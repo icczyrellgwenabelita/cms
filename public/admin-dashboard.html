@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASAT Admin Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">ASAT Admin</div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="admin-dashboard.html" class="nav-tab active">Dashboard</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Lessons Management Section -->
+            <section class="lessons-section">
+                <div class="section-header">
+                    <h1 class="section-title">Lessons Management</h1>
+                </div>
+                <div class="lessons-grid" id="lessonsContainer">
+                    <!-- Lesson cards will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Quizzes Management Section -->
+            <section class="quizzes-section">
+                <div class="section-header">
+                    <h1 class="section-title">Quizzes Management</h1>
+                </div>
+                <div class="quizzes-grid" id="quizzesContainer">
+                    <!-- Quiz cards will be inserted here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Lesson Edit Modal -->
+    <div id="lessonModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="lessonModalTitle">Edit Lesson</h2>
+                <button class="modal-close" onclick="closeLessonModal()">&times;</button>
+            </div>
+            <form id="lessonForm" onsubmit="saveLesson(event)">
+                <input type="hidden" id="lessonSlot" value="">
+                <div class="form-group">
+                    <label for="lessonName">Lesson Name *</label>
+                    <input type="text" id="lessonName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lessonDescription">Lesson Description</label>
+                    <textarea id="lessonDescription" rows="4"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeLessonModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Lesson</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Edit Modal -->
+    <div id="quizModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="quizModalTitle">Edit Quiz</h2>
+                <button class="modal-close" onclick="closeQuizModal()">&times;</button>
+            </div>
+            <form id="quizForm" onsubmit="saveQuiz(event)">
+                <input type="hidden" id="quizSlot" value="">
+                <div class="form-group">
+                    <label for="quizQuestion">Question *</label>
+                    <textarea id="quizQuestion" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerA">Answer A *</label>
+                    <input type="text" id="quizAnswerA" required>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerB">Answer B *</label>
+                    <input type="text" id="quizAnswerB" required>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerC">Answer C *</label>
+                    <input type="text" id="quizAnswerC" required>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerD">Answer D *</label>
+                    <input type="text" id="quizAnswerD" required>
+                </div>
+                <div class="form-group">
+                    <label for="quizCorrectAnswer">Correct Answer *</label>
+                    <select id="quizCorrectAnswer" required>
+                        <option value="">Select correct answer</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeQuizModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+            window.location.href = 'admin-login.html';
+        }
+
+        // Load lessons and quizzes
+        async function loadLessons() {
+            try {
+                const response = await fetch('/api/admin/lessons', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const container = document.getElementById('lessonsContainer');
+                    container.innerHTML = data.lessons.map(lesson => `
+                        <div class="lesson-card">
+                            <div class="lesson-card-header">
+                                <span class="lesson-number">Lesson ${lesson.slot}</span>
+                                <button class="btn-edit" onclick="editLesson(${lesson.slot})">Edit</button>
+                            </div>
+                            <h3 class="lesson-name">${lesson.lessonName || ''}</h3>
+                            <p class="lesson-description">${lesson.lessonDescription || ''}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    if (response.status === 401) {
+                        logout();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+            }
+        }
+
+        async function loadQuizzes() {
+            try {
+                const response = await fetch('/api/admin/quizzes', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const container = document.getElementById('quizzesContainer');
+                    container.innerHTML = data.quizzes.map(quiz => `
+                        <div class="quiz-card">
+                            <div class="quiz-card-header">
+                                <span class="quiz-number">Quiz ${quiz.slot}</span>
+                                <button class="btn-edit" onclick="editQuiz(${quiz.slot})">Edit</button>
+                            </div>
+                            <h3 class="quiz-question">${quiz.question || ''}</h3>
+                            <div class="quiz-answers">
+                                <div class="answer-item ${quiz.correctAnswer === 'A' ? 'correct' : ''}">
+                                    <span class="answer-label">A:</span>
+                                    <span>${quiz.answerA || ''}</span>
+                                </div>
+                                <div class="answer-item ${quiz.correctAnswer === 'B' ? 'correct' : ''}">
+                                    <span class="answer-label">B:</span>
+                                    <span>${quiz.answerB || ''}</span>
+                                </div>
+                                <div class="answer-item ${quiz.correctAnswer === 'C' ? 'correct' : ''}">
+                                    <span class="answer-label">C:</span>
+                                    <span>${quiz.answerC || ''}</span>
+                                </div>
+                                <div class="answer-item ${quiz.correctAnswer === 'D' ? 'correct' : ''}">
+                                    <span class="answer-label">D:</span>
+                                    <span>${quiz.answerD || ''}</span>
+                                </div>
+                            </div>
+                            ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct: ${quiz.correctAnswer}</div>` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    if (response.status === 401) {
+                        logout();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+            }
+        }
+
+        function editLesson(slot) {
+            fetch(`/api/admin/lessons`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const lesson = data.lessons.find(l => l.slot === slot);
+                    document.getElementById('lessonSlot').value = slot;
+                    document.getElementById('lessonName').value = lesson.lessonName || '';
+                    document.getElementById('lessonDescription').value = lesson.lessonDescription || '';
+                    document.getElementById('lessonModalTitle').textContent = `Edit Lesson ${slot}`;
+                    document.getElementById('lessonModal').style.display = 'flex';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading lesson:', error);
+                alert('Failed to load lesson data');
+            });
+        }
+
+        function closeLessonModal() {
+            document.getElementById('lessonModal').style.display = 'none';
+            document.getElementById('lessonForm').reset();
+        }
+
+        async function saveLesson(e) {
+            e.preventDefault();
+            const slot = parseInt(document.getElementById('lessonSlot').value);
+            const lessonName = document.getElementById('lessonName').value;
+            const lessonDescription = document.getElementById('lessonDescription').value;
+
+            try {
+                const response = await fetch(`/api/admin/lessons/${slot}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lessonName,
+                        lessonDescription
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Lesson saved successfully!');
+                    closeLessonModal();
+                    loadLessons();
+                } else {
+                    alert(data.error || 'Failed to save lesson');
+                }
+            } catch (error) {
+                console.error('Error saving lesson:', error);
+                alert('Failed to save lesson');
+            }
+        }
+
+        function editQuiz(slot) {
+            fetch(`/api/admin/quizzes`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const quiz = data.quizzes.find(q => q.slot === slot);
+                    document.getElementById('quizSlot').value = slot;
+                    document.getElementById('quizQuestion').value = quiz.question || '';
+                    document.getElementById('quizAnswerA').value = quiz.answerA || '';
+                    document.getElementById('quizAnswerB').value = quiz.answerB || '';
+                    document.getElementById('quizAnswerC').value = quiz.answerC || '';
+                    document.getElementById('quizAnswerD').value = quiz.answerD || '';
+                    document.getElementById('quizCorrectAnswer').value = quiz.correctAnswer || '';
+                    document.getElementById('quizModalTitle').textContent = `Edit Quiz ${slot}`;
+                    document.getElementById('quizModal').style.display = 'flex';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading quiz:', error);
+                alert('Failed to load quiz data');
+            });
+        }
+
+        function closeQuizModal() {
+            document.getElementById('quizModal').style.display = 'none';
+            document.getElementById('quizForm').reset();
+        }
+
+        async function saveQuiz(e) {
+            e.preventDefault();
+            const slot = parseInt(document.getElementById('quizSlot').value);
+            const question = document.getElementById('quizQuestion').value;
+            const answerA = document.getElementById('quizAnswerA').value;
+            const answerB = document.getElementById('quizAnswerB').value;
+            const answerC = document.getElementById('quizAnswerC').value;
+            const answerD = document.getElementById('quizAnswerD').value;
+            const correctAnswer = document.getElementById('quizCorrectAnswer').value;
+
+            try {
+                const response = await fetch(`/api/admin/quizzes/${slot}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question,
+                        answerA,
+                        answerB,
+                        answerC,
+                        answerD,
+                        correctAnswer
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Quiz saved successfully!');
+                    closeQuizModal();
+                    loadQuizzes();
+                } else {
+                    alert(data.error || 'Failed to save quiz');
+                }
+            } catch (error) {
+                console.error('Error saving quiz:', error);
+                alert('Failed to save quiz');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminData');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            const lessonModal = document.getElementById('lessonModal');
+            const quizModal = document.getElementById('quizModal');
+            if (event.target === lessonModal) {
+                closeLessonModal();
+            }
+            if (event.target === quizModal) {
+                closeQuizModal();
+            }
+        }
+
+        // Load data on page load
+        loadLessons();
+        loadQuizzes();
+    </script>
+</body>
+</html>
