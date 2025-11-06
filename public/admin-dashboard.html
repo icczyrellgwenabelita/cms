@@ -39,8 +39,15 @@
                 <div class="section-header">
                     <h1 class="section-title">Quizzes Management</h1>
                 </div>
+                
+                <!-- Lesson Tabs -->
+                <div class="lesson-tabs" id="lessonTabs">
+                    <!-- Lesson tabs will be dynamically generated -->
+                </div>
+                
+                <!-- Quizzes Grid for Selected Lesson -->
                 <div class="quizzes-grid" id="quizzesContainer">
-                    <!-- Quiz cards will be inserted here -->
+                    <!-- Quiz cards will be inserted here for the selected lesson -->
                 </div>
             </section>
         </main>
@@ -79,26 +86,46 @@
                 <button class="modal-close" onclick="closeQuizModal()">&times;</button>
             </div>
             <form id="quizForm" onsubmit="saveQuiz(event)">
+                <input type="hidden" id="quizLesson" value="">
                 <input type="hidden" id="quizSlot" value="">
                 <div class="form-group">
+                    <label for="quizLessonDisplay">Lesson</label>
+                    <input type="text" id="quizLessonDisplay" readonly disabled>
+                </div>
+                <div class="form-group">
                     <label for="quizQuestion">Question *</label>
-                    <textarea id="quizQuestion" rows="3" required></textarea>
+                    <textarea id="quizQuestion" rows="3" maxlength="80" required></textarea>
+                    <div class="char-counter">
+                        <span id="questionCharCount">0</span>/80
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerA">Answer A *</label>
-                    <input type="text" id="quizAnswerA" required>
+                    <input type="text" id="quizAnswerA" maxlength="25" required>
+                    <div class="char-counter">
+                        <span id="answerACharCount">0</span>/25
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerB">Answer B *</label>
-                    <input type="text" id="quizAnswerB" required>
+                    <input type="text" id="quizAnswerB" maxlength="25" required>
+                    <div class="char-counter">
+                        <span id="answerBCharCount">0</span>/25
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerC">Answer C *</label>
-                    <input type="text" id="quizAnswerC" required>
+                    <input type="text" id="quizAnswerC" maxlength="25" required>
+                    <div class="char-counter">
+                        <span id="answerCCharCount">0</span>/25
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerD">Answer D *</label>
-                    <input type="text" id="quizAnswerD" required>
+                    <input type="text" id="quizAnswerD" maxlength="25" required>
+                    <div class="char-counter">
+                        <span id="answerDCharCount">0</span>/25
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="quizCorrectAnswer">Correct Answer *</label>
@@ -158,53 +185,176 @@
             }
         }
 
-        async function loadQuizzes() {
+        let currentLesson = 1; // Track currently selected lesson
+        let lessonsData = []; // Store lesson names
+
+        // Helper function to get lesson name with format "Lesson X: Lesson Name"
+        function getLessonDisplayName(lessonSlot) {
+            const lessonNames = {
+                1: 'Monitoring Vital Signs',
+                2: 'Medication Assistance',
+                3: 'Meal Preparation and Feeding',
+                4: 'Safe Patient Transfer',
+                5: 'Bathing and Grooming the Elderly',
+                6: 'Emergency Response (CPR Basics)'
+            };
+            return `Lesson ${lessonSlot}: ${lessonNames[lessonSlot] || `Lesson ${lessonSlot}`}`;
+        }
+
+        // Load lessons first to get names for tabs
+        async function loadLessonsForTabs() {
             try {
-                const response = await fetch('/api/admin/quizzes', {
+                const response = await fetch('/api/admin/lessons', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 const data = await response.json();
+                if (response.ok && data.success) {
+                    lessonsData = data.lessons;
+                    renderLessonTabs();
+                }
+            } catch (error) {
+                console.error('Error loading lessons for tabs:', error);
+            }
+        }
+
+        // Render lesson tabs
+        function renderLessonTabs() {
+            const tabsContainer = document.getElementById('lessonTabs');
+            tabsContainer.innerHTML = lessonsData.map(lesson => {
+                const lessonName = lesson.lessonName || `Lesson ${lesson.slot}`;
+                const isActive = lesson.slot === currentLesson ? 'active' : '';
+                return `
+                    <button class="lesson-tab ${isActive}" onclick="selectLesson(${lesson.slot})">
+                        ${lessonName}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Select a lesson tab
+        function selectLesson(lessonSlot) {
+            currentLesson = lessonSlot;
+            renderLessonTabs();
+            loadQuizzes(lessonSlot);
+        }
+
+        async function loadQuizzes(lessonSlot = currentLesson) {
+            try {
+                console.log(`Loading quizzes for lesson ${lessonSlot}`);
+                const response = await fetch(`/api/admin/quizzes/${lessonSlot}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log(`Response status: ${response.status}`);
+                const data = await response.json();
+                console.log('Response data:', data);
 
                 if (response.ok && data.success) {
                     const container = document.getElementById('quizzesContainer');
-                    container.innerHTML = data.quizzes.map(quiz => `
-                        <div class="quiz-card">
-                            <div class="quiz-card-header">
-                                <span class="quiz-number">Quiz ${quiz.slot}</span>
-                                <button class="btn-edit" onclick="editQuiz(${quiz.slot})">Edit</button>
+                    const lessonName = getLessonDisplayName(lessonSlot);
+                    
+                    if (!data.quizzes || data.quizzes.length === 0) {
+                        container.innerHTML = `
+                            <div class="quizzes-section-header">
+                                <h2>${lessonName}</h2>
                             </div>
-                            <h3 class="quiz-question">${quiz.question || ''}</h3>
-                            <div class="quiz-answers">
-                                <div class="answer-item ${quiz.correctAnswer === 'A' ? 'correct' : ''}">
-                                    <span class="answer-label">A:</span>
-                                    <span>${quiz.answerA || ''}</span>
-                                </div>
-                                <div class="answer-item ${quiz.correctAnswer === 'B' ? 'correct' : ''}">
-                                    <span class="answer-label">B:</span>
-                                    <span>${quiz.answerB || ''}</span>
-                                </div>
-                                <div class="answer-item ${quiz.correctAnswer === 'C' ? 'correct' : ''}">
-                                    <span class="answer-label">C:</span>
-                                    <span>${quiz.answerC || ''}</span>
-                                </div>
-                                <div class="answer-item ${quiz.correctAnswer === 'D' ? 'correct' : ''}">
-                                    <span class="answer-label">D:</span>
-                                    <span>${quiz.answerD || ''}</span>
-                                </div>
+                            <div class="quizzes-grid-inner">
+                                ${Array.from({ length: 10 }, (_, i) => `
+                                    <div class="quiz-card">
+                                        <div class="quiz-card-header">
+                                            <span class="quiz-number">Question ${i + 1}</span>
+                                            <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${i + 1})">Edit</button>
+                                        </div>
+                                        <h3 class="quiz-question">(No question set)</h3>
+                                        <div class="quiz-answers">
+                                            <div class="answer-item">
+                                                <span class="answer-label">A:</span>
+                                                <span>(Not set)</span>
+                                            </div>
+                                            <div class="answer-item">
+                                                <span class="answer-label">B:</span>
+                                                <span>(Not set)</span>
+                                            </div>
+                                            <div class="answer-item">
+                                                <span class="answer-label">C:</span>
+                                                <span>(Not set)</span>
+                                            </div>
+                                            <div class="answer-item">
+                                                <span class="answer-label">D:</span>
+                                                <span>(Not set)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
-                            ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct: ${quiz.correctAnswer}</div>` : ''}
-                        </div>
-                    `).join('');
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="quizzes-section-header">
+                                <h2>${lessonName}</h2>
+                            </div>
+                            <div class="quizzes-grid-inner">
+                                ${data.quizzes.map(quiz => `
+                                    <div class="quiz-card">
+                                        <div class="quiz-card-header">
+                                            <span class="quiz-number">Question ${quiz.slot}</span>
+                                            <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${quiz.slot})">Edit</button>
+                                        </div>
+                                        <h3 class="quiz-question">${(quiz.question && quiz.question.length > 80) ? quiz.question.substring(0, 80) + '...' : (quiz.question || '(No question set)')}</h3>
+                                        <div class="quiz-answers">
+                                            <div class="answer-item ${quiz.correctAnswer === 'A' ? 'correct' : ''}">
+                                                <span class="answer-label">A:</span>
+                                                <span>${(quiz.answerA && quiz.answerA.length > 25) ? quiz.answerA.substring(0, 25) + '...' : (quiz.answerA || '(Not set)')}</span>
+                                            </div>
+                                            <div class="answer-item ${quiz.correctAnswer === 'B' ? 'correct' : ''}">
+                                                <span class="answer-label">B:</span>
+                                                <span>${(quiz.answerB && quiz.answerB.length > 25) ? quiz.answerB.substring(0, 25) + '...' : (quiz.answerB || '(Not set)')}</span>
+                                            </div>
+                                            <div class="answer-item ${quiz.correctAnswer === 'C' ? 'correct' : ''}">
+                                                <span class="answer-label">C:</span>
+                                                <span>${(quiz.answerC && quiz.answerC.length > 25) ? quiz.answerC.substring(0, 25) + '...' : (quiz.answerC || '(Not set)')}</span>
+                                            </div>
+                                            <div class="answer-item ${quiz.correctAnswer === 'D' ? 'correct' : ''}">
+                                                <span class="answer-label">D:</span>
+                                                <span>${(quiz.answerD && quiz.answerD.length > 25) ? quiz.answerD.substring(0, 25) + '...' : (quiz.answerD || '(Not set)')}</span>
+                                            </div>
+                                        </div>
+                                        ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct: ${quiz.correctAnswer}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
                 } else {
                     if (response.status === 401) {
                         logout();
+                    } else {
+                        console.error('Failed to load quizzes:', data);
+                        const container = document.getElementById('quizzesContainer');
+                        const lessonName = getLessonDisplayName(lessonSlot);
+                        container.innerHTML = `
+                            <div class="quizzes-section-header">
+                                <h2>${lessonName}</h2>
+                                <p class="quizzes-count" style="color: #EF4444;">Error loading quizzes: ${data.error || 'Unknown error'}</p>
+                            </div>
+                        `;
                     }
                 }
             } catch (error) {
                 console.error('Error loading quizzes:', error);
+                const container = document.getElementById('quizzesContainer');
+                const lessonName = getLessonDisplayName(lessonSlot);
+                container.innerHTML = `
+                    <div class="quizzes-section-header">
+                        <h2>${lessonName}</h2>
+                        <p class="quizzes-count" style="color: #EF4444;">Error: ${error.message}</p>
+                    </div>
+                `;
             }
         }
 
@@ -270,8 +420,8 @@
             }
         }
 
-        function editQuiz(slot) {
-            fetch(`/api/admin/quizzes`, {
+        function editQuiz(lesson, slot) {
+            fetch(`/api/admin/quizzes/${lesson}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -280,15 +430,29 @@
             .then(data => {
                 if (data.success) {
                     const quiz = data.quizzes.find(q => q.slot === slot);
+                    const lessonName = getLessonDisplayName(lesson);
+                    
+                    document.getElementById('quizLesson').value = lesson;
                     document.getElementById('quizSlot').value = slot;
+                    document.getElementById('quizLessonDisplay').value = lessonName;
                     document.getElementById('quizQuestion').value = quiz.question || '';
                     document.getElementById('quizAnswerA').value = quiz.answerA || '';
                     document.getElementById('quizAnswerB').value = quiz.answerB || '';
                     document.getElementById('quizAnswerC').value = quiz.answerC || '';
                     document.getElementById('quizAnswerD').value = quiz.answerD || '';
                     document.getElementById('quizCorrectAnswer').value = quiz.correctAnswer || '';
-                    document.getElementById('quizModalTitle').textContent = `Edit Quiz ${slot}`;
+                    document.getElementById('quizModalTitle').textContent = `Edit Question ${slot} - ${lessonName}`;
                     document.getElementById('quizModal').style.display = 'flex';
+                    
+                    // Update character counters and setup event listeners
+                    setTimeout(() => {
+                        updateCharCount('quizQuestion', 'questionCharCount', 80);
+                        updateCharCount('quizAnswerA', 'answerACharCount', 25);
+                        updateCharCount('quizAnswerB', 'answerBCharCount', 25);
+                        updateCharCount('quizAnswerC', 'answerCCharCount', 25);
+                        updateCharCount('quizAnswerD', 'answerDCharCount', 25);
+                        setupCharCounters();
+                    }, 100);
                 }
             })
             .catch(error => {
@@ -296,14 +460,80 @@
                 alert('Failed to load quiz data');
             });
         }
+        
+        // Function to update character counter
+        function updateCharCount(inputId, counterId, maxLength) {
+            const input = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            if (input && counter) {
+                const currentLength = input.value.length;
+                counter.textContent = currentLength;
+                if (currentLength >= maxLength) {
+                    counter.parentElement.classList.add('char-limit-reached');
+                } else {
+                    counter.parentElement.classList.remove('char-limit-reached');
+                }
+            }
+        }
+        
+        // Initialize character counter event listeners
+        function setupCharCounters() {
+            const questionInput = document.getElementById('quizQuestion');
+            const answerAInput = document.getElementById('quizAnswerA');
+            const answerBInput = document.getElementById('quizAnswerB');
+            const answerCInput = document.getElementById('quizAnswerC');
+            const answerDInput = document.getElementById('quizAnswerD');
+            
+            if (questionInput) {
+                questionInput.addEventListener('input', function() {
+                    updateCharCount('quizQuestion', 'questionCharCount', 80);
+                });
+            }
+            if (answerAInput) {
+                answerAInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerA', 'answerACharCount', 25);
+                });
+            }
+            if (answerBInput) {
+                answerBInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerB', 'answerBCharCount', 25);
+                });
+            }
+            if (answerCInput) {
+                answerCInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerC', 'answerCCharCount', 25);
+                });
+            }
+            if (answerDInput) {
+                answerDInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerD', 'answerDCharCount', 25);
+                });
+            }
+        }
+        
+        // Setup counters when page loads (if elements exist)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(setupCharCounters, 100);
+            });
+        } else {
+            setTimeout(setupCharCounters, 100);
+        }
 
         function closeQuizModal() {
             document.getElementById('quizModal').style.display = 'none';
             document.getElementById('quizForm').reset();
+            // Reset character counters
+            updateCharCount('quizQuestion', 'questionCharCount', 80);
+            updateCharCount('quizAnswerA', 'answerACharCount', 25);
+            updateCharCount('quizAnswerB', 'answerBCharCount', 25);
+            updateCharCount('quizAnswerC', 'answerCCharCount', 25);
+            updateCharCount('quizAnswerD', 'answerDCharCount', 25);
         }
 
         async function saveQuiz(e) {
             e.preventDefault();
+            const lesson = parseInt(document.getElementById('quizLesson').value);
             const slot = parseInt(document.getElementById('quizSlot').value);
             const question = document.getElementById('quizQuestion').value;
             const answerA = document.getElementById('quizAnswerA').value;
@@ -313,7 +543,7 @@
             const correctAnswer = document.getElementById('quizCorrectAnswer').value;
 
             try {
-                const response = await fetch(`/api/admin/quizzes/${slot}`, {
+                const response = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -334,7 +564,7 @@
                 if (response.ok && data.success) {
                     alert('Quiz saved successfully!');
                     closeQuizModal();
-                    loadQuizzes();
+                    loadQuizzes(lesson);
                 } else {
                     alert(data.error || 'Failed to save quiz');
                 }
@@ -364,7 +594,9 @@
 
         // Load data on page load
         loadLessons();
-        loadQuizzes();
+        loadLessonsForTabs().then(() => {
+            loadQuizzes(currentLesson);
+        });
     </script>
 </body>
 </html>

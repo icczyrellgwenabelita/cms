@@ -12,11 +12,13 @@ app.use(express.json());
 // Import routes
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
+const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 
 // API Routes - MUST come before static middleware
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Static files - after API routes

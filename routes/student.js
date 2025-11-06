@@ -3,18 +3,60 @@ const router = express.Router();
 const { verifyStudentToken } = require('../middleware/auth');
 const { db } = require('../config/firebase');
 
-// Get student dashboard data
+// Helper function to get user data from either students or users database
+async function getUserData(userId) {
+  // First check students database
+  const studentRef = db.ref(`students/${userId}`);
+  const studentSnapshot = await studentRef.once('value');
+  let studentData = studentSnapshot.val();
+  let isUser = false;
+
+  // If not found in students, check users database
+  if (!studentData) {
+    const userRef = db.ref(`users/${userId}`);
+    const userSnapshot = await userRef.once('value');
+    const userData = userSnapshot.val();
+    
+    if (userData) {
+      isUser = true;
+      // Convert user data structure to student-compatible format
+      const studentInfo = userData.studentInfo || {};
+      studentData = {
+        email: userData.email || '',
+        fullName: userData.name || '',
+        status: 'active',
+        certificates: [],
+        gender: studentInfo.gender || '',
+        studentNumber: studentInfo.studentNumber || '',
+        batch: studentInfo.batch || '',
+        address: studentInfo.address || '',
+        contactNumber: studentInfo.contactNumber || '',
+        birthday: studentInfo.birthday || '',
+        isVerified: userData.verified || false,
+        profileCompletion: userData.profileCompletion || 0,
+        profilePicture: userData.profilePicture || null,
+        _isUser: true,
+        _userData: userData // Keep original for progress/history access
+      };
+    }
+  }
+
+  return { studentData, isUser };
+}
+
+// Get student dashboard data (supports both students and users)
 router.get('/dashboard', verifyStudentToken, async (req, res) => {
   try {
     console.log('Dashboard request received for userId:', req.userId);
-    const studentRef = db.ref(`students/${req.userId}`);
-    const snapshot = await studentRef.once('value');
-    let studentData = snapshot.val();
+    
+    const { studentData: data, isUser } = await getUserData(req.userId);
+    let studentData = data;
 
     console.log('Raw studentData from Firebase:', JSON.stringify(studentData ? Object.keys(studentData) : 'null'));
+    console.log('Is user from users database:', isUser);
 
     if (!studentData) {
-      // Initialize student data
+      // Initialize student data in students database
       studentData = {
         email: req.user.email,
         status: 'active',
@@ -24,6 +66,7 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         isVerified: false,
         createdAt: new Date().toISOString()
       };
+      const studentRef = db.ref(`students/${req.userId}`);
       await studentRef.set(studentData);
       console.log('Created new student data entry');
     }
@@ -34,7 +77,7 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         const allLessons = lessonsSnapshot.val() || {};
         
         // Map lessons with student progress - Always return 6 lessons
-        // Only include data that exists in database
+        // Include progress even if lesson name doesn't exist in lessons collection
         const lessons = [];
         for (let i = 1; i <= 6; i++) {
           const lesson = allLessons[i];
@@ -44,76 +87,129 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
             slot: i
           };
           
-          // Only include lesson info if it exists in database
+          // Include lesson info if it exists in database
           if (lesson && lesson.lessonName) {
             lessonData.lessonName = lesson.lessonName;
             if (lesson.lessonDescription) {
               lessonData.lessonDescription = lesson.lessonDescription;
             }
+          }
+          
+          // Always get student's lesson progress - check students or users database
+          // This ensures progress shows even when lesson name isn't defined
+          let progress = null;
+          if (isUser) {
+            // For users, read from users/progress/lesson{i} structure
+            const userProgressRef = db.ref(`users/${req.userId}/progress/lesson${i}`);
+            const userProgressSnapshot = await userProgressRef.once('value');
+            const userProgress = userProgressSnapshot.val();
             
-            // Get student's lesson progress - check if data actually exists
+            console.log(`Lesson ${i} progress from users DB:`, JSON.stringify(userProgress));
+            
+            if (userProgress) {
+              // Determine status based on completion logic:
+              // BOTH quiz AND simulation must be completed for status = "completed"
+              // If either is incomplete, status = "in_progress"
+              const quizCompleted = userProgress.quiz?.completed || false;
+              const simCompleted = userProgress.simulation?.completed || false;
+              const quizAttempts = userProgress.quiz?.attempts || 0;
+              const simAttempts = userProgress.simulation?.attempts || 0;
+              
+              console.log(`Lesson ${i} - Quiz completed: ${quizCompleted}, Sim completed: ${simCompleted}, Quiz attempts: ${quizAttempts}, Sim attempts: ${simAttempts}`);
+              
+              let status = 'not_started';
+              if (quizCompleted && simCompleted) {
+                // Both completed = Completed
+                status = 'completed';
+                console.log(`Lesson ${i} - Status: completed (both quiz and sim completed)`);
+              } else if (quizCompleted || simCompleted || quizAttempts > 0 || simAttempts > 0) {
+                // At least one started/incomplete = In Progress
+                status = 'in_progress';
+                console.log(`Lesson ${i} - Status: in_progress (one or both incomplete)`);
+              } else {
+                console.log(`Lesson ${i} - Status: not_started (no attempts)`);
+              }
+              
+              // Convert user progress structure to student format
+              progress = {
+                status: status,
+                quizScore: userProgress.quiz?.highestScore || null
+              };
+              
+              console.log(`Lesson ${i} - Final progress object:`, JSON.stringify(progress));
+            } else {
+              console.log(`Lesson ${i} - No progress data found in users database`);
+            }
+          } else {
+            // For students, read from students/lessonProgress/{i} structure
             const lessonProgressRef = db.ref(`students/${req.userId}/lessonProgress/${i}`);
             const progressSnapshot = await lessonProgressRef.once('value');
-            const progress = progressSnapshot.val();
-            
-            // Get class averages - check if data actually exists
-            const classStatsRef = db.ref(`classStats/lessons/${i}`);
-            const classStatsSnapshot = await classStatsRef.once('value');
-            const classStats = classStatsSnapshot.val();
-            
-            // Only include status if progress exists, is an object, and has status field with a valid value
-            if (progress && typeof progress === 'object' && progress !== null && 
-                progress.status && typeof progress.status === 'string' && progress.status.trim() !== '') {
-              lessonData.status = progress.status;
+            progress = progressSnapshot.val();
+            console.log(`Lesson ${i} progress from students DB:`, JSON.stringify(progress));
+          }
+          
+          // Get class averages - check if data actually exists
+          const classStatsRef = db.ref(`classStats/lessons/${i}`);
+          const classStatsSnapshot = await classStatsRef.once('value');
+          const classStats = classStatsSnapshot.val();
+          
+          // Set status based on progress data
+          // Status determination: Both quiz AND simulation must be completed for "completed"
+          // If either is incomplete, status is "in_progress"
+          if (progress && typeof progress === 'object' && progress !== null && 
+              progress.status && typeof progress.status === 'string' && progress.status.trim() !== '') {
+            lessonData.status = progress.status;
+          } else {
+            // Default to "not_started" if no progress data exists
+            lessonData.status = 'not_started';
+          }
+          
+          // Only include quizScore if it exists, is a number, and is not null/undefined
+          if (progress && typeof progress === 'object' && progress !== null &&
+              'quizScore' in progress && 
+              progress.quizScore !== null && 
+              progress.quizScore !== undefined && 
+              typeof progress.quizScore === 'number' &&
+              !isNaN(progress.quizScore)) {
+            lessonData.quizScore = progress.quizScore;
+          }
+          
+          // Only include class stats if they exist, are objects, and have valid numeric values
+          if (classStats && typeof classStats === 'object' && classStats !== null) {
+            // Average Quiz Grade
+            if ('avgQuizGrade' in classStats &&
+                classStats.avgQuizGrade !== null && 
+                classStats.avgQuizGrade !== undefined && 
+                typeof classStats.avgQuizGrade === 'number' &&
+                !isNaN(classStats.avgQuizGrade)) {
+              lessonData.avgClassGrade = classStats.avgQuizGrade;
             }
             
-            // Only include quizScore if it exists, is a number, and is not null/undefined
-            if (progress && typeof progress === 'object' && progress !== null &&
-                'quizScore' in progress && 
-                progress.quizScore !== null && 
-                progress.quizScore !== undefined && 
-                typeof progress.quizScore === 'number' &&
-                !isNaN(progress.quizScore)) {
-              lessonData.quizScore = progress.quizScore;
+            // Highest Quiz Grade
+            if ('highestQuizGrade' in classStats &&
+                classStats.highestQuizGrade !== null && 
+                classStats.highestQuizGrade !== undefined && 
+                typeof classStats.highestQuizGrade === 'number' &&
+                !isNaN(classStats.highestQuizGrade)) {
+              lessonData.highestGrade = classStats.highestQuizGrade;
             }
             
-            // Only include class stats if they exist, are objects, and have valid numeric values
-            if (classStats && typeof classStats === 'object' && classStats !== null) {
-              // Average Quiz Grade
-              if ('avgQuizGrade' in classStats &&
-                  classStats.avgQuizGrade !== null && 
-                  classStats.avgQuizGrade !== undefined && 
-                  typeof classStats.avgQuizGrade === 'number' &&
-                  !isNaN(classStats.avgQuizGrade)) {
-                lessonData.avgClassGrade = classStats.avgQuizGrade;
-              }
-              
-              // Highest Quiz Grade
-              if ('highestQuizGrade' in classStats &&
-                  classStats.highestQuizGrade !== null && 
-                  classStats.highestQuizGrade !== undefined && 
-                  typeof classStats.highestQuizGrade === 'number' &&
-                  !isNaN(classStats.highestQuizGrade)) {
-                lessonData.highestGrade = classStats.highestQuizGrade;
-              }
-              
-              // Average Quiz Time
-              if ('avgQuizTime' in classStats &&
-                  classStats.avgQuizTime !== null && 
-                  classStats.avgQuizTime !== undefined && 
-                  typeof classStats.avgQuizTime === 'number' &&
-                  !isNaN(classStats.avgQuizTime)) {
-                lessonData.avgQuizTime = classStats.avgQuizTime;
-              }
-              
-              // Average Simulation Time
-              if ('avgSimTime' in classStats &&
-                  classStats.avgSimTime !== null && 
-                  classStats.avgSimTime !== undefined && 
-                  typeof classStats.avgSimTime === 'number' &&
-                  !isNaN(classStats.avgSimTime)) {
-                lessonData.avgSimTime = classStats.avgSimTime;
-              }
+            // Average Quiz Time
+            if ('avgQuizTime' in classStats &&
+                classStats.avgQuizTime !== null && 
+                classStats.avgQuizTime !== undefined && 
+                typeof classStats.avgQuizTime === 'number' &&
+                !isNaN(classStats.avgQuizTime)) {
+              lessonData.avgQuizTime = classStats.avgQuizTime;
+            }
+            
+            // Average Simulation Time
+            if ('avgSimTime' in classStats &&
+                classStats.avgSimTime !== null && 
+                classStats.avgSimTime !== undefined && 
+                typeof classStats.avgSimTime === 'number' &&
+                !isNaN(classStats.avgSimTime)) {
+              lessonData.avgSimTime = classStats.avgSimTime;
             }
           }
           
@@ -121,15 +217,25 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         }
 
     // Calculate profile completion
+    // If verified is true in database, show 50% (minimum)
+    // Otherwise calculate based on fields filled
     let completionScore = 0;
-    if (studentData.email) completionScore += 15;
-    if (studentData.fullName) completionScore += 15;
-    if (studentData.gender) completionScore += 10;
-    if (studentData.studentNumber) completionScore += 15;
-    if (studentData.batch) completionScore += 10;
-    if (studentData.address) completionScore += 10;
-    if (studentData.contactNumber) completionScore += 10;
-    if (studentData.birthday) completionScore += 15;
+    const isVerified = studentData.isVerified || studentData.verified || false;
+    
+    if (isVerified) {
+      // If verified in database, start with 50%
+      completionScore = 50;
+    } else {
+      // Calculate normally if not verified
+      if (studentData.email) completionScore += 15;
+      if (studentData.fullName) completionScore += 15;
+      if (studentData.gender) completionScore += 10;
+      if (studentData.studentNumber) completionScore += 15;
+      if (studentData.batch) completionScore += 10;
+      if (studentData.address) completionScore += 10;
+      if (studentData.contactNumber) completionScore += 10;
+      if (studentData.birthday) completionScore += 15;
+    }
 
     // Check for profile picture in studentData - be more thorough
     let profilePictureValue = null;
@@ -180,7 +286,7 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
       certificates: studentData.certificates || [],
       lessons: lessons,
       profileCompletion: completionScore,
-      isVerified: studentData.isVerified || completionScore >= 80,
+      isVerified: isVerified,
       gender: studentData.gender || '',
       studentNumber: studentData.studentNumber || '',
       batch: studentData.batch || '',
@@ -202,12 +308,11 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
   }
 });
 
-// Get student profile
+// Get student profile (supports both students and users)
 router.get('/profile', verifyStudentToken, async (req, res) => {
   try {
-    const studentRef = db.ref(`students/${req.userId}`);
-    const snapshot = await studentRef.once('value');
-    let studentData = snapshot.val();
+    const { studentData: data, isUser } = await getUserData(req.userId);
+    let studentData = data;
 
     if (!studentData) {
       studentData = {
@@ -215,19 +320,30 @@ router.get('/profile', verifyStudentToken, async (req, res) => {
         status: 'active',
         createdAt: new Date().toISOString()
       };
+      const studentRef = db.ref(`students/${req.userId}`);
       await studentRef.set(studentData);
     }
 
     // Calculate profile completion
+    // If verified is true in database, show 50% (minimum)
+    // Otherwise calculate based on fields filled
     let completionScore = 0;
-    if (studentData.email) completionScore += 15;
-    if (studentData.fullName) completionScore += 15;
-    if (studentData.gender) completionScore += 10;
-    if (studentData.studentNumber) completionScore += 15;
-    if (studentData.batch) completionScore += 10;
-    if (studentData.address) completionScore += 10;
-    if (studentData.contactNumber) completionScore += 10;
-    if (studentData.birthday) completionScore += 15;
+    const isVerified = studentData.isVerified || studentData.verified || false;
+    
+    if (isVerified) {
+      // If verified in database, start with 50%
+      completionScore = 50;
+    } else {
+      // Calculate normally if not verified
+      if (studentData.email) completionScore += 15;
+      if (studentData.fullName) completionScore += 15;
+      if (studentData.gender) completionScore += 10;
+      if (studentData.studentNumber) completionScore += 15;
+      if (studentData.batch) completionScore += 10;
+      if (studentData.address) completionScore += 10;
+      if (studentData.contactNumber) completionScore += 10;
+      if (studentData.birthday) completionScore += 15;
+    }
 
     res.json({
       success: true,
@@ -242,7 +358,7 @@ router.get('/profile', verifyStudentToken, async (req, res) => {
         birthday: studentData.birthday || '',
         profilePicture: studentData.profilePicture || null,
         profileCompletion: completionScore,
-        isVerified: studentData.isVerified || completionScore >= 80
+        isVerified: isVerified
       }
     });
   } catch (error) {
@@ -251,7 +367,7 @@ router.get('/profile', verifyStudentToken, async (req, res) => {
   }
 });
 
-// Update student profile
+// Update student profile (supports both students and users)
 router.put('/profile', verifyStudentToken, async (req, res) => {
   try {
     const { fullName, gender, studentNumber, batch, address, contactNumber, birthday, profilePicture } = req.body;
@@ -259,23 +375,104 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
     console.log('Profile update request received for userId:', req.userId);
     console.log('Profile update - ProfilePicture provided:', profilePicture !== undefined, 'Value:', profilePicture ? 'base64 string (' + profilePicture.length + ' chars)' : profilePicture);
     
+    // Check if user is from users database
+    const { studentData: data, isUser } = await getUserData(req.userId);
+    const existing = data || {};
+    
+    console.log('Profile update - Is user from users database:', isUser);
+    console.log('Profile update - Existing data keys:', Object.keys(existing));
+
+    if (isUser) {
+      // Update users database
+      const userRef = db.ref(`users/${req.userId}`);
+      const userSnapshot = await userRef.once('value');
+      const userData = userSnapshot.val() || {};
+      const existingStudentInfo = userData.studentInfo || {};
+      
+      // Update user data structure
+      const updatedUserData = {
+        ...userData,
+        email: req.user.email || userData.email,
+        name: fullName !== undefined ? fullName : userData.name,
+        updatedAt: new Date().toISOString(),
+        studentInfo: {
+          ...existingStudentInfo,
+          gender: gender !== undefined ? gender : existingStudentInfo.gender,
+          studentNumber: studentNumber !== undefined ? studentNumber : existingStudentInfo.studentNumber,
+          batch: batch !== undefined ? batch : existingStudentInfo.batch,
+          address: address !== undefined ? address : existingStudentInfo.address,
+          contactNumber: contactNumber !== undefined ? contactNumber : existingStudentInfo.contactNumber,
+          birthday: birthday !== undefined ? birthday : existingStudentInfo.birthday
+        }
+      };
+      
+      // Update profile picture
+      if (profilePicture !== undefined) {
+        if (profilePicture === null || profilePicture === 'null') {
+          delete updatedUserData.profilePicture;
+        } else if (typeof profilePicture === 'string' && profilePicture.trim() !== '') {
+          updatedUserData.profilePicture = profilePicture;
+        }
+      }
+      
+      // Calculate profile completion based on actual fields filled
+      // When user updates profile, calculate properly (can reach 100%)
+      let completionScore = 0;
+      if (updatedUserData.email) completionScore += 15;
+      if (updatedUserData.name) completionScore += 15;
+      if (updatedUserData.studentInfo.gender) completionScore += 10;
+      if (updatedUserData.studentInfo.studentNumber) completionScore += 15;
+      if (updatedUserData.studentInfo.batch) completionScore += 10;
+      if (updatedUserData.studentInfo.address) completionScore += 10;
+      if (updatedUserData.studentInfo.contactNumber) completionScore += 10;
+      if (updatedUserData.studentInfo.birthday) completionScore += 15;
+      
+      updatedUserData.profileCompletion = completionScore;
+      
+      // Auto-verify if completion is 80%+ (but don't force 50% if user updates)
+      if (completionScore >= 80) {
+        updatedUserData.verified = true;
+      }
+      
+      await userRef.set(updatedUserData);
+      
+      const savedUserData = (await userRef.once('value')).val() || {};
+      const savedStudentInfo = savedUserData.studentInfo || {};
+      
+      return res.json({
+        success: true,
+        data: {
+          email: savedUserData.email || updatedUserData.email,
+          fullName: savedUserData.name || updatedUserData.name || '',
+          gender: savedStudentInfo.gender || updatedUserData.studentInfo.gender || '',
+          studentNumber: savedStudentInfo.studentNumber || updatedUserData.studentInfo.studentNumber || '',
+          batch: savedStudentInfo.batch || updatedUserData.studentInfo.batch || '',
+          address: savedStudentInfo.address || updatedUserData.studentInfo.address || '',
+          contactNumber: savedStudentInfo.contactNumber || updatedUserData.studentInfo.contactNumber || '',
+          birthday: savedStudentInfo.birthday || updatedUserData.studentInfo.birthday || '',
+          profilePicture: savedUserData.profilePicture || null,
+          profileCompletion: completionScore,
+          isVerified: savedUserData.verified || (completionScore >= 80)
+        }
+      });
+    }
+
+    // For students, update students database
     const studentRef = db.ref(`students/${req.userId}`);
     const snapshot = await studentRef.once('value');
-    const existing = snapshot.val() || {};
-    
-    console.log('Profile update - Existing data keys:', Object.keys(existing));
+    const studentExisting = snapshot.val() || {};
 
     // Ensure email is preserved
     const updatedData = {
-      ...existing,
-      email: req.user.email || existing.email,
-      fullName: fullName !== undefined ? fullName : existing.fullName,
-      gender: gender !== undefined ? gender : existing.gender,
-      studentNumber: studentNumber !== undefined ? studentNumber : existing.studentNumber,
-      batch: batch !== undefined ? batch : existing.batch,
-      address: address !== undefined ? address : existing.address,
-      contactNumber: contactNumber !== undefined ? contactNumber : existing.contactNumber,
-      birthday: birthday !== undefined ? birthday : existing.birthday,
+      ...studentExisting,
+      email: req.user.email || studentExisting.email,
+      fullName: fullName !== undefined ? fullName : studentExisting.fullName,
+      gender: gender !== undefined ? gender : studentExisting.gender,
+      studentNumber: studentNumber !== undefined ? studentNumber : studentExisting.studentNumber,
+      batch: batch !== undefined ? batch : studentExisting.batch,
+      address: address !== undefined ? address : studentExisting.address,
+      contactNumber: contactNumber !== undefined ? contactNumber : studentExisting.contactNumber,
+      birthday: birthday !== undefined ? birthday : studentExisting.birthday,
       updatedAt: new Date().toISOString()
     };
 
@@ -299,7 +496,8 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
     const savedData = verifySnapshot.val() || {};
     console.log('Profile saved. ProfilePicture in saved data:', savedData.hasOwnProperty('profilePicture') ? 'Yes (length: ' + (savedData.profilePicture?.length || 0) + ')' : 'No');
 
-    // Calculate profile completion
+    // Calculate profile completion based on actual fields filled
+    // When user updates profile, calculate properly (can reach 100%)
     let completionScore = 0;
     if (updatedData.email) completionScore += 15;
     if (updatedData.fullName) completionScore += 15;
@@ -310,7 +508,7 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
     if (updatedData.contactNumber) completionScore += 10;
     if (updatedData.birthday) completionScore += 15;
 
-    // Auto-verify if completion is 80%+
+    // Auto-verify if completion is 80%+ (but don't force 50% if user updates)
     if (completionScore >= 80) {
       updatedData.isVerified = true;
       await studentRef.set(updatedData);

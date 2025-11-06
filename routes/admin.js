@@ -59,17 +59,26 @@ router.put('/lessons/:slot', verifyAdminToken, async (req, res) => {
   }
 });
 
-// Get all quizzes (10 slots)
-router.get('/quizzes', verifyAdminToken, async (req, res) => {
+// Get all quizzes for a specific lesson (10 quizzes per lesson)
+// NOTE: This route MUST come before /quizzes to ensure proper matching
+router.get('/quizzes/:lesson', verifyAdminToken, async (req, res) => {
   try {
-    const quizzesRef = db.ref('quizzes');
+    const lesson = parseInt(req.params.lesson);
+    console.log(`Admin: Fetching quizzes for lesson ${lesson}`);
+    
+    if (isNaN(lesson) || lesson < 1 || lesson > 6) {
+      return res.status(400).json({ error: 'Invalid lesson number (1-6)' });
+    }
+
+    const quizzesRef = db.ref(`quizzes/lesson${lesson}`);
     const snapshot = await quizzesRef.once('value');
     let quizzes = snapshot.val() || {};
 
-    // Ensure we have 10 slots
+    // Ensure we have 10 quiz slots per lesson
     const quizzesArray = [];
     for (let i = 1; i <= 10; i++) {
       quizzesArray.push(quizzes[i] || {
+        lesson: lesson,
         slot: i,
         question: '',
         answerA: '',
@@ -80,19 +89,61 @@ router.get('/quizzes', verifyAdminToken, async (req, res) => {
       });
     }
 
-    res.json({ success: true, quizzes: quizzesArray });
+    console.log(`Admin: Returning ${quizzesArray.length} quizzes for lesson ${lesson}`);
+    res.json({ success: true, lesson: lesson, quizzes: quizzesArray });
   } catch (error) {
     console.error('Get quizzes error:', error);
+    res.status(500).json({ error: 'Failed to fetch quizzes', details: error.message });
+  }
+});
+
+// Get all quizzes for all lessons (for overview)
+// NOTE: This route must come AFTER /quizzes/:lesson
+router.get('/quizzes', verifyAdminToken, async (req, res) => {
+  try {
+    const allQuizzes = {};
+    
+    // Fetch quizzes for each lesson (1-6)
+    for (let lesson = 1; lesson <= 6; lesson++) {
+      const quizzesRef = db.ref(`quizzes/lesson${lesson}`);
+      const snapshot = await quizzesRef.once('value');
+      let quizzes = snapshot.val() || {};
+
+      // Ensure we have 10 quiz slots per lesson
+      const quizzesArray = [];
+      for (let i = 1; i <= 10; i++) {
+        quizzesArray.push(quizzes[i] || {
+          lesson: lesson,
+          slot: i,
+          question: '',
+          answerA: '',
+          answerB: '',
+          answerC: '',
+          answerD: '',
+          correctAnswer: ''
+        });
+      }
+      allQuizzes[lesson] = quizzesArray;
+    }
+
+    res.json({ success: true, quizzes: allQuizzes });
+  } catch (error) {
+    console.error('Get all quizzes error:', error);
     res.status(500).json({ error: 'Failed to fetch quizzes' });
   }
 });
 
-// Update a quiz
-router.put('/quizzes/:slot', verifyAdminToken, async (req, res) => {
+// Update a quiz for a specific lesson
+router.put('/quizzes/:lesson/:slot', verifyAdminToken, async (req, res) => {
   try {
+    const lesson = parseInt(req.params.lesson);
     const slot = parseInt(req.params.slot);
+    
+    if (lesson < 1 || lesson > 6) {
+      return res.status(400).json({ error: 'Invalid lesson number (1-6)' });
+    }
     if (slot < 1 || slot > 10) {
-      return res.status(400).json({ error: 'Invalid slot number (1-10)' });
+      return res.status(400).json({ error: 'Invalid quiz slot number (1-10)' });
     }
 
     const { question, answerA, answerB, answerC, answerD, correctAnswer } = req.body;
@@ -101,12 +152,13 @@ router.put('/quizzes/:slot', verifyAdminToken, async (req, res) => {
       return res.status(400).json({ error: 'Question is required' });
     }
 
-    const quizRef = db.ref(`quizzes/${slot}`);
+    const quizRef = db.ref(`quizzes/lesson${lesson}/${slot}`);
     const snapshot = await quizRef.once('value');
     const existing = snapshot.val() || {};
 
     await quizRef.set({
-      slot,
+      lesson: lesson,
+      slot: slot,
       question: question || existing.question || '',
       answerA: answerA !== undefined ? answerA : existing.answerA || '',
       answerB: answerB !== undefined ? answerB : existing.answerB || '',

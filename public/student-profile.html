@@ -132,7 +132,7 @@
         // Load profile data
         async function loadProfile() {
             try {
-                const response = await fetch('/api/student/profile', {
+                const response = await fetch('/api/user/profile', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -143,8 +143,8 @@
                 if (response.ok && data.data) {
                     const profile = data.data;
                     
-                    // Populate form fields
-                    if (profile.fullName) document.getElementById('fullName').value = profile.fullName;
+                    // Populate form fields (handle both name and fullName for compatibility)
+                    if (profile.name || profile.fullName) document.getElementById('fullName').value = profile.name || profile.fullName;
                     if (profile.gender) document.getElementById('gender').value = profile.gender;
                     if (profile.studentNumber) document.getElementById('studentNumber').value = profile.studentNumber;
                     if (profile.batch) document.getElementById('batch').value = profile.batch;
@@ -156,7 +156,7 @@
                     
                     // Update completion
                     updateCompletion(data.data.profileCompletion || 0);
-                    updateVerificationStatus(data.data.isVerified || false);
+                    updateVerificationStatus(data.data.isVerified || data.data.verified || false);
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
@@ -170,7 +170,8 @@
             e.preventDefault();
             
             const formData = {
-                fullName: document.getElementById('fullName').value,
+                name: document.getElementById('fullName').value, // Use 'name' for user routes
+                fullName: document.getElementById('fullName').value, // Also include for compatibility
                 gender: document.getElementById('gender').value,
                 studentNumber: document.getElementById('studentNumber').value,
                 batch: document.getElementById('batch').value,
@@ -182,7 +183,7 @@
             // Profile picture not included
 
             try {
-                const response = await fetch('/api/student/profile', {
+                const response = await fetch('/api/user/profile', {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -205,7 +206,7 @@
                 if (response.ok && data.success) {
                     alert('Profile updated successfully!');
                     updateCompletion(data.data.profileCompletion || 0);
-                    updateVerificationStatus(data.data.isVerified || false);
+                    updateVerificationStatus(data.data.isVerified || data.data.verified || false);
                     
                     // Profile picture UI removed; no preview updates
                     

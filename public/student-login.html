@@ -54,9 +54,13 @@
             errorDiv.style.display = 'none';
 
             try {
+                console.log('Attempting to sign in with Firebase...');
                 // Sign in with Firebase (client-side)
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                console.log('Firebase sign-in successful, getting ID token...');
+                
                 const idToken = await userCredential.user.getIdToken();
+                console.log('ID token obtained, sending to backend...');
 
                 // Verify with backend
                 const response = await fetch('/api/auth/student/login', {
@@ -67,18 +71,54 @@
                     body: JSON.stringify({ idToken })
                 });
 
+                console.log('Backend response status:', response.status);
                 const data = await response.json();
+                console.log('Backend response data:', data);
 
-                if (response.ok) {
+                if (response.ok && data.success) {
                     localStorage.setItem('studentToken', idToken);
                     localStorage.setItem('studentData', JSON.stringify(data.user));
+                    console.log('Login successful, redirecting...');
                     window.location.href = 'student-dashboard.html';
                 } else {
-                    errorDiv.textContent = data.error || 'Login failed';
+                    const errorMsg = data.error || data.details || 'Login failed';
+                    console.error('Login failed:', errorMsg);
+                    errorDiv.textContent = errorMsg;
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                errorDiv.textContent = error.message || 'Login failed';
+                console.error('Login error:', error);
+                let errorMsg = 'Login failed';
+                
+                // Handle Firebase Auth errors
+                if (error.code) {
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMsg = 'No account found with this email';
+                            break;
+                        case 'auth/wrong-password':
+                            errorMsg = 'Incorrect password';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMsg = 'Invalid email address';
+                            break;
+                        case 'auth/user-disabled':
+                            errorMsg = 'This account has been disabled';
+                            break;
+                        case 'auth/too-many-requests':
+                            errorMsg = 'Too many failed attempts. Please try again later';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMsg = 'Network error. Please check your connection';
+                            break;
+                        default:
+                            errorMsg = error.message || 'Login failed';
+                    }
+                } else {
+                    errorMsg = error.message || 'Login failed';
+                }
+                
+                errorDiv.textContent = errorMsg;
                 errorDiv.style.display = 'block';
             }
         });
