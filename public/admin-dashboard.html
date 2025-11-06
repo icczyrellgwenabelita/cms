@@ -94,37 +94,37 @@
                 </div>
                 <div class="form-group">
                     <label for="quizQuestion">Question *</label>
-                    <textarea id="quizQuestion" rows="3" maxlength="80" required></textarea>
+                    <textarea id="quizQuestion" rows="3" maxlength="90" required></textarea>
                     <div class="char-counter">
-                        <span id="questionCharCount">0</span>/80
+                        <span id="questionCharCount">0</span>/90
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerA">Answer A *</label>
-                    <input type="text" id="quizAnswerA" maxlength="25" required>
+                    <input type="text" id="quizAnswerA" maxlength="30" required>
                     <div class="char-counter">
-                        <span id="answerACharCount">0</span>/25
+                        <span id="answerACharCount">0</span>/30
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerB">Answer B *</label>
-                    <input type="text" id="quizAnswerB" maxlength="25" required>
+                    <input type="text" id="quizAnswerB" maxlength="30" required>
                     <div class="char-counter">
-                        <span id="answerBCharCount">0</span>/25
+                        <span id="answerBCharCount">0</span>/30
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerC">Answer C *</label>
-                    <input type="text" id="quizAnswerC" maxlength="25" required>
+                    <input type="text" id="quizAnswerC" maxlength="30" required>
                     <div class="char-counter">
-                        <span id="answerCCharCount">0</span>/25
+                        <span id="answerCCharCount">0</span>/30
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="quizAnswerD">Answer D *</label>
-                    <input type="text" id="quizAnswerD" maxlength="25" required>
+                    <input type="text" id="quizAnswerD" maxlength="30" required>
                     <div class="char-counter">
-                        <span id="answerDCharCount">0</span>/25
+                        <span id="answerDCharCount">0</span>/30
                     </div>
                 </div>
                 <div class="form-group">
@@ -136,6 +136,13 @@
                         <option value="C">C</option>
                         <option value="D">D</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="quizExplanation">Explanation</label>
+                    <textarea id="quizExplanation" rows="3" maxlength="80" placeholder="Enter explanation (max 80 characters)"></textarea>
+                    <div class="char-counter">
+                        <span id="explanationCharCount">0</span>/80
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="closeQuizModal()">Cancel</button>
@@ -289,6 +296,10 @@
                                                 <span>(Not set)</span>
                                             </div>
                                         </div>
+                                        <div class="explanation-section">
+                                            <label class="explanation-label">Explanation:</label>
+                                            <div class="explanation-text"><span class="explanation-empty">No explanation set. Click Edit to add one.</span></div>
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -305,26 +316,30 @@
                                             <span class="quiz-number">Question ${quiz.slot}</span>
                                             <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${quiz.slot})">Edit</button>
                                         </div>
-                                        <h3 class="quiz-question">${(quiz.question && quiz.question.length > 80) ? quiz.question.substring(0, 80) + '...' : (quiz.question || '(No question set)')}</h3>
+                                        <h3 class="quiz-question">${quiz.question || '(No question set)'}</h3>
                                         <div class="quiz-answers">
                                             <div class="answer-item ${quiz.correctAnswer === 'A' ? 'correct' : ''}">
                                                 <span class="answer-label">A:</span>
-                                                <span>${(quiz.answerA && quiz.answerA.length > 25) ? quiz.answerA.substring(0, 25) + '...' : (quiz.answerA || '(Not set)')}</span>
+                                                <span>${quiz.answerA || '(Not set)'}</span>
                                             </div>
                                             <div class="answer-item ${quiz.correctAnswer === 'B' ? 'correct' : ''}">
                                                 <span class="answer-label">B:</span>
-                                                <span>${(quiz.answerB && quiz.answerB.length > 25) ? quiz.answerB.substring(0, 25) + '...' : (quiz.answerB || '(Not set)')}</span>
+                                                <span>${quiz.answerB || '(Not set)'}</span>
                                             </div>
                                             <div class="answer-item ${quiz.correctAnswer === 'C' ? 'correct' : ''}">
                                                 <span class="answer-label">C:</span>
-                                                <span>${(quiz.answerC && quiz.answerC.length > 25) ? quiz.answerC.substring(0, 25) + '...' : (quiz.answerC || '(Not set)')}</span>
+                                                <span>${quiz.answerC || '(Not set)'}</span>
                                             </div>
                                             <div class="answer-item ${quiz.correctAnswer === 'D' ? 'correct' : ''}">
                                                 <span class="answer-label">D:</span>
-                                                <span>${(quiz.answerD && quiz.answerD.length > 25) ? quiz.answerD.substring(0, 25) + '...' : (quiz.answerD || '(Not set)')}</span>
+                                                <span>${quiz.answerD || '(Not set)'}</span>
                                             </div>
                                         </div>
-                                        ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct: ${quiz.correctAnswer}</div>` : ''}
+                                        ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct Answer: ${quiz.correctAnswer}</div>` : ''}
+                                        <div class="explanation-section">
+                                            <label class="explanation-label">Explanation:</label>
+                                            <div class="explanation-text">${quiz.explanation || '<span class="explanation-empty">No explanation set. Click Edit to add one.</span>'}</div>
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -441,16 +456,18 @@
                     document.getElementById('quizAnswerC').value = quiz.answerC || '';
                     document.getElementById('quizAnswerD').value = quiz.answerD || '';
                     document.getElementById('quizCorrectAnswer').value = quiz.correctAnswer || '';
+                    document.getElementById('quizExplanation').value = quiz.explanation || '';
                     document.getElementById('quizModalTitle').textContent = `Edit Question ${slot} - ${lessonName}`;
                     document.getElementById('quizModal').style.display = 'flex';
                     
                     // Update character counters and setup event listeners
                     setTimeout(() => {
-                        updateCharCount('quizQuestion', 'questionCharCount', 80);
-                        updateCharCount('quizAnswerA', 'answerACharCount', 25);
-                        updateCharCount('quizAnswerB', 'answerBCharCount', 25);
-                        updateCharCount('quizAnswerC', 'answerCCharCount', 25);
-                        updateCharCount('quizAnswerD', 'answerDCharCount', 25);
+                        updateCharCount('quizQuestion', 'questionCharCount', 90);
+                        updateCharCount('quizAnswerA', 'answerACharCount', 30);
+                        updateCharCount('quizAnswerB', 'answerBCharCount', 30);
+                        updateCharCount('quizAnswerC', 'answerCCharCount', 30);
+                        updateCharCount('quizAnswerD', 'answerDCharCount', 30);
+                        updateCharCount('quizExplanation', 'explanationCharCount', 80);
                         setupCharCounters();
                     }, 100);
                 }
@@ -486,28 +503,91 @@
             
             if (questionInput) {
                 questionInput.addEventListener('input', function() {
-                    updateCharCount('quizQuestion', 'questionCharCount', 80);
+                    updateCharCount('quizQuestion', 'questionCharCount', 90);
                 });
             }
             if (answerAInput) {
                 answerAInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerA', 'answerACharCount', 25);
+                    updateCharCount('quizAnswerA', 'answerACharCount', 30);
                 });
             }
             if (answerBInput) {
                 answerBInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerB', 'answerBCharCount', 25);
+                    updateCharCount('quizAnswerB', 'answerBCharCount', 30);
                 });
             }
             if (answerCInput) {
                 answerCInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerC', 'answerCCharCount', 25);
+                    updateCharCount('quizAnswerC', 'answerCCharCount', 30);
                 });
             }
             if (answerDInput) {
                 answerDInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerD', 'answerDCharCount', 25);
+                    updateCharCount('quizAnswerD', 'answerDCharCount', 30);
                 });
+            }
+            
+            const explanationInput = document.getElementById('quizExplanation');
+            if (explanationInput) {
+                explanationInput.addEventListener('input', function() {
+                    updateCharCount('quizExplanation', 'explanationCharCount', 80);
+                });
+            }
+        }
+        
+        // Function to update explanation character count in quiz cards
+        function updateExplanationCharCount(input, counterId) {
+            const counter = document.getElementById(counterId);
+            if (counter) {
+                const currentLength = input.value.length;
+                counter.textContent = currentLength;
+                if (currentLength >= 80) {
+                    counter.parentElement.classList.add('char-limit-reached');
+                } else {
+                    counter.parentElement.classList.remove('char-limit-reached');
+                }
+            }
+        }
+        
+        // Function to save explanation inline
+        async function saveExplanation(lesson, slot, explanation) {
+            try {
+                // Get current quiz data
+                const response = await fetch(`/api/admin/quizzes/${lesson}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const quiz = data.quizzes.find(q => q.slot === slot);
+                    
+                    // Update quiz with new explanation
+                    const updateResponse = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            question: quiz.question || '',
+                            answerA: quiz.answerA || '',
+                            answerB: quiz.answerB || '',
+                            answerC: quiz.answerC || '',
+                            answerD: quiz.answerD || '',
+                            correctAnswer: quiz.correctAnswer || '',
+                            explanation: explanation
+                        })
+                    });
+                    
+                    const updateData = await updateResponse.json();
+                    if (updateResponse.ok && updateData.success) {
+                        console.log('Explanation saved successfully');
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving explanation:', error);
             }
         }
         
@@ -524,11 +604,12 @@
             document.getElementById('quizModal').style.display = 'none';
             document.getElementById('quizForm').reset();
             // Reset character counters
-            updateCharCount('quizQuestion', 'questionCharCount', 80);
-            updateCharCount('quizAnswerA', 'answerACharCount', 25);
-            updateCharCount('quizAnswerB', 'answerBCharCount', 25);
-            updateCharCount('quizAnswerC', 'answerCCharCount', 25);
-            updateCharCount('quizAnswerD', 'answerDCharCount', 25);
+            updateCharCount('quizQuestion', 'questionCharCount', 90);
+            updateCharCount('quizAnswerA', 'answerACharCount', 30);
+            updateCharCount('quizAnswerB', 'answerBCharCount', 30);
+            updateCharCount('quizAnswerC', 'answerCCharCount', 30);
+            updateCharCount('quizAnswerD', 'answerDCharCount', 30);
+            updateCharCount('quizExplanation', 'explanationCharCount', 80);
         }
 
         async function saveQuiz(e) {
@@ -541,6 +622,7 @@
             const answerC = document.getElementById('quizAnswerC').value;
             const answerD = document.getElementById('quizAnswerD').value;
             const correctAnswer = document.getElementById('quizCorrectAnswer').value;
+            const explanation = document.getElementById('quizExplanation').value;
 
             try {
                 const response = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
@@ -555,7 +637,8 @@
                         answerB,
                         answerC,
                         answerD,
-                        correctAnswer
+                        correctAnswer,
+                        explanation
                     })
                 });
 

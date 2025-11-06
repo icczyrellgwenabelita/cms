@@ -70,23 +70,58 @@ router.get('/quizzes/:lesson', verifyAdminToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid lesson number (1-6)' });
     }
 
-    const quizzesRef = db.ref(`quizzes/lesson${lesson}`);
-    const snapshot = await quizzesRef.once('value');
-    let quizzes = snapshot.val() || {};
+    // Fetch from lessons database - questions are nested under lesson1, lesson2, etc.
+    const questionsRef = db.ref(`lessons/lesson${lesson}/questions`);
+    const snapshot = await questionsRef.once('value');
+    let questions = snapshot.val() || {};
+    
+    console.log(`Admin: Raw questions data for lesson ${lesson}:`, JSON.stringify(questions, null, 2));
+    console.log(`Admin: Questions keys:`, questions ? Object.keys(questions) : 'none');
 
-    // Ensure we have 10 quiz slots per lesson
+    // Convert database format to UI format
+    // Database: questions/{index} with questionText, choices[], correctIndex, explanation
+    // UI: slot (1-10), question, answerA/B/C/D, correctAnswer (A/B/C/D), explanation
     const quizzesArray = [];
-    for (let i = 1; i <= 10; i++) {
-      quizzesArray.push(quizzes[i] || {
-        lesson: lesson,
-        slot: i,
-        question: '',
-        answerA: '',
-        answerB: '',
-        answerC: '',
-        answerD: '',
-        correctAnswer: ''
-      });
+    for (let i = 0; i < 10; i++) {
+      const questionData = questions[i];
+      const slot = i + 1; // UI uses 1-10, DB uses 0-9
+      
+      if (questionData) {
+        const choices = questionData.choices || [];
+        const correctIndex = questionData.correctIndex !== undefined ? questionData.correctIndex : -1;
+        const correctAnswer = correctIndex >= 0 && correctIndex <= 3 ? ['A', 'B', 'C', 'D'][correctIndex] : '';
+        
+        console.log(`Admin: Processing question ${i}:`, {
+          questionText: questionData.questionText,
+          choices: choices,
+          correctIndex: correctIndex,
+          correctAnswer: correctAnswer
+        });
+        
+        quizzesArray.push({
+          lesson: lesson,
+          slot: slot,
+          question: questionData.questionText || '',
+          answerA: choices[0] || '',
+          answerB: choices[1] || '',
+          answerC: choices[2] || '',
+          answerD: choices[3] || '',
+          correctAnswer: correctAnswer,
+          explanation: questionData.explanation || ''
+        });
+      } else {
+        quizzesArray.push({
+          lesson: lesson,
+          slot: slot,
+          question: '',
+          answerA: '',
+          answerB: '',
+          answerC: '',
+          answerD: '',
+          correctAnswer: '',
+          explanation: ''
+        });
+      }
     }
 
     console.log(`Admin: Returning ${quizzesArray.length} quizzes for lesson ${lesson}`);
@@ -105,23 +140,45 @@ router.get('/quizzes', verifyAdminToken, async (req, res) => {
     
     // Fetch quizzes for each lesson (1-6)
     for (let lesson = 1; lesson <= 6; lesson++) {
-      const quizzesRef = db.ref(`quizzes/lesson${lesson}`);
-      const snapshot = await quizzesRef.once('value');
-      let quizzes = snapshot.val() || {};
+      const questionsRef = db.ref(`lessons/lesson${lesson}/questions`);
+      const snapshot = await questionsRef.once('value');
+      let questions = snapshot.val() || {};
 
-      // Ensure we have 10 quiz slots per lesson
+      // Convert database format to UI format
       const quizzesArray = [];
-      for (let i = 1; i <= 10; i++) {
-        quizzesArray.push(quizzes[i] || {
-          lesson: lesson,
-          slot: i,
-          question: '',
-          answerA: '',
-          answerB: '',
-          answerC: '',
-          answerD: '',
-          correctAnswer: ''
-        });
+      for (let i = 0; i < 10; i++) {
+        const questionData = questions[i];
+        const slot = i + 1;
+        
+        if (questionData) {
+          const choices = questionData.choices || [];
+          const correctIndex = questionData.correctIndex !== undefined ? questionData.correctIndex : -1;
+          const correctAnswer = correctIndex >= 0 && correctIndex <= 3 ? ['A', 'B', 'C', 'D'][correctIndex] : '';
+          
+          quizzesArray.push({
+            lesson: lesson,
+            slot: slot,
+            question: questionData.questionText || '',
+            answerA: choices[0] || '',
+            answerB: choices[1] || '',
+            answerC: choices[2] || '',
+            answerD: choices[3] || '',
+            correctAnswer: correctAnswer,
+            explanation: questionData.explanation || ''
+          });
+        } else {
+          quizzesArray.push({
+            lesson: lesson,
+            slot: slot,
+            question: '',
+            answerA: '',
+            answerB: '',
+            answerC: '',
+            answerD: '',
+            correctAnswer: '',
+            explanation: ''
+          });
+        }
       }
       allQuizzes[lesson] = quizzesArray;
     }
@@ -146,25 +203,35 @@ router.put('/quizzes/:lesson/:slot', verifyAdminToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid quiz slot number (1-10)' });
     }
 
-    const { question, answerA, answerB, answerC, answerD, correctAnswer } = req.body;
+    const { question, answerA, answerB, answerC, answerD, correctAnswer, explanation } = req.body;
     
     if (!question) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
-    const quizRef = db.ref(`quizzes/lesson${lesson}/${slot}`);
-    const snapshot = await quizRef.once('value');
+    // Convert UI format to database format
+    // UI: slot (1-10), question, answerA/B/C/D, correctAnswer (A/B/C/D), explanation
+    // Database: questions/{index (0-9)} with questionText, choices[], correctIndex (0-3), explanation
+    const questionIndex = slot - 1; // Convert 1-10 to 0-9
+    const correctIndexMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+    const correctIndex = correctIndexMap[correctAnswer] !== undefined ? correctIndexMap[correctAnswer] : -1;
+    
+    const choices = [
+      answerA || '',
+      answerB || '',
+      answerC || '',
+      answerD || ''
+    ];
+
+    const questionRef = db.ref(`lessons/lesson${lesson}/questions/${questionIndex}`);
+    const snapshot = await questionRef.once('value');
     const existing = snapshot.val() || {};
 
-    await quizRef.set({
-      lesson: lesson,
-      slot: slot,
-      question: question || existing.question || '',
-      answerA: answerA !== undefined ? answerA : existing.answerA || '',
-      answerB: answerB !== undefined ? answerB : existing.answerB || '',
-      answerC: answerC !== undefined ? answerC : existing.answerC || '',
-      answerD: answerD !== undefined ? answerD : existing.answerD || '',
-      correctAnswer: correctAnswer || existing.correctAnswer || '',
+    await questionRef.set({
+      questionText: question || existing.questionText || '',
+      choices: choices,
+      correctIndex: correctIndex !== -1 ? correctIndex : (existing.correctIndex !== undefined ? existing.correctIndex : 0),
+      explanation: explanation !== undefined ? explanation : (existing.explanation || ''),
       updatedAt: new Date().toISOString()
     });
 

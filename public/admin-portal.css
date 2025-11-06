@@ -348,6 +348,36 @@ body.admin-portal,
     border-radius: 20px;
     display: inline-block;
     margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+/* Explanation Section */
+.explanation-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.explanation-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 6px;
+}
+
+.explanation-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1E293B;
+    padding: 8px 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.explanation-empty {
+    color: #94A3B8;
+    font-style: italic;
 }
 
 /* Buttons */
