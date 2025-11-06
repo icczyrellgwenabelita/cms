@@ -5,28 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
-<body>
-    <div class="container">
-        <h2>Student Login</h2>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required>
-            </div>
-            <div class="error" id="error"></div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
-        </form>
-        <p style="text-align: center; margin-top: 20px;">
-            <a href="index.html">Back to Home</a>
-        </p>
+<body class="admin-portal">
+    <div class="login-container">
+        <div class="login-card">
+            <h2>ASAT Student Portal</h2>
+            <form id="loginForm" style="display: block;">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="error" id="error"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+            
+        </div>
     </div>
+
+    <style>
+        body.admin-portal {
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 30%, #A7F3D0 65%, #86EFAC 100%);
+            background-attachment: fixed;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: transparent;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(22, 163, 74, 0.15);
+            border: 1px solid rgba(22, 163, 74, 0.08);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            color: #16A34A;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 30px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1E293B;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1E293B;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4ADE80;
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+        }
+
+        .error {
+            display: none;
+            padding: 10px;
+            background: #FEE2E2;
+            color: #DC2626;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4ADE80;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #16A34A;
+            transform: translateY(-1px);
+        }
+    </style>
 
     <script>
         // Initialize Firebase

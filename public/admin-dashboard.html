@@ -139,10 +139,7 @@
                 </div>
                 <div class="form-group">
                     <label for="quizExplanation">Explanation</label>
-                    <textarea id="quizExplanation" rows="3" maxlength="80" placeholder="Enter explanation (max 80 characters)"></textarea>
-                    <div class="char-counter">
-                        <span id="explanationCharCount">0</span>/80
-                    </div>
+                    <textarea id="quizExplanation" rows="4" placeholder="Enter explanation"></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="closeQuizModal()">Cancel</button>
@@ -467,7 +464,6 @@
                         updateCharCount('quizAnswerB', 'answerBCharCount', 30);
                         updateCharCount('quizAnswerC', 'answerCCharCount', 30);
                         updateCharCount('quizAnswerD', 'answerDCharCount', 30);
-                        updateCharCount('quizExplanation', 'explanationCharCount', 80);
                         setupCharCounters();
                     }, 100);
                 }
@@ -527,27 +523,10 @@
                 });
             }
             
-            const explanationInput = document.getElementById('quizExplanation');
-            if (explanationInput) {
-                explanationInput.addEventListener('input', function() {
-                    updateCharCount('quizExplanation', 'explanationCharCount', 80);
-                });
-            }
+            // No character limit for explanation; no counter needed
         }
         
-        // Function to update explanation character count in quiz cards
-        function updateExplanationCharCount(input, counterId) {
-            const counter = document.getElementById(counterId);
-            if (counter) {
-                const currentLength = input.value.length;
-                counter.textContent = currentLength;
-                if (currentLength >= 80) {
-                    counter.parentElement.classList.add('char-limit-reached');
-                } else {
-                    counter.parentElement.classList.remove('char-limit-reached');
-                }
-            }
-        }
+        // Explanation field intentionally has no character limit
         
         // Function to save explanation inline
         async function saveExplanation(lesson, slot, explanation) {
@@ -609,7 +588,7 @@
             updateCharCount('quizAnswerB', 'answerBCharCount', 30);
             updateCharCount('quizAnswerC', 'answerCCharCount', 30);
             updateCharCount('quizAnswerD', 'answerDCharCount', 30);
-            updateCharCount('quizExplanation', 'explanationCharCount', 80);
+            // No explanation counter to reset
         }
 
         async function saveQuiz(e) {

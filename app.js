@@ -39,7 +39,7 @@ app.use((err, req, res, next) => {
 
 // Serve frontend pages
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.redirect('/student-login.html');
 });
 
 // Catch-all for undefined API routes - return JSON error (must be last)
