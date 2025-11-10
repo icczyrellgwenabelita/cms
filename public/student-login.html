@@ -167,7 +167,7 @@
                     localStorage.setItem('studentToken', idToken);
                     localStorage.setItem('studentData', JSON.stringify(data.user));
                     console.log('Login successful, redirecting...');
-                    window.location.href = 'student-dashboard.html';
+                    window.location.href = '/student-dashboard';
                 } else {
                     const errorMsg = data.error || data.details || 'Login failed';
                     console.error('Login failed:', errorMsg);

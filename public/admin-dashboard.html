@@ -17,7 +17,7 @@
             </div>
             <div class="header-right">
                 <nav class="nav-tabs">
-                    <a href="admin-dashboard.html" class="nav-tab active">Dashboard</a>
+                    <a href="/admin-dashboard" class="nav-tab active">Dashboard</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
@@ -151,7 +151,7 @@
         const token = localStorage.getItem('adminToken');
         
         if (!token) {
-            window.location.href = 'admin-login.html';
+            window.location.href = '/admin-login';
         }
         async function loadLessons() {
             try {
@@ -596,7 +596,7 @@
         function logout() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminData');
-            window.location.href = 'admin-login.html';
+            window.location.href = '/admin-login';
         }
         window.onclick = function(event) {
             const lessonModal = document.getElementById('lessonModal');

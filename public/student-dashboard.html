@@ -16,8 +16,8 @@
             </div>
             <div class="header-right">
                 <nav class="nav-tabs">
-                    <a href="student-dashboard.html" class="nav-tab active">Dashboard</a>
-                    <a href="student-profile.html" class="nav-tab">Profile</a>
+                    <a href="/student-dashboard" class="nav-tab active">Dashboard</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
@@ -126,7 +126,7 @@
         const token = localStorage.getItem('studentToken');
         
         if (!token) {
-            window.location.href = 'student-login.html';
+            window.location.href = '/student-login';
         }
         async function loadDashboard() {
             try {
@@ -372,7 +372,7 @@
             alert(`Downloading certificate ${certId}`);
         }
         function goToProfile() {
-            window.location.href = 'student-profile.html';
+            window.location.href = '/student-profile';
         }
         window.loadDashboard = loadDashboard;
         function toggleProfileMenu() {
@@ -381,7 +381,7 @@
         function logout() {
             localStorage.removeItem('studentToken');
             localStorage.removeItem('studentData');
-            window.location.href = 'student-login.html';
+            window.location.href = '/student-login';
         }
         function showHistory(lessonSlot, historyData) {
             const historyModal = document.getElementById('historyModal');
