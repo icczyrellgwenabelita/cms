@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASAT Admin Portal</title>
+    <title>CareSim Admin Portal</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="admin-portal.css">
 </head>
@@ -11,7 +11,10 @@
     <!-- Header / Navigation -->
     <header class="portal-header">
         <div class="header-content">
-            <div class="logo">ASAT Admin</div>
+            <div class="logo">
+                <img src="caresimm.png" alt="CareSim" class="header-logo">
+                <span class="logo-text">Admin</span>
+            </div>
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="admin-dashboard.html" class="nav-tab active">Dashboard</a>
@@ -20,7 +23,6 @@
             </div>
         </div>
     </header>
-
     <div class="portal-container">
         <!-- Main Content Area -->
         <main class="main-content">
@@ -33,7 +35,6 @@
                     <!-- Lesson cards will be inserted here -->
                 </div>
             </section>
-
             <!-- Quizzes Management Section -->
             <section class="quizzes-section">
                 <div class="section-header">
@@ -52,7 +53,6 @@
             </section>
         </main>
     </div>
-
     <!-- Lesson Edit Modal -->
     <div id="lessonModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -77,7 +77,6 @@
             </form>
         </div>
     </div>
-
     <!-- Quiz Edit Modal -->
     <div id="quizModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -148,15 +147,12 @@
             </form>
         </div>
     </div>
-
     <script>
         const token = localStorage.getItem('adminToken');
         
         if (!token) {
             window.location.href = 'admin-login.html';
         }
-
-        // Load lessons and quizzes
         async function loadLessons() {
             try {
                 const response = await fetch('/api/admin/lessons', {
@@ -164,9 +160,7 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-
                 const data = await response.json();
-
                 if (response.ok && data.success) {
                     const container = document.getElementById('lessonsContainer');
                     container.innerHTML = data.lessons.map(lesson => `
@@ -188,11 +182,8 @@
                 console.error('Error loading lessons:', error);
             }
         }
-
-        let currentLesson = 1; // Track currently selected lesson
-        let lessonsData = []; // Store lesson names
-
-        // Helper function to get lesson name with format "Lesson X: Lesson Name"
+        let currentLesson = 1;
+        let lessonsData = [];
         function getLessonDisplayName(lessonSlot) {
             const lessonNames = {
                 1: 'Monitoring Vital Signs',
@@ -204,8 +195,6 @@
             };
             return `Lesson ${lessonSlot}: ${lessonNames[lessonSlot] || `Lesson ${lessonSlot}`}`;
         }
-
-        // Load lessons first to get names for tabs
         async function loadLessonsForTabs() {
             try {
                 const response = await fetch('/api/admin/lessons', {
@@ -213,7 +202,6 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-
                 const data = await response.json();
                 if (response.ok && data.success) {
                     lessonsData = data.lessons;
@@ -223,8 +211,6 @@
                 console.error('Error loading lessons for tabs:', error);
             }
         }
-
-        // Render lesson tabs
         function renderLessonTabs() {
             const tabsContainer = document.getElementById('lessonTabs');
             tabsContainer.innerHTML = lessonsData.map(lesson => {
@@ -237,14 +223,11 @@
                 `;
             }).join('');
         }
-
-        // Select a lesson tab
         function selectLesson(lessonSlot) {
             currentLesson = lessonSlot;
             renderLessonTabs();
             loadQuizzes(lessonSlot);
         }
-
         async function loadQuizzes(lessonSlot = currentLesson) {
             try {
                 console.log(`Loading quizzes for lesson ${lessonSlot}`);
@@ -253,11 +236,9 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-
                 console.log(`Response status: ${response.status}`);
                 const data = await response.json();
                 console.log('Response data:', data);
-
                 if (response.ok && data.success) {
                     const container = document.getElementById('quizzesContainer');
                     const lessonName = getLessonDisplayName(lessonSlot);
@@ -369,7 +350,6 @@
                 `;
             }
         }
-
         function editLesson(slot) {
             fetch(`/api/admin/lessons`, {
                 headers: {
@@ -392,18 +372,15 @@
                 alert('Failed to load lesson data');
             });
         }
-
         function closeLessonModal() {
             document.getElementById('lessonModal').style.display = 'none';
             document.getElementById('lessonForm').reset();
         }
-
         async function saveLesson(e) {
             e.preventDefault();
             const slot = parseInt(document.getElementById('lessonSlot').value);
             const lessonName = document.getElementById('lessonName').value;
             const lessonDescription = document.getElementById('lessonDescription').value;
-
             try {
                 const response = await fetch(`/api/admin/lessons/${slot}`, {
                     method: 'PUT',
@@ -416,9 +393,7 @@
                         lessonDescription
                     })
                 });
-
                 const data = await response.json();
-
                 if (response.ok && data.success) {
                     alert('Lesson saved successfully!');
                     closeLessonModal();
@@ -431,7 +406,6 @@
                 alert('Failed to save lesson');
             }
         }
-
         function editQuiz(lesson, slot) {
             fetch(`/api/admin/quizzes/${lesson}`, {
                 headers: {
@@ -457,7 +431,6 @@
                     document.getElementById('quizModalTitle').textContent = `Edit Question ${slot} - ${lessonName}`;
                     document.getElementById('quizModal').style.display = 'flex';
                     
-                    // Update character counters and setup event listeners
                     setTimeout(() => {
                         updateCharCount('quizQuestion', 'questionCharCount', 90);
                         updateCharCount('quizAnswerA', 'answerACharCount', 30);
@@ -474,7 +447,6 @@
             });
         }
         
-        // Function to update character counter
         function updateCharCount(inputId, counterId, maxLength) {
             const input = document.getElementById(inputId);
             const counter = document.getElementById(counterId);
@@ -489,7 +461,6 @@
             }
         }
         
-        // Initialize character counter event listeners
         function setupCharCounters() {
             const questionInput = document.getElementById('quizQuestion');
             const answerAInput = document.getElementById('quizAnswerA');
@@ -523,15 +494,11 @@
                 });
             }
             
-            // No character limit for explanation; no counter needed
         }
         
-        // Explanation field intentionally has no character limit
         
-        // Function to save explanation inline
         async function saveExplanation(lesson, slot, explanation) {
             try {
-                // Get current quiz data
                 const response = await fetch(`/api/admin/quizzes/${lesson}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -542,7 +509,6 @@
                 if (data.success) {
                     const quiz = data.quizzes.find(q => q.slot === slot);
                     
-                    // Update quiz with new explanation
                     const updateResponse = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
                         method: 'PUT',
                         headers: {
@@ -570,7 +536,6 @@
             }
         }
         
-        // Setup counters when page loads (if elements exist)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(setupCharCounters, 100);
@@ -578,19 +543,15 @@
         } else {
             setTimeout(setupCharCounters, 100);
         }
-
         function closeQuizModal() {
             document.getElementById('quizModal').style.display = 'none';
             document.getElementById('quizForm').reset();
-            // Reset character counters
             updateCharCount('quizQuestion', 'questionCharCount', 90);
             updateCharCount('quizAnswerA', 'answerACharCount', 30);
             updateCharCount('quizAnswerB', 'answerBCharCount', 30);
             updateCharCount('quizAnswerC', 'answerCCharCount', 30);
             updateCharCount('quizAnswerD', 'answerDCharCount', 30);
-            // No explanation counter to reset
         }
-
         async function saveQuiz(e) {
             e.preventDefault();
             const lesson = parseInt(document.getElementById('quizLesson').value);
@@ -602,7 +563,6 @@
             const answerD = document.getElementById('quizAnswerD').value;
             const correctAnswer = document.getElementById('quizCorrectAnswer').value;
             const explanation = document.getElementById('quizExplanation').value;
-
             try {
                 const response = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
                     method: 'PUT',
@@ -620,9 +580,7 @@
                         explanation
                     })
                 });
-
                 const data = await response.json();
-
                 if (response.ok && data.success) {
                     alert('Quiz saved successfully!');
                     closeQuizModal();
@@ -635,14 +593,11 @@
                 alert('Failed to save quiz');
             }
         }
-
         function logout() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminData');
             window.location.href = 'admin-login.html';
         }
-
-        // Close modals on outside click
         window.onclick = function(event) {
             const lessonModal = document.getElementById('lessonModal');
             const quizModal = document.getElementById('quizModal');
@@ -653,8 +608,6 @@
                 closeQuizModal();
             }
         }
-
-        // Load data on page load
         loadLessons();
         loadLessonsForTabs().then(() => {
             loadQuizzes(currentLesson);

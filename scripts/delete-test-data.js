@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// Initialize Firebase Admin
 try {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -23,11 +22,9 @@ async function deleteTestData() {
   try {
     console.log('Starting to delete test data...');
 
-    // 1. Delete class statistics
     await db.ref('classStats/lessons').remove();
     console.log('✓ Deleted class statistics');
 
-    // 2. Get all students and delete their lesson progress
     const studentsRef = db.ref('students');
     const studentsSnapshot = await studentsRef.once('value');
     const students = studentsSnapshot.val() || {};
@@ -36,11 +33,9 @@ async function deleteTestData() {
       console.log(`\nFound ${Object.keys(students).length} student(s)`);
       
       for (const studentId of Object.keys(students)) {
-        // Delete lesson progress for each student
         await db.ref(`students/${studentId}/lessonProgress`).remove();
         console.log(`✓ Deleted lesson progress for student: ${studentId}`);
         
-        // Delete test certificates for each student
         await db.ref(`students/${studentId}/certificates`).remove();
         console.log(`✓ Deleted certificates for student: ${studentId}`);
       }
@@ -60,4 +55,4 @@ async function deleteTestData() {
 }
 
 deleteTestData();
-
+

@@ -1,6 +1,5 @@
 const { auth } = require('../config/firebase');
 
-// Middleware to verify Firebase ID token (for students)
 const verifyStudentToken = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split('Bearer ')[1];
@@ -19,7 +18,6 @@ const verifyStudentToken = async (req, res, next) => {
   }
 };
 
-// Middleware to verify admin JWT token
 const verifyAdminToken = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split('Bearer ')[1];
@@ -38,4 +36,4 @@ const verifyAdminToken = (req, res, next) => {
 };
 
 module.exports = { verifyStudentToken, verifyAdminToken };
-
+

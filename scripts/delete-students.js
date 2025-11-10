@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// Initialize Firebase Admin
 try {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -26,7 +25,6 @@ async function deleteStudents() {
     console.log('='.repeat(60));
     console.log(`Database URL: ${process.env.FIREBASE_DATABASE_URL}\n`);
 
-    // Get all students before deletion
     const studentsRef = db.ref('students');
     const studentsSnapshot = await studentsRef.once('value');
     const students = studentsSnapshot.val() || {};
@@ -46,14 +44,12 @@ async function deleteStudents() {
     console.log(`\n⚠ WARNING: This will delete ALL ${studentCount} student(s) from the database!`);
     console.log('⚠ Users database will remain untouched.\n');
 
-    // Delete all students
     await studentsRef.remove();
     
     console.log('✅ Successfully deleted all students from database!');
     console.log(`✅ Deleted ${studentCount} student(s)`);
     console.log('✅ Users database remains intact');
     
-    // Verify deletion
     const verifySnapshot = await studentsRef.once('value');
     const remainingStudents = verifySnapshot.val();
     
@@ -77,4 +73,4 @@ async function deleteStudents() {
 deleteStudents();
 
 
-
+

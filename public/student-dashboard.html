@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASAT Student Portal</title>
+    <title>CareSim Student Portal</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="student-portal.css">
 </head>
@@ -11,7 +11,9 @@
     <!-- Header / Navigation -->
     <header class="portal-header">
         <div class="header-content">
-            <div class="logo">ASAT</div>
+            <div class="logo">
+                <img src="caresimm.png" alt="CareSim" class="header-logo">
+            </div>
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="student-dashboard.html" class="nav-tab active">Dashboard</a>
@@ -21,7 +23,6 @@
             </div>
         </div>
     </header>
-
     <div class="portal-container">
         <!-- Profile Section (Left Sidebar) -->
         <aside class="profile-sidebar">
@@ -66,7 +67,7 @@
                         <span class="verified-badge">✅ Verified Student</span>
                     </div>
                     <div id="verificationMessage" class="verification-message">
-                        <p>Complete your information to get verified as an ASAT student</p>
+                        <p>Complete your information to get verified as a CareSim student</p>
                         <button class="btn-verify" onclick="goToProfile()">Complete Profile</button>
                     </div>
                 </div>
@@ -81,18 +82,16 @@
                 </div>
             </div>
         </aside>
-
         <!-- Main Content Area -->
         <main class="main-content">
             <!-- Verification Callout -->
             <div id="verificationBanner" class="verification-banner" style="display: none;">
                 <div class="banner-content">
                     <span class="banner-icon">🎯</span>
-                    <p>Complete your profile to become a Verified ASAT Student and unlock special game rewards!</p>
+                    <p>Complete your profile to become a Verified CareSim Student and unlock special game rewards!</p>
                     <button class="btn-banner" onclick="goToProfile()">Go to Profile</button>
                 </div>
             </div>
-
             <!-- Lesson Progress Section -->
             <section class="lessons-section">
                 <h1 class="section-title">Lesson Progress</h1>
@@ -100,7 +99,6 @@
                     <!-- Lesson cards will be inserted here -->
                 </div>
             </section>
-
             <!-- Certificates Section -->
             <section class="certificates-section">
                 <h1 class="section-title">🎓 Certificates</h1>
@@ -110,7 +108,6 @@
             </section>
         </main>
     </div>
-
     <!-- History Modal -->
     <div id="historyModal" class="history-modal" style="display: none;">
         <div class="history-modal-content">
@@ -125,17 +122,14 @@
             </div>
         </div>
     </div>
-
     <script>
         const token = localStorage.getItem('studentToken');
         
         if (!token) {
             window.location.href = 'student-login.html';
         }
-
         async function loadDashboard() {
             try {
-                // Add timestamp to prevent caching
                 const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
                     method: 'GET',
                     headers: {
@@ -143,22 +137,17 @@
                         'Cache-Control': 'no-cache'
                     }
                 });
-
                 const data = await response.json();
                 
                 console.log('Dashboard API Response:', data);
                 console.log('Dashboard Response Status:', response.status);
                 console.log('Dashboard Lessons:', data.data?.lessons);
-
                 if (response.ok) {
-                    // Update profile info
                     document.getElementById('profileName').textContent = data.data.name || data.data.fullName || data.data.email || 'User';
                     document.getElementById('profileEmail').textContent = data.data.email || '';
                     
-                    // Update profile details
                     const details = data.data;
                     
-                    // Gender
                     if (details.gender) {
                         document.getElementById('genderValue').textContent = details.gender.charAt(0).toUpperCase() + details.gender.slice(1);
                         document.getElementById('genderItem').style.display = 'flex';
@@ -166,7 +155,6 @@
                         document.getElementById('genderItem').style.display = 'none';
                     }
                     
-                    // Student Number
                     if (details.studentNumber) {
                         document.getElementById('studentNumberValue').textContent = details.studentNumber;
                         document.getElementById('studentNumberItem').style.display = 'flex';
@@ -174,7 +162,6 @@
                         document.getElementById('studentNumberItem').style.display = 'none';
                     }
                     
-                    // Batch
                     if (details.batch) {
                         document.getElementById('batchValue').textContent = details.batch;
                         document.getElementById('batchItem').style.display = 'flex';
@@ -182,7 +169,6 @@
                         document.getElementById('batchItem').style.display = 'none';
                     }
                     
-                    // Contact Number
                     if (details.contactNumber) {
                         document.getElementById('contactNumberValue').textContent = details.contactNumber;
                         document.getElementById('contactNumberItem').style.display = 'flex';
@@ -190,7 +176,6 @@
                         document.getElementById('contactNumberItem').style.display = 'none';
                     }
                     
-                    // Birthday
                     if (details.birthday) {
                         const birthdayDate = new Date(details.birthday);
                         const formattedDate = birthdayDate.toLocaleDateString('en-US', { 
@@ -204,7 +189,6 @@
                         document.getElementById('birthdayItem').style.display = 'none';
                     }
                     
-                    // Address
                     if (details.address) {
                         document.getElementById('addressValue').textContent = details.address;
                         document.getElementById('addressItem').style.display = 'flex';
@@ -212,12 +196,10 @@
                         document.getElementById('addressItem').style.display = 'none';
                     }
                     
-                    // Update progress
                     const progressPercent = data.data.profileCompletion || 0;
                     document.getElementById('progressPercent').textContent = progressPercent + '%';
                     document.getElementById('progressFill').style.width = progressPercent + '%';
                     
-                    // Show/hide verification badge
                     if (data.data.isVerified || data.data.verified) {
                         document.getElementById('verifiedBadge').style.display = 'block';
                         document.getElementById('verificationMessage').style.display = 'none';
@@ -228,12 +210,9 @@
                         document.getElementById('verificationBanner').style.display = 'flex';
                     }
                     
-                    // Profile picture feature removed per request
                     
-                    // Load lessons with analytics
                     loadLessons(data.data.lessons || []);
                     
-                    // Load certificates
                     loadCertificates(data.data.certificates || []);
                 } else {
                     console.error('Dashboard API Error:', data);
@@ -251,25 +230,19 @@
                 alert('Error loading dashboard: ' + error.message);
             }
         }
-
         async function loadLessons(lessons) {
             const container = document.getElementById('lessonsContainer');
-
-            // Ensure we always have 6 lesson slots (1..6)
             const slotToLesson = {};
             (lessons || []).forEach(l => {
                 if (l && typeof l === 'object' && 'slot' in l) {
                     slotToLesson[l.slot] = l;
                 }
             });
-
             const normalizedLessons = [];
             for (let i = 1; i <= 6; i++) {
                 const l = slotToLesson[i] || { slot: i };
                 normalizedLessons.push(l);
             }
-
-            // Helper function to format time (seconds to minutes:seconds)
             const formatTime = (seconds) => {
                 if (seconds === null || seconds === undefined || typeof seconds !== 'number' || isNaN(seconds)) {
                     return 'No attempts yet';
@@ -279,7 +252,6 @@
                 return `${mins}m ${secs}s`;
             };
             
-            // Helper function to get value or "No attempts yet" (for scores, no percentage)
             const getValue = (value) => {
                 if (value !== null && value !== undefined && typeof value === 'number' && !isNaN(value)) {
                     return value;
@@ -287,7 +259,6 @@
                 return 'No attempts yet';
             };
             
-            // Helper function to format score as "X out of 10"
             const formatScore = (score) => {
                 if (score !== null && score !== undefined && typeof score === 'number' && !isNaN(score)) {
                     return `${score} out of 10`;
@@ -295,9 +266,7 @@
                 return 'No attempts yet';
             };
             
-            // Render 6 cards with the new analytics fields
             container.innerHTML = normalizedLessons.map(lesson => {
-                // Build analytics rows - always show all fields
                 const analyticsRows = `
                     <div class="analytics-row">
                         <span class="analytics-label">Recent Quiz Score:</span>
@@ -324,13 +293,10 @@
                         <span class="analytics-value">${formatTime(lesson.avgSimTime)}</span>
                     </div>
                 `;
-
-                // Determine status display (default to Not Started when missing)
                 let statusHtml = '';
                 const statusValue = (lesson && typeof lesson.status === 'string' && lesson.status.trim() !== '')
                     ? lesson.status.trim()
                     : 'not_started';
-
                 if (statusValue === 'completed') {
                     statusHtml = `<span class="lesson-status completed">✓ Completed</span>`;
                 } else if (statusValue === 'in_progress') {
@@ -338,11 +304,8 @@
                 } else {
                     statusHtml = `<span class="lesson-status not-started">○ Not Started</span>`;
                 }
-
-                // Card title (fallback to slot label)
                 const lessonName = (lesson && lesson.lessonName) ? lesson.lessonName : `Lesson ${lesson.slot}`;
                 const lessonSlot = lesson.slot || 0;
-                // Enable history button if there are quiz attempts (completed or in progress)
                 const hasAttempts = lesson.quizAttempts && lesson.quizAttempts > 0;
                 const historyData = (lesson.quizHistory && Array.isArray(lesson.quizHistory)) 
                     ? encodeURIComponent(JSON.stringify(lesson.quizHistory)) 
@@ -366,10 +329,9 @@
                 `;
             }).join('');
             
-            // Add event listeners to all history buttons (enabled and disabled)
             container.querySelectorAll('.btn-history').forEach(button => {
                 button.addEventListener('click', function() {
-                    if (this.disabled) return; // Don't do anything if disabled
+                    if (this.disabled) return;
                     const lessonSlot = parseInt(this.getAttribute('data-lesson-slot'));
                     const historyData = this.getAttribute('data-history');
                     let history = [];
@@ -384,7 +346,6 @@
                 });
             });
         }
-
         function loadCertificates(certificates) {
             const container = document.getElementById('certificatesContainer');
             
@@ -392,7 +353,6 @@
                 container.innerHTML = '<p class="empty-state">No certificates yet. Keep progressing!</p>';
                 return;
             }
-
             container.innerHTML = certificates.map(cert => `
                 <div class="certificate-card">
                     <div class="certificate-icon">🎓</div>
@@ -405,34 +365,24 @@
                 </div>
             `).join('');
         }
-
-
         function viewCertificate(certId) {
             alert(`Viewing certificate ${certId}`);
         }
-
         function downloadCertificate(certId) {
             alert(`Downloading certificate ${certId}`);
         }
-
         function goToProfile() {
             window.location.href = 'student-profile.html';
         }
-
-        // Make loadDashboard accessible globally so it can be called from profile page
         window.loadDashboard = loadDashboard;
-
         function toggleProfileMenu() {
             alert('Profile menu');
         }
-
         function logout() {
             localStorage.removeItem('studentToken');
             localStorage.removeItem('studentData');
             window.location.href = 'student-login.html';
         }
-
-        // History modal functions
         function showHistory(lessonSlot, historyData) {
             const historyModal = document.getElementById('historyModal');
             const historyTitle = document.getElementById('historyTitle');
@@ -445,16 +395,12 @@
             
             historyTitle.textContent = `Quiz History - Lesson ${lessonSlot}`;
             
-            // Use history data directly (should already be parsed)
             const history = Array.isArray(historyData) ? historyData : [];
             
             if (history.length === 0) {
                 historyList.innerHTML = '<p class="empty-history">No quiz history available</p>';
             } else {
-                // Display formatted history with date, time, duration, and score
                 historyList.innerHTML = history.map((entry, index) => {
-                    // Use formatted fields from backend (date, time, duration, scoreText)
-                    // Fallback to parsing if format is old
                     const date = entry.date || 'N/A';
                     const time = entry.time || 'N/A';
                     const duration = entry.duration || 'N/A';
@@ -477,26 +423,20 @@
             
             historyModal.style.display = 'flex';
         }
-
         function closeHistoryModal() {
             const historyModal = document.getElementById('historyModal');
             if (historyModal) {
                 historyModal.style.display = 'none';
             }
         }
-
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const historyModal = document.getElementById('historyModal');
             if (event.target === historyModal) {
                 closeHistoryModal();
             }
         };
-
-        // Load dashboard on page load
         loadDashboard();
         
-        // Also reload dashboard if there's a refresh parameter
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('refresh')) {
             console.log('Refresh parameter detected, reloading dashboard data');

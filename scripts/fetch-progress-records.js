@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// Initialize Firebase Admin
 try {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -26,7 +25,6 @@ async function fetchProgressRecords() {
     console.log('='.repeat(60));
     console.log(`Database URL: ${process.env.FIREBASE_DATABASE_URL}\n`);
 
-    // Get all users
     const usersRef = db.ref('users');
     const usersSnapshot = await usersRef.once('value');
     const users = usersSnapshot.val() || {};
@@ -38,7 +36,6 @@ async function fetchProgressRecords() {
 
     console.log(`Found ${Object.keys(users).length} user(s) in database\n`);
 
-    // Process each user's progress
     for (const [userId, userData] of Object.entries(users)) {
       console.log(`${'='.repeat(60)}`);
       console.log(`👤 USER: ${userId}`);
@@ -53,7 +50,6 @@ async function fetchProgressRecords() {
         continue;
       }
 
-      // Process each lesson (lesson1, lesson2, etc.)
       for (let i = 1; i <= 6; i++) {
         const lessonKey = `lesson${i}`;
         const lessonProgress = progress[lessonKey];
@@ -66,7 +62,6 @@ async function fetchProgressRecords() {
         console.log(`\n📚 Lesson ${i}:`);
         console.log(`   ${'-'.repeat(50)}`);
 
-        // Quiz progress
         const quiz = lessonProgress.quiz || {};
         const quizCompleted = quiz.completed || false;
         const quizAttempts = quiz.attempts || 0;
@@ -81,7 +76,6 @@ async function fetchProgressRecords() {
         console.log(`      Latest Score: ${quizLatestScore}/10`);
         console.log(`      Avg Time: ${quizAvgTime.toFixed(2)}s`);
 
-        // Simulation progress
         const simulation = lessonProgress.simulation || {};
         const simCompleted = simulation.completed || false;
         const simAttempts = simulation.attempts || 0;
@@ -92,7 +86,6 @@ async function fetchProgressRecords() {
         console.log(`      Attempts: ${simAttempts}`);
         console.log(`      Avg Time: ${simAvgTime.toFixed(2)}s`);
 
-        // Overall status: Both quiz AND simulation must be completed for "Completed"
         const overallStatus = (quizCompleted && simCompleted) ? '✅ Completed' : '🔄 In Progress';
         console.log(`\n   📊 Overall Status: ${overallStatus}`);
         if (!quizCompleted || !simCompleted) {
@@ -103,7 +96,6 @@ async function fetchProgressRecords() {
         }
       }
 
-      // Summary for this user
       console.log(`\n${'='.repeat(60)}`);
       console.log(`📊 PROGRESS SUMMARY FOR ${userData.email || userId}:`);
       console.log('='.repeat(60));
@@ -142,7 +134,6 @@ async function fetchProgressRecords() {
       console.log('');
     }
 
-    // Overall database summary
     console.log(`\n${'='.repeat(60)}`);
     console.log('📊 DATABASE PROGRESS SUMMARY');
     console.log('='.repeat(60));
@@ -202,4 +193,4 @@ async function fetchProgressRecords() {
 fetchProgressRecords();
 
 
-
+

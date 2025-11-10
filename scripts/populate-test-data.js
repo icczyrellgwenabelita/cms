@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// Initialize Firebase Admin
 try {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -23,7 +22,6 @@ async function populateTestData() {
   try {
     console.log('Starting to populate test data...');
 
-    // 1. Create 6 lessons
     const lessonsData = {
       1: {
         lessonName: 'Monitoring Vital Signs',
@@ -54,7 +52,6 @@ async function populateTestData() {
     await db.ref('lessons').set(lessonsData);
     console.log('✓ Created 6 lessons');
 
-    // 2. Create class statistics for each lesson
     const classStats = {
       1: {
         avgQuizGrade: 85,
@@ -97,15 +94,11 @@ async function populateTestData() {
     await db.ref('classStats/lessons').set(classStats);
     console.log('✓ Created class statistics');
 
-    // 3. Get a student ID from the database (or use a test one)
-    // Note: You'll need to replace 'YOUR_STUDENT_UID' with an actual Firebase Auth UID
-    // Or we can check existing students
     const studentsRef = db.ref('students');
     const studentsSnapshot = await studentsRef.once('value');
     const students = studentsSnapshot.val() || {};
     
     if (Object.keys(students).length > 0) {
-      // Add progress for the first student found
       const firstStudentId = Object.keys(students)[0];
       console.log(`\nAdding progress for student: ${firstStudentId}`);
       
@@ -138,24 +131,22 @@ async function populateTestData() {
         }
       };
       
-      // Update student progress
       for (const [path, data] of Object.entries(studentProgress)) {
         await db.ref(path).set(data);
       }
       console.log('✓ Added student progress data');
       
-      // 4. Add test certificates
       const certificates = [
         {
           id: 'cert-001',
           title: 'Patient Care Fundamentals Certificate',
-          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
+          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           description: 'Completed Introduction to Patient Care module'
         },
         {
           id: 'cert-002',
           title: 'Vital Signs Mastery Certificate',
-          date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 15 days ago
+          date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           description: 'Completed Vital Signs Monitoring module'
         }
       ];
@@ -176,4 +167,4 @@ async function populateTestData() {
   }
 }
 
-populateTestData();
+populateTestData();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Login</title>
+    <title>CareSim Student Portal</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="admin-portal.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -12,7 +12,10 @@
 <body class="admin-portal">
     <div class="login-container">
         <div class="login-card">
-            <h2>ASAT Student Portal</h2>
+            <div class="logo-container">
+                <img src="caresimm.png" alt="CareSim" class="login-logo">
+            </div>
+            <h2>CareSim Student Portal</h2>
             <form id="loginForm" style="display: block;">
                 <div class="form-group">
                     <label for="email">Email</label>
@@ -28,13 +31,11 @@
             
         </div>
     </div>
-
     <style>
         body.admin-portal {
-            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 30%, #A7F3D0 65%, #86EFAC 100%);
+            background: linear-gradient(135deg, #FFF8F0 0%, #FAF0E6 30%, #F5E6D3 65%, #E8D5B7 100%);
             background-attachment: fixed;
         }
-
         .login-container {
             display: flex;
             justify-content: center;
@@ -43,31 +44,36 @@
             padding: 20px;
             background: transparent;
         }
-
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .login-logo {
+            height: 50px;
+            width: auto;
+        }
         .login-card {
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
             border-radius: 16px;
             padding: 40px;
-            box-shadow: 0 10px 30px rgba(22, 163, 74, 0.15);
-            border: 1px solid rgba(22, 163, 74, 0.08);
+            box-shadow: 0 10px 30px rgba(85, 107, 47, 0.15);
+            border: 1px solid rgba(193, 154, 107, 0.2);
             width: 100%;
             max-width: 400px;
         }
-
         .login-card h2 {
             text-align: center;
-            color: #16A34A;
+            color: #556B2F;
             font-size: 28px;
             font-weight: 700;
             margin: 0 0 30px 0;
         }
-
         .form-group {
             margin-bottom: 20px;
         }
-
         .form-group label {
             display: block;
             font-size: 14px;
@@ -75,7 +81,6 @@
             color: #1E293B;
             margin-bottom: 8px;
         }
-
         .form-group input {
             width: 100%;
             padding: 10px 12px;
@@ -87,13 +92,11 @@
             box-sizing: border-box;
             transition: all 0.2s;
         }
-
         .form-group input:focus {
             outline: none;
-            border-color: #4ADE80;
-            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+            border-color: #C19A6B;
+            box-shadow: 0 0 0 3px rgba(193, 154, 107, 0.1);
         }
-
         .error {
             display: none;
             padding: 10px;
@@ -103,7 +106,6 @@
             margin-bottom: 16px;
             font-size: 13px;
         }
-
         .btn {
             padding: 12px 24px;
             border: none;
@@ -113,20 +115,16 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
         .btn-primary {
-            background: #4ADE80;
+            background: #C19A6B;
             color: white;
         }
-
         .btn-primary:hover {
-            background: #16A34A;
+            background: #556B2F;
             transform: translateY(-1px);
         }
     </style>
-
     <script>
-        // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAP_JtE2w4Qc0WSmfMUDt9XuyCC1AIOaIM",
             authDomain: "caresim-b9342.firebaseapp.com",
@@ -140,7 +138,6 @@
         
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -149,17 +146,13 @@
             const errorDiv = document.getElementById('error');
             
             errorDiv.style.display = 'none';
-
             try {
                 console.log('Attempting to sign in with Firebase...');
-                // Sign in with Firebase (client-side)
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 console.log('Firebase sign-in successful, getting ID token...');
                 
                 const idToken = await userCredential.user.getIdToken();
                 console.log('ID token obtained, sending to backend...');
-
-                // Verify with backend
                 const response = await fetch('/api/auth/student/login', {
                     method: 'POST',
                     headers: {
@@ -167,11 +160,9 @@
                     },
                     body: JSON.stringify({ idToken })
                 });
-
                 console.log('Backend response status:', response.status);
                 const data = await response.json();
                 console.log('Backend response data:', data);
-
                 if (response.ok && data.success) {
                     localStorage.setItem('studentToken', idToken);
                     localStorage.setItem('studentData', JSON.stringify(data.user));
@@ -187,7 +178,6 @@
                 console.error('Login error:', error);
                 let errorMsg = 'Login failed';
                 
-                // Handle Firebase Auth errors
                 if (error.code) {
                     switch (error.code) {
                         case 'auth/user-not-found':
@@ -222,4 +212,3 @@
     </script>
 </body>
 </html>
-

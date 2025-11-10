@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// Initialize Firebase Admin SDK
 try {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -20,4 +19,4 @@ const auth = admin.auth();
 const db = admin.database();
 
 module.exports = { admin, auth, db };
-
+

@@ -1,4 +1,4 @@
-/* ASAT Admin Portal - Light Green Minimalist Theme */
+/* CareSim Admin Portal - Light Green Minimalist Theme */
 
 /* Reset global styles for admin portal */
 html, body {
@@ -11,7 +11,7 @@ html, body {
 body.admin-portal,
 .admin-portal {
     font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #F6FBF7;
+    background: #FFF8F0;
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -49,10 +49,23 @@ body.admin-portal,
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 24px;
     font-weight: 700;
-    color: #16A34A;
+    color: #556B2F;
     letter-spacing: 1px;
+}
+
+.header-logo {
+    height: 40px;
+    width: auto;
+}
+
+.logo-text {
+    color: #556B2F;
+    font-weight: 600;
 }
 
 .nav-tabs {
@@ -72,12 +85,12 @@ body.admin-portal,
 }
 
 .nav-tab:hover {
-    background: #F6FBF7;
-    color: #16A34A;
+    background: #FAF0E6;
+    color: #556B2F;
 }
 
 .nav-tab.active {
-    background: #4ADE80;
+    background: #C19A6B;
     color: white;
 }
 
@@ -99,9 +112,9 @@ body.admin-portal,
 }
 
 .btn-logout:hover {
-    border-color: #16A34A;
-    color: #16A34A;
-    background: #F6FBF7;
+    border-color: #556B2F;
+    color: #556B2F;
+    background: #FAF0E6;
 }
 
 /* Portal Container - Admin Dashboard */
@@ -181,8 +194,8 @@ body.admin-portal,
 .lesson-number {
     font-size: 12px;
     font-weight: 600;
-    color: #16A34A;
-    background: #F6FBF7;
+    color: #556B2F;
+    background: #FAF0E6;
     padding: 4px 12px;
     border-radius: 20px;
 }
@@ -226,14 +239,14 @@ body.admin-portal,
 }
 
 .lesson-tab:hover {
-    color: #16A34A;
-    background: #F6FBF7;
+    color: #556B2F;
+    background: #FAF0E6;
     border-radius: 8px 8px 0 0;
 }
 
 .lesson-tab.active {
-    color: #16A34A;
-    border-bottom-color: #4ADE80;
+    color: #556B2F;
+    border-bottom-color: #C19A6B;
     background: transparent;
     font-weight: 600;
 }
@@ -295,8 +308,8 @@ body.admin-portal,
 .quiz-number {
     font-size: 12px;
     font-weight: 600;
-    color: #16A34A;
-    background: #F6FBF7;
+    color: #556B2F;
+    background: #FAF0E6;
     padding: 4px 12px;
     border-radius: 20px;
 }
@@ -328,9 +341,9 @@ body.admin-portal,
 }
 
 .answer-item.correct {
-    background: #F6FBF7;
-    border: 1px solid #4ADE80;
-    color: #16A34A;
+    background: #FAF0E6;
+    border: 1px solid #C19A6B;
+    color: #556B2F;
 }
 
 .answer-label {
@@ -342,8 +355,8 @@ body.admin-portal,
 .correct-answer-badge {
     font-size: 12px;
     font-weight: 600;
-    color: #16A34A;
-    background: #F6FBF7;
+    color: #556B2F;
+    background: #FAF0E6;
     padding: 4px 12px;
     border-radius: 20px;
     display: inline-block;
@@ -382,7 +395,7 @@ body.admin-portal,
 
 /* Buttons */
 .btn-edit {
-    background: #4ADE80;
+    background: #C19A6B;
     color: white;
     border: none;
     border-radius: 6px;
@@ -397,7 +410,7 @@ body.admin-portal,
 }
 
 .btn-edit:hover {
-    background: #16A34A;
+    background: #556B2F;
     transform: translateY(-1px);
 }
 
@@ -458,8 +471,8 @@ body.admin-portal,
 }
 
 .modal-close:hover {
-    background: #F6FBF7;
-    color: #16A34A;
+    background: #FAF0E6;
+    color: #556B2F;
 }
 
 .modal form {
@@ -496,8 +509,8 @@ body.admin-portal,
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #4ADE80;
-    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+    border-color: #C19A6B;
+    box-shadow: 0 0 0 3px rgba(193, 154, 107, 0.1);
 }
 
 .form-group input:disabled,
@@ -545,7 +558,7 @@ body.admin-portal,
 }
 
 .btn-primary {
-    background: #4ADE80;
+    background: #C19A6B;
     color: white;
     border: none;
     border-radius: 6px;
@@ -557,7 +570,7 @@ body.admin-portal,
 }
 
 .btn-primary:hover {
-    background: #16A34A;
+    background: #556B2F;
     transform: translateY(-1px);
 }
 
@@ -574,9 +587,9 @@ body.admin-portal,
 }
 
 .btn-secondary:hover {
-    border-color: #16A34A;
-    color: #16A34A;
-    background: #F6FBF7;
+    border-color: #556B2F;
+    color: #556B2F;
+    background: #FAF0E6;
 }
 
 /* Responsive Design */

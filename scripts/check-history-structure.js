@@ -30,14 +30,12 @@ async function checkHistoryStructure() {
     console.log('='.repeat(60));
     console.log(`User ID: ${userId}\n`);
 
-    // Check top-level history
     if (userData.history) {
       console.log('Found top-level "history" field:');
       console.log(JSON.stringify(userData.history, null, 2));
       console.log('\n');
     }
 
-    // Check progress/lesson history
     for (let i = 1; i <= 6; i++) {
       const progressRef = db.ref(`users/${userId}/progress/lesson${i}`);
       const progressSnapshot = await progressRef.once('value');
@@ -56,7 +54,6 @@ async function checkHistoryStructure() {
       }
     }
 
-    // Check if history is at users/{userId}/history
     const historyRef = db.ref(`users/${userId}/history`);
     const historySnapshot = await historyRef.once('value');
     const historyData = historySnapshot.val();
@@ -75,4 +72,4 @@ async function checkHistoryStructure() {
 checkHistoryStructure();
 
 
-
+

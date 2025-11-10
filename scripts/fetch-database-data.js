@@ -1,7 +1,5 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
-
-// Initialize Firebase Admin
 try {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -16,17 +14,13 @@ try {
   console.error('Firebase initialization error:', error);
   process.exit(1);
 }
-
 const db = admin.database();
-
 async function fetchDatabaseData() {
   try {
     console.log('='.repeat(60));
     console.log('FETCHING DATABASE DATA');
     console.log('='.repeat(60));
     console.log(`Database URL: ${process.env.FIREBASE_DATABASE_URL}\n`);
-
-    // Fetch all major collections
     const collections = [
       'students',
       'users',
@@ -35,7 +29,6 @@ async function fetchDatabaseData() {
       'admins',
       'classStats'
     ];
-
     for (const collection of collections) {
       console.log(`\n${'='.repeat(60)}`);
       console.log(`📦 COLLECTION: ${collection.toUpperCase()}`);
@@ -44,17 +37,12 @@ async function fetchDatabaseData() {
       const ref = db.ref(collection);
       const snapshot = await ref.once('value');
       const data = snapshot.val();
-
       if (!data) {
         console.log('  (empty)');
         continue;
       }
-
-      // Pretty print the data
       console.log(JSON.stringify(data, null, 2));
     }
-
-    // Fetch detailed student data
     console.log(`\n${'='.repeat(60)}`);
     console.log('📋 DETAILED STUDENT DATA');
     console.log('='.repeat(60));
@@ -62,7 +50,6 @@ async function fetchDatabaseData() {
     const studentsRef = db.ref('students');
     const studentsSnapshot = await studentsRef.once('value');
     const students = studentsSnapshot.val() || {};
-
     if (Object.keys(students).length === 0) {
       console.log('  No students found in database.');
     } else {
@@ -95,8 +82,6 @@ async function fetchDatabaseData() {
         }
       }
     }
-
-    // Fetch detailed users data
     console.log(`\n${'='.repeat(60)}`);
     console.log('👥 DETAILED USERS DATA');
     console.log('='.repeat(60));
@@ -104,7 +89,6 @@ async function fetchDatabaseData() {
     const usersRef = db.ref('users');
     const usersSnapshot = await usersRef.once('value');
     const users = usersSnapshot.val() || {};
-
     if (Object.keys(users).length === 0) {
       console.log('  No users found in database.');
     } else {
@@ -112,7 +96,6 @@ async function fetchDatabaseData() {
         console.log(`\n  👤 User ID: ${userId}`);
         console.log(`  ${'-'.repeat(50)}`);
         
-        // Display all user properties
         for (const [key, value] of Object.entries(userData)) {
           if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             console.log(`  ${key}:`);
@@ -138,8 +121,6 @@ async function fetchDatabaseData() {
         }
       }
     }
-
-    // Summary
     console.log(`\n${'='.repeat(60)}`);
     console.log('📊 DATABASE SUMMARY');
     console.log('='.repeat(60));
@@ -172,6 +153,4 @@ async function fetchDatabaseData() {
     process.exit(1);
   }
 }
-
 fetchDatabaseData();
-
