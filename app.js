@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 const app = express();
 app.use(cors());
@@ -13,6 +14,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !path.extname(req.path)) {
+    const trimmedPath = req.path.endsWith('/') && req.path.length > 1 ? req.path.slice(0, -1) : req.path;
+    const relativePath = trimmedPath === '/' ? 'index' : trimmedPath.replace(/^\//, '');
+    const filePath = path.join(__dirname, 'public', `${relativePath}.html`);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+  }
+  next();
+});
 app.use(express.static('public'));
 app.use((err, req, res, next) => {
   if (req.path && req.path.startsWith('/api')) {
