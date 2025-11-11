@@ -1260,3 +1260,20 @@ body.student-portal,
     font-size: 14px;
 }
 
+/* Logout Modal Styles */
+.logout-modal-content {
+    max-width: 400px;
+}
+
+.logout-modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.logout-modal-body p {
+    font-size: 16px;
+    color: #1E293B;
+    margin: 0;
+    line-height: 1.5;
+}
+

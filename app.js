@@ -40,6 +40,28 @@ app.use((err, req, res, next) => {
 app.get('/', (req, res) => {
   res.redirect('/student-login.html');
 });
+
+// Explicit routes for dashboard pages
+app.get('/admin-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
+});
+
+app.get('/student-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student-dashboard.html'));
+});
+
+app.get('/student-profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student-profile.html'));
+});
+
+app.get('/admin-login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
+});
+
+app.get('/student-login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student-login.html'));
+});
+
 app.use('/api', (req, res) => {
   console.log('404 API route:', req.method, req.originalUrl);
   res

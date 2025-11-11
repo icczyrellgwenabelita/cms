@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CareSim Admin Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="admin-portal.css">
 </head>
@@ -75,6 +78,22 @@
                     <button type="submit" class="btn-primary">Save Lesson</button>
                 </div>
             </form>
+        </div>
+    </div>
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirm Logout</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
         </div>
     </div>
     <!-- Quiz Edit Modal -->
@@ -594,6 +613,14 @@
             }
         }
         function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+        
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+        
+        function confirmLogout() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminData');
             window.location.href = '/admin-login';
@@ -601,11 +628,15 @@
         window.onclick = function(event) {
             const lessonModal = document.getElementById('lessonModal');
             const quizModal = document.getElementById('quizModal');
+            const logoutModal = document.getElementById('logoutModal');
             if (event.target === lessonModal) {
                 closeLessonModal();
             }
             if (event.target === quizModal) {
                 closeQuizModal();
+            }
+            if (event.target === logoutModal) {
+                closeLogoutModal();
             }
         }
         loadLessons();
