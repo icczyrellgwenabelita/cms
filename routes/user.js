@@ -20,7 +20,12 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
     const historySnapshot = await historyRef.once('value');
     const allHistory = historySnapshot.val() || {};
     
+    const simHistoryRef = db.ref(`users/${req.userId}/history/simulations`);
+    const simHistorySnapshot = await simHistoryRef.once('value');
+    const allSimHistory = simHistorySnapshot.val() || {};
+    
     console.log('User Dashboard: Fetched all quiz history, entries:', Object.keys(allHistory || {}).length);
+    console.log('User Dashboard: Fetched all simulation history, entries:', Object.keys(allSimHistory || {}).length);
     
     const lessons = [];
     for (let i = 1; i <= 6; i++) {
@@ -77,7 +82,83 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
           return new Date(b.timestamp) - new Date(a.timestamp);
         });
         
-        console.log(`Lesson ${i} - Found ${lessonHistory.length} history entries`);
+        console.log(`Lesson ${i} - Found ${lessonHistory.length} quiz history entries`);
+      }
+      
+      const lessonSimHistory = [];
+      const parseLessonNumber = (value) => {
+        if (value === null || value === undefined) {
+          return null;
+        }
+        if (typeof value === 'number' && !isNaN(value)) {
+          return value;
+        }
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (/^\d+$/.test(trimmed)) {
+            return Number(trimmed);
+          }
+          const match = trimmed.match(/\d+/);
+          if (match && match[0]) {
+            return Number(match[0]);
+          }
+        }
+        if (typeof value === 'object') {
+          if ('slot' in value) {
+            return parseLessonNumber(value.slot);
+          }
+          if ('number' in value) {
+            return parseLessonNumber(value.number);
+          }
+          if ('lesson' in value) {
+            return parseLessonNumber(value.lesson);
+          }
+        }
+        return null;
+      };
+
+      if (allSimHistory && typeof allSimHistory === 'object') {
+        Object.entries(allSimHistory).forEach(([timestamp, entry]) => {
+          if (!entry || typeof entry !== 'object') {
+            return;
+          }
+          const lessonRef = entry.lesson ?? entry.lessonId ?? entry.lessonNumber ?? entry.lessonSlot ?? entry.lessonIndex;
+          const resolvedLesson = parseLessonNumber(lessonRef);
+          const lessonMatch = resolvedLesson === i;
+          if (lessonMatch) {
+            const dateObj = new Date(timestamp);
+            const dateStr = dateObj.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            });
+            const timeStr = dateObj.toLocaleTimeString('en-US', { 
+              hour: 'numeric', 
+              minute: '2-digit',
+              hour12: true 
+            });
+            
+            const durationSeconds = Number(entry.time || entry.duration || 0) || 0;
+            const mins = Math.floor(durationSeconds / 60);
+            const secs = Math.floor(durationSeconds % 60);
+            const durationStr = `${mins}m ${secs}s`;
+            
+            lessonSimHistory.push({
+              timestamp: timestamp,
+              date: dateStr,
+              time: timeStr,
+              duration: durationStr,
+              durationSeconds: durationSeconds,
+              result: entry.result || entry.status || ''
+            });
+          }
+        });
+        
+        lessonSimHistory.sort((a, b) => {
+          return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+        
+        console.log(`Lesson ${i} - Found ${lessonSimHistory.length} simulation history entries`);
       }
       
       const lessonProgressRef = db.ref(`users/${req.userId}/progress/lesson${i}`);
@@ -90,7 +171,9 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         const quizCompleted = progress.quiz?.completed || false;
         const simCompleted = progress.simulation?.completed || false;
         const quizAttempts = progress.quiz?.attempts || 0;
-        const simAttempts = progress.simulation?.attempts || 0;
+        const rawSimAttempts = progress.simulation?.attempts;
+        const simAttemptsNumber = Number(rawSimAttempts);
+        const simAttempts = !isNaN(simAttemptsNumber) && simAttemptsNumber > 0 ? simAttemptsNumber : 0;
         
         console.log(`Lesson ${i} - Quiz completed: ${quizCompleted}, Sim completed: ${simCompleted}, Quiz attempts: ${quizAttempts}, Sim attempts: ${simAttempts}`);
         
@@ -106,6 +189,8 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         }
         
         lessonData.status = status;
+        lessonData.simAttempts = simAttempts;
+        lessonData.simCompleted = simCompleted;
         
         if (progress.quiz) {
           const latestScore = progress.quiz.latestScore;
@@ -142,12 +227,14 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         }
         
         if (progress.simulation) {
-          const simAvgTime = progress.simulation.avgTime;
-          if (simAvgTime !== null && simAvgTime !== undefined && typeof simAvgTime === 'number' && !isNaN(simAvgTime) && simAvgTime > 0) {
-            lessonData.avgSimTime = simAvgTime;
+          const simAvgTime = typeof progress.simulation.avgTime === 'number' && !isNaN(progress.simulation.avgTime)
+            ? progress.simulation.avgTime
+            : 0;
+          lessonData.avgSimTime = simAvgTime;
+          if (simAvgTime > 0) {
             console.log(`Lesson ${i} - Avg Sim Time: ${simAvgTime}`);
           } else {
-            console.log(`Lesson ${i} - Avg Sim Time: MISSING or invalid (value: ${simAvgTime}, type: ${typeof simAvgTime})`);
+            console.log(`Lesson ${i} - Avg Sim Time: MISSING or invalid (value: ${progress.simulation.avgTime}, type: ${typeof progress.simulation.avgTime})`);
           }
         }
         
@@ -176,6 +263,17 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
         }
         lessonData.avgQuizScore = null;
         console.log(`Lesson ${i} - Average Quiz Score: null (no history available)`);
+      }
+      
+      if (lessonSimHistory.length > 0) {
+        lessonData.simHistory = lessonSimHistory;
+        console.log(`Lesson ${i} - Simulation History: ${lessonSimHistory.length} entries from history/simulations`);
+      } else {
+        lessonData.simHistory = [];
+        const attemptsForLog = Number(lessonData.simAttempts) || Number(progress?.simulation?.attempts) || 0;
+        if (attemptsForLog > 0) {
+          console.log(`Lesson ${i} - Simulation History: No history found, but ${attemptsForLog} attempts exist`);
+        }
       }
       
       lessons.push(lessonData);
@@ -330,7 +428,60 @@ router.get('/profile', verifyStudentToken, async (req, res) => {
 });
 router.put('/profile', verifyStudentToken, async (req, res) => {
   try {
-    const { name, gender, studentNumber, batch, address, contactNumber, birthday, school, profilePicture } = req.body;
+    let { name, fullName, gender, studentNumber, batch, address, contactNumber, birthday, school, profilePicture } = req.body;
+    
+    if (typeof name === 'string') {
+      name = name.trim();
+    }
+    if (typeof fullName === 'string') {
+      fullName = fullName.trim();
+    }
+    const effectiveName = name !== undefined ? name : fullName;
+    const nameRegex = /^[A-Za-z\s]{1,60}$/;
+    if (effectiveName && !nameRegex.test(effectiveName)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Full name must contain letters and spaces only (max 60 characters)'
+      });
+    }
+    
+    // Validate student number (numeric only)
+    if (studentNumber && !/^\d+$/.test(studentNumber)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Student number must contain only numbers' 
+      });
+    }
+    
+    // Validate batch (must be 2022-2025)
+    if (batch && !['2022', '2023', '2024', '2025'].includes(batch)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Batch must be one of: 2022, 2023, 2024, or 2025' 
+      });
+    }
+    
+    // Validate and clean contact number (numeric only, max 11 digits)
+    let cleanedContactNumber = contactNumber;
+    if (typeof contactNumber === 'string') {
+      contactNumber = contactNumber.trim();
+    }
+    if (contactNumber) {
+      const cleanContact = contactNumber.replace(/\D/g, ''); // Remove non-digits
+      if (cleanContact.length > 11) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Contact number must be maximum 11 digits' 
+        });
+      }
+      if (cleanContact.length > 0 && !/^\d+$/.test(cleanContact)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Contact number must contain only numbers' 
+        });
+      }
+      cleanedContactNumber = cleanContact; // Use cleaned version
+    }
     
     console.log('User profile update request received for userId:', req.userId);
     console.log('User profile update - ProfilePicture provided:', profilePicture !== undefined, 'Value:', profilePicture ? 'base64 string (' + profilePicture.length + ' chars)' : profilePicture);
@@ -342,10 +493,13 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
     console.log('User profile update - Existing data keys:', Object.keys(existing));
     const existingStudentInfo = existing.studentInfo || {};
     
+    const shouldUpdateName = name !== undefined || fullName !== undefined;
+    const nameToSave = shouldUpdateName ? (effectiveName || '') : existing.name;
+
     const updatedData = {
       ...existing,
       email: req.user.email || existing.email,
-      name: name !== undefined ? name : existing.name,
+      name: nameToSave,
       updatedAt: new Date().toISOString(),
       studentInfo: {
         ...existingStudentInfo,
@@ -353,7 +507,7 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
         studentNumber: studentNumber !== undefined ? studentNumber : existingStudentInfo.studentNumber,
         batch: batch !== undefined ? batch : existingStudentInfo.batch,
         address: address !== undefined ? address : existingStudentInfo.address,
-        contactNumber: contactNumber !== undefined ? contactNumber : existingStudentInfo.contactNumber,
+        contactNumber: contactNumber !== undefined ? cleanedContactNumber : existingStudentInfo.contactNumber,
         birthday: birthday !== undefined ? birthday : existingStudentInfo.birthday,
         school: school !== undefined ? school : existingStudentInfo.school
       }

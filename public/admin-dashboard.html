@@ -388,7 +388,7 @@
             })
             .catch(error => {
                 console.error('Error loading lesson:', error);
-                alert('Failed to load lesson data');
+                showAlertModal('Failed to load lesson data', 'Error');
             });
         }
         function closeLessonModal() {
@@ -414,15 +414,15 @@
                 });
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    alert('Lesson saved successfully!');
+                    showAlertModal('Lesson saved successfully!', 'Success');
                     closeLessonModal();
                     loadLessons();
                 } else {
-                    alert(data.error || 'Failed to save lesson');
+                    showAlertModal(data.error || 'Failed to save lesson', 'Error');
                 }
             } catch (error) {
                 console.error('Error saving lesson:', error);
-                alert('Failed to save lesson');
+                showAlertModal('Failed to save lesson', 'Error');
             }
         }
         function editQuiz(lesson, slot) {
@@ -462,7 +462,7 @@
             })
             .catch(error => {
                 console.error('Error loading quiz:', error);
-                alert('Failed to load quiz data');
+                showAlertModal('Failed to load quiz data', 'Error');
             });
         }
         
@@ -601,15 +601,15 @@
                 });
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    alert('Quiz saved successfully!');
+                    showAlertModal('Quiz saved successfully!', 'Success');
                     closeQuizModal();
                     loadQuizzes(lesson);
                 } else {
-                    alert(data.error || 'Failed to save quiz');
+                    showAlertModal(data.error || 'Failed to save quiz', 'Error');
                 }
             } catch (error) {
                 console.error('Error saving quiz:', error);
-                alert('Failed to save quiz');
+                showAlertModal('Failed to save quiz', 'Error');
             }
         }
         function logout() {
@@ -643,6 +643,36 @@
         loadLessonsForTabs().then(() => {
             loadQuizzes(currentLesson);
         });
+    </script>
+    <!-- Alert Modal -->
+    <div id="alertModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 id="alertTitle">Notice</h2>
+                <button class="history-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    function showAlertModal(message, title = 'Notice') {
+        const modal = document.getElementById('alertModal');
+        const msg = document.getElementById('alertMessage');
+        const ttl = document.getElementById('alertTitle');
+        if (!modal || !msg || !ttl) return alert(message);
+        ttl.textContent = title;
+        msg.textContent = message;
+        modal.style.display = 'flex';
+    }
+    function closeAlertModal() {
+        const modal = document.getElementById('alertModal');
+        if (modal) modal.style.display = 'none';
+    }
     </script>
 </body>
 </html>

@@ -32,6 +32,9 @@
             <div class="profile-card">
                 <div class="profile-header">
                     <h3>Personal details</h3>
+                    <div id="verifiedBadge" class="badge-container" style="display: none;">
+                        <span class="verified-badge">✅ Verified Student</span>
+                    </div>
                 </div>
                 
                 <h2 class="profile-name" id="profileName">Loading...</h2>
@@ -65,15 +68,7 @@
                     </div>
                 </div>
                 
-                <div class="profile-badge-section">
-                    <div id="verifiedBadge" class="badge-container" style="display: none;">
-                        <span class="verified-badge">✅ Verified Student</span>
-                    </div>
-                    <div id="verificationMessage" class="verification-message">
-                        <p>Complete your information to get verified as a CareSim student</p>
-                        <button class="btn-verify" onclick="goToProfile()">Complete Profile</button>
-                    </div>
-                </div>
+                
                 <div class="progress-bar-container">
                     <div class="progress-label">
                         <span>Profile Completion</span>
@@ -219,14 +214,17 @@
                     document.getElementById('progressPercent').textContent = progressPercent + '%';
                     document.getElementById('progressFill').style.width = progressPercent + '%';
                     
+                    const verifiedBadgeEl = document.getElementById('verifiedBadge');
+                    const verificationMsgEl = document.getElementById('verificationMessage');
+                    const verificationBannerEl = document.getElementById('verificationBanner');
                     if (data.data.isVerified || data.data.verified) {
-                        document.getElementById('verifiedBadge').style.display = 'block';
-                        document.getElementById('verificationMessage').style.display = 'none';
-                        document.getElementById('verificationBanner').style.display = 'none';
+                        if (verifiedBadgeEl) verifiedBadgeEl.style.display = 'block';
+                        if (verificationMsgEl) verificationMsgEl.style.display = 'none';
+                        if (verificationBannerEl) verificationBannerEl.style.display = 'none';
                     } else {
-                        document.getElementById('verifiedBadge').style.display = 'none';
-                        document.getElementById('verificationMessage').style.display = 'block';
-                        document.getElementById('verificationBanner').style.display = 'flex';
+                        if (verifiedBadgeEl) verifiedBadgeEl.style.display = 'none';
+                        if (verificationMsgEl) verificationMsgEl.style.display = 'block';
+                        if (verificationBannerEl) verificationBannerEl.style.display = 'flex';
                     }
                     
                     
@@ -240,17 +238,21 @@
                         console.log('Unauthorized - logging out');
                         logout();
                     } else {
-                        alert('Failed to load dashboard: ' + (data.error || 'Unknown error'));
+                        showAlertModal('Failed to load dashboard: ' + (data.error || 'Unknown error'), 'Error');
                     }
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
                 console.error('Error details:', error.message);
-                alert('Error loading dashboard: ' + error.message);
+                showAlertModal('Error loading dashboard: ' + error.message, 'Error');
             }
         }
         async function loadLessons(lessons) {
             const container = document.getElementById('lessonsContainer');
+            if (!container) {
+                console.error('Lessons container not found');
+                return;
+            }
             const slotToLesson = {};
             (lessons || []).forEach(l => {
                 if (l && typeof l === 'object' && 'slot' in l) {
@@ -285,7 +287,7 @@
                 return 'No attempts yet';
             };
             
-            container.innerHTML = normalizedLessons.map(lesson => {
+            const cardsHtml = normalizedLessons.map(lesson => {
                 const analyticsRows = `
                     <div class="analytics-row">
                         <span class="analytics-label">Recent Quiz Score:</span>
@@ -325,10 +327,21 @@
                 }
                 const lessonName = (lesson && lesson.lessonName) ? lesson.lessonName : `Lesson ${lesson.slot}`;
                 const lessonSlot = lesson.slot || 0;
-                const hasAttempts = lesson.quizAttempts && lesson.quizAttempts > 0;
-                const historyData = (lesson.quizHistory && Array.isArray(lesson.quizHistory)) 
+                const hasQuizAttempts = lesson.quizAttempts && lesson.quizAttempts > 0;
+                const simAttemptsCount = Number(lesson.simAttempts) || 0;
+                const hasSimHistory = Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0;
+                const normalizedAvgSimTime = (typeof lesson.avgSimTime === 'number' && !isNaN(lesson.avgSimTime)) ? lesson.avgSimTime : Number(lesson.avgSimTime) || 0;
+                const hasSimAttempts = simAttemptsCount > 0 || normalizedAvgSimTime > 0 || hasSimHistory;
+                const quizHistoryData = (lesson.quizHistory && Array.isArray(lesson.quizHistory)) 
                     ? encodeURIComponent(JSON.stringify(lesson.quizHistory)) 
                     : encodeURIComponent(JSON.stringify([]));
+                const simHistoryData = (lesson.simHistory && Array.isArray(lesson.simHistory)) 
+                    ? encodeURIComponent(JSON.stringify(lesson.simHistory)) 
+                    : encodeURIComponent(JSON.stringify([]));
+                const simSummaryData = encodeURIComponent(JSON.stringify({
+                    attempts: simAttemptsCount,
+                    avgTime: normalizedAvgSimTime
+                }));
                 
                 return `
                     <div class="lesson-card">
@@ -340,19 +353,30 @@
                             ${analyticsRows}
                         </div>
                         <div class="lesson-actions">
-                            <button class="btn-history" data-lesson-slot="${lessonSlot}" data-history="${historyData}" ${hasAttempts ? '' : 'disabled'}>
-                                History
+                            <button class="btn-history" data-lesson-slot="${lessonSlot}" data-history="${quizHistoryData}" data-type="quiz" ${hasQuizAttempts ? '' : 'disabled'}>
+                                Quiz History
+                            </button>
+                            <button class="btn-history" data-lesson-slot="${lessonSlot}" data-history="${simHistoryData}" data-summary="${simSummaryData}" data-type="simulation" ${hasSimAttempts ? '' : 'disabled'}>
+                                Simulation History
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
+            container.innerHTML = cardsHtml;
+            console.log('Rendered lesson cards:', normalizedLessons.length);
+            if (!cardsHtml || cardsHtml.trim() === '') {
+                console.warn('No lesson cards HTML generated, rendering fallback');
+                container.innerHTML = '<p class="empty-state">No lessons to display.</p>';
+            }
             
             container.querySelectorAll('.btn-history').forEach(button => {
                 button.addEventListener('click', function() {
                     if (this.disabled) return;
                     const lessonSlot = parseInt(this.getAttribute('data-lesson-slot'));
                     const historyData = this.getAttribute('data-history');
+                    const historyType = this.getAttribute('data-type') || 'quiz';
+                    const summaryAttr = this.getAttribute('data-summary');
                     let history = [];
                     if (historyData) {
                         try {
@@ -361,12 +385,24 @@
                             console.error('Error parsing history data:', e);
                         }
                     }
-                    showHistory(lessonSlot, history);
+                    let summaryInfo = null;
+                    if (summaryAttr) {
+                        try {
+                            summaryInfo = JSON.parse(decodeURIComponent(summaryAttr));
+                        } catch (e) {
+                            console.error('Error parsing summary data:', e);
+                        }
+                    }
+                    showHistory(lessonSlot, history, historyType, summaryInfo);
                 });
             });
         }
         function loadCertificates(certificates) {
             const container = document.getElementById('certificatesContainer');
+            if (!container) {
+                console.error('Certificates container not found');
+                return;
+            }
             
             if (certificates.length === 0) {
                 container.innerHTML = '<p class="empty-state">No certificates yet. Keep progressing!</p>';
@@ -385,17 +421,17 @@
             `).join('');
         }
         function viewCertificate(certId) {
-            alert(`Viewing certificate ${certId}`);
+            showAlertModal(`Viewing certificate ${certId}`, 'Notice');
         }
         function downloadCertificate(certId) {
-            alert(`Downloading certificate ${certId}`);
+            showAlertModal(`Downloading certificate ${certId}`, 'Notice');
         }
         function goToProfile() {
             window.location.href = '/student-profile';
         }
         window.loadDashboard = loadDashboard;
         function toggleProfileMenu() {
-            alert('Profile menu');
+            showAlertModal('Profile menu', 'Notice');
         }
         function logout() {
             document.getElementById('logoutModal').style.display = 'flex';
@@ -410,7 +446,15 @@
             localStorage.removeItem('studentData');
             window.location.href = '/student-login';
         }
-        function showHistory(lessonSlot, historyData) {
+        function formatSimulationDuration(seconds) {
+            if (seconds === null || seconds === undefined || typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) {
+                return 'No attempts yet';
+            }
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}m ${secs}s`;
+        }
+        function showHistory(lessonSlot, historyData, historyType = 'quiz', summaryInfo = null) {
             const historyModal = document.getElementById('historyModal');
             const historyTitle = document.getElementById('historyTitle');
             const historyList = document.getElementById('historyList');
@@ -420,31 +464,62 @@
                 return;
             }
             
-            historyTitle.textContent = `Quiz History - Lesson ${lessonSlot}`;
+            const typeLabel = historyType === 'simulation' ? 'Simulation' : 'Quiz';
+            historyTitle.textContent = `${typeLabel} History - Lesson ${lessonSlot}`;
             
             const history = Array.isArray(historyData) ? historyData : [];
             
             if (history.length === 0) {
-                historyList.innerHTML = '<p class="empty-history">No quiz history available</p>';
+                if (historyType === 'simulation' && summaryInfo && Number(summaryInfo.attempts) > 0) {
+                    historyList.innerHTML = `
+                        <div class="history-item-new">
+                            <div class="history-header">
+                                <span class="history-date">Attempts: ${summaryInfo.attempts}</span>
+                                <span class="history-time-label">Average Duration</span>
+                            </div>
+                            <div class="history-body">
+                                <span class="history-duration">${formatSimulationDuration(summaryInfo.avgTime)}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    historyList.innerHTML = `<p class="empty-history">No ${historyType} history available</p>`;
+                }
             } else {
                 historyList.innerHTML = history.map((entry, index) => {
                     const date = entry.date || 'N/A';
                     const time = entry.time || 'N/A';
                     const duration = entry.duration || 'N/A';
-                    const scoreText = entry.scoreText || (entry.score !== undefined ? `${entry.score} out of 10` : 'N/A');
                     
-                    return `
-                        <div class="history-item-new">
-                            <div class="history-header">
-                                <span class="history-date">${date}</span>
-                                <span class="history-time-label">${time}</span>
+                    if (historyType === 'quiz') {
+                        const scoreText = entry.scoreText || (entry.score !== undefined ? `${entry.score} out of 10` : 'N/A');
+                        return `
+                            <div class="history-item-new">
+                                <div class="history-header">
+                                    <span class="history-date">${date}</span>
+                                    <span class="history-time-label">${time}</span>
+                                </div>
+                                <div class="history-body">
+                                    <span class="history-duration">${duration}</span>
+                                    <span class="history-score-text">${scoreText}</span>
+                                </div>
                             </div>
-                            <div class="history-body">
-                                <span class="history-duration">${duration}</span>
-                                <span class="history-score-text">${scoreText}</span>
+                        `;
+                    } else {
+                        const resultText = entry.result ? `<span class="history-score-text">Result: ${entry.result}</span>` : '';
+                        return `
+                            <div class="history-item-new">
+                                <div class="history-header">
+                                    <span class="history-date">${date}</span>
+                                    <span class="history-time-label">${time}</span>
+                                </div>
+                                <div class="history-body">
+                                    <span class="history-duration">Duration: ${duration}</span>
+                                    ${resultText}
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }).join('');
             }
             
@@ -476,5 +551,36 @@
             }, 100);
         }
     </script>
+    <!-- Alert Modal -->
+    <div id="alertModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 id="alertTitle">Notice</h2>
+                <button class="history-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showAlertModal(message, title = 'Notice') {
+            const modal = document.getElementById('alertModal');
+            if (!modal) return alert(message);
+            const titleEl = document.getElementById('alertTitle');
+            const msgEl = document.getElementById('alertMessage');
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message;
+            modal.style.display = 'flex';
+        }
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            if (modal) modal.style.display = 'none';
+        }
+    </script>
+    
 </body>
 </html>

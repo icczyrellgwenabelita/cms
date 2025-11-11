@@ -43,7 +43,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="fullName">Full Name *</label>
-                                <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name">
+                                <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name" maxlength="60" pattern="[A-Za-z\s]{1,60}" title="Full name must use letters and spaces only (max 60 characters)" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" autocomplete="name">
                             </div>
                             <div class="form-group">
                                 <label for="gender">Gender *</label>
@@ -57,11 +57,17 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="studentNumber">Student Number *</label>
-                                <input type="text" id="studentNumber" name="studentNumber" required placeholder="Enter your student number">
+                                <input type="text" id="studentNumber" name="studentNumber" required placeholder="Enter your student number" pattern="[0-9]*" inputmode="numeric" onkeypress="return /[0-9]/i.test(event.key)">
                             </div>
                             <div class="form-group">
                                 <label for="batch">Batch *</label>
-                                <input type="text" id="batch" name="batch" required placeholder="e.g., 2024">
+                                <select id="batch" name="batch" required>
+                                    <option value="">Select batch year</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -75,11 +81,12 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="contactNumber">Contact Number *</label>
-                                <input type="tel" id="contactNumber" name="contactNumber" required placeholder="e.g., +63 912 345 6789">
+                                <input type="tel" id="contactNumber" name="contactNumber" required placeholder="e.g., 09123456789" maxlength="11" pattern="[0-9]*" inputmode="numeric" onkeypress="return /[0-9]/i.test(event.key)">
+                                <small style="color: #64748B; font-size: 12px; margin-top: 4px; display: block;">Maximum 11 digits (numbers only)</small>
                             </div>
                             <div class="form-group">
                                 <label for="birthday">Birthday *</label>
-                                <input type="date" id="birthday" name="birthday" required>
+                                <input type="date" id="birthday" name="birthday" required max="2010-12-31">
                             </div>
                         </div>
                     </div>
@@ -112,6 +119,22 @@
                 </div>
             </aside>
             </main>
+        </div>
+    </div>
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirm Logout</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
         </div>
     </div>
     <script>
@@ -173,12 +196,12 @@
                 if (!contentType || !contentType.includes('application/json')) {
                     const text = await response.text();
                     console.error('Non-JSON response received:', text.substring(0, 200));
-                    alert('Server error: Received HTML instead of JSON. The API endpoint might not be working. Status: ' + response.status);
+                    showAlertModal('Server error: Received HTML instead of JSON. The API endpoint might not be working. Status: ' + response.status, 'Error');
                     return;
                 }
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    alert('Profile updated successfully!');
+                    showAlertModal('Profile updated successfully!', 'Success');
                     updateCompletion(data.data.profileCompletion || 0);
                     updateVerificationStatus(data.data.isVerified || data.data.verified || false);
                     
@@ -187,11 +210,11 @@
                     localStorage.setItem('lastProfileUpdate', JSON.stringify(updatedProfileData));
                 } else {
                     console.error('Profile update failed:', data);
-                    alert(data.error || 'Failed to update profile. Please check the console for details.');
+                    showAlertModal(data.error || 'Failed to update profile. Please check the console for details.', 'Error');
                 }
             } catch (error) {
                 console.error('Error saving profile:', error);
-                alert('Failed to save profile. Error: ' + error.message + '. Please check the console for details.');
+                showAlertModal('Failed to save profile. Error: ' + error.message + '. Please check the console for details.', 'Error');
             }
         });
         function updateCompletion(percent) {
@@ -219,11 +242,56 @@
         function toggleProfileMenu() {
         }
         function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+        
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+        
+        function confirmLogout() {
             localStorage.removeItem('studentToken');
             localStorage.removeItem('studentData');
             window.location.href = '/student-login';
         }
+        
+        window.onclick = function(event) {
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target === logoutModal) {
+                closeLogoutModal();
+            }
+        };
+        
+        function showAlertModal(message, title = 'Notice') {
+            const modal = document.getElementById('alertModal');
+            const msg = document.getElementById('alertMessage');
+            const ttl = document.getElementById('alertTitle');
+            if (!modal || !msg || !ttl) return alert(message);
+            ttl.textContent = title;
+            msg.textContent = message;
+            modal.style.display = 'flex';
+        }
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         loadProfile();
     </script>
 </body>
+<!-- Alert Modal -->
+<div id="alertModal" class="history-modal" style="display: none;">
+    <div class="history-modal-content">
+        <div class="history-modal-header">
+            <h2 id="alertTitle">Notice</h2>
+            <button class="history-close" onclick="closeAlertModal()">&times;</button>
+        </div>
+        <div class="history-modal-body">
+            <p id="alertMessage"></p>
+        </div>
+        <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+            <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+        </div>
+    </div>
+</div>
 </html>

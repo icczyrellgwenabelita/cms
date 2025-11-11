@@ -305,7 +305,49 @@ router.get('/profile', verifyStudentToken, async (req, res) => {
 });
 router.put('/profile', verifyStudentToken, async (req, res) => {
   try {
-    const { fullName, gender, studentNumber, batch, address, contactNumber, birthday, profilePicture } = req.body;
+    let { fullName, gender, studentNumber, batch, address, contactNumber, birthday, profilePicture } = req.body;
+    if (typeof fullName === 'string') {
+      fullName = fullName.trim();
+    }
+    const nameRegex = /^[A-Za-z\s]{1,60}$/;
+    if (fullName && !nameRegex.test(fullName)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Full name must contain letters and spaces only (max 60 characters)'
+      });
+    }
+    if (studentNumber && !/^\d+$/.test(studentNumber)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Student number must contain only numbers'
+      });
+    }
+    if (batch && !['2022', '2023', '2024', '2025'].includes(batch)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Batch must be one of: 2022, 2023, 2024, or 2025'
+      });
+    }
+    let cleanedContactNumber = contactNumber;
+    if (typeof contactNumber === 'string') {
+      contactNumber = contactNumber.trim();
+    }
+    if (contactNumber) {
+      const cleanContact = contactNumber.replace(/\D/g, '');
+      if (cleanContact.length > 11) {
+        return res.status(400).json({
+          success: false,
+          error: 'Contact number must be maximum 11 digits'
+        });
+      }
+      if (cleanContact.length > 0 && !/^\d+$/.test(cleanContact)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Contact number must contain only numbers'
+        });
+      }
+      cleanedContactNumber = cleanContact;
+    }
     
     console.log('Profile update request received for userId:', req.userId);
     console.log('Profile update - ProfilePicture provided:', profilePicture !== undefined, 'Value:', profilePicture ? 'base64 string (' + profilePicture.length + ' chars)' : profilePicture);
@@ -332,7 +374,7 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
           studentNumber: studentNumber !== undefined ? studentNumber : existingStudentInfo.studentNumber,
           batch: batch !== undefined ? batch : existingStudentInfo.batch,
           address: address !== undefined ? address : existingStudentInfo.address,
-          contactNumber: contactNumber !== undefined ? contactNumber : existingStudentInfo.contactNumber,
+          contactNumber: contactNumber !== undefined ? cleanedContactNumber : existingStudentInfo.contactNumber,
           birthday: birthday !== undefined ? birthday : existingStudentInfo.birthday
         }
       };
@@ -394,7 +436,7 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
       studentNumber: studentNumber !== undefined ? studentNumber : studentExisting.studentNumber,
       batch: batch !== undefined ? batch : studentExisting.batch,
       address: address !== undefined ? address : studentExisting.address,
-      contactNumber: contactNumber !== undefined ? contactNumber : studentExisting.contactNumber,
+      contactNumber: contactNumber !== undefined ? cleanedContactNumber : studentExisting.contactNumber,
       birthday: birthday !== undefined ? birthday : studentExisting.birthday,
       updatedAt: new Date().toISOString()
     };

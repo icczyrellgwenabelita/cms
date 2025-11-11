@@ -138,7 +138,7 @@ body.student-portal,
     margin-right: auto;
     padding: 4px 24px 16px 24px;
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 460px 1fr; /* widen personal details column to fit long values */
     gap: 32px;
     width: 100%;
     box-sizing: border-box;
@@ -266,10 +266,24 @@ body.student-portal,
     font-weight: 500;
     color: #1E293B;
     text-align: right;
-    word-wrap: break-word;
+    word-wrap: normal;
+    white-space: nowrap;
     flex: 1;
     font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+    .detail-value {
+        white-space: normal;
+        word-wrap: break-word;
+    }
+}
+
+/* Allow wrapping for the Address row specifically to prevent overlap */
+#addressItem .detail-value {
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .profile-badge-section {
@@ -959,18 +973,6 @@ body.student-portal,
         position: static;
     }
     
-    .profile-main {
-        /* Grid columns already set to 12 on mobile */
-    }
-    
-    .profile-form-card {
-        /* Already col-span-12 on mobile */
-    }
-    
-    .profile-info-card {
-        /* Already col-span-12 on mobile */
-    }
-    
     .nav-tabs {
         display: none;
     }
@@ -1077,15 +1079,17 @@ body.student-portal,
     text-align: center;
 }
 
-/* Lesson Actions - History Button */
+/* Lesson Actions - History Buttons */
 .lesson-actions {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid #E5E7EB;
+    display: flex;
+    gap: 8px;
 }
 
 .btn-history {
-    width: 100%;
+    flex: 1;
     padding: 10px 16px;
     background: #C19A6B;
     color: white;
