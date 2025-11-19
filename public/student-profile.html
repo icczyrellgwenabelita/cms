@@ -7,6 +7,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
     <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
     <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="student-portal.css">
 </head>
@@ -15,11 +18,16 @@
     <header class="portal-header">
         <div class="header-content">
             <div class="logo">
-                <img src="caresimm.png" alt="CareSim" class="header-logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
             </div>
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab">Lessons</a>
+                    <a href="/student-assessment" class="nav-tab">Assessment</a>
+                    <a href="/student-certificates" class="nav-tab">Certificates</a>
                     <a href="/student-profile" class="nav-tab active">Profile</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
@@ -27,98 +35,257 @@
         </div>
     </header>
     <div class="portal-container profile-page">
-        <!-- Profile Form -->
         <div class="profile-page-wrapper">
-            <main class="profile-main">
-                <div class="profile-form-card">
-                <div class="profile-form-header">
-                    <h1>Personal Information</h1>
-                    <p class="subtitle">Complete your profile to become a Verified CareSim Student</p>
-                </div>
-                <form id="profileForm" class="profile-form">
-                    
-                    <div class="form-section">
-                        <h2 class="section-title">Basic Information</h2>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="fullName">Full Name *</label>
-                                <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name" maxlength="60" pattern="[A-Za-z\s]{1,60}" title="Full name must use letters and spaces only (max 60 characters)" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" autocomplete="name">
+            <section class="profile-layout-grid">
+                <form id="profileForm" class="profile-form-grid" novalidate>
+                    <article class="profile-card student-overview-card" data-role-card="student">
+                        <div class="overview-header">
+                            <div>
+                                <h2>Student Overview</h2>
                             </div>
-                            <div class="form-group">
-                                <label for="gender">Gender *</label>
-                                <select id="gender" name="gender" required>
+                        </div>
+                        <div class="student-overview-grid">
+                            <div class="overview-identity">
+                                <div class="overview-identity-header">
+                                    <div class="photo-frame" id="photoFrame">
+                                        <img src="" alt="Profile photo" id="profilePhotoImage" style="display:none;">
+                                        <span class="photo-initial" id="profilePhotoInitial">?</span>
+                                    </div>
+                                    <div class="identity-text">
+                                        <h3 id="heroName">Loading...</h3>
+                                        <p class="hero-role" id="heroRole">CareSim Student</p>
+                                        <div class="photo-actions">
+                                            <button type="button" class="btn-upload" id="uploadPhotoBtn">Upload Photo</button>
+                                            <button type="button" class="btn-remove-picture" id="removePhotoBtn">Remove</button>
+                                        </div>
+                                        <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+                                        <p class="photo-hint">PNG or JPG, max 5MB.</p>
+                                    </div>
+                                </div>
+                                <div class="identity-info-tiles">
+                                    <div class="info-tile compact">
+                                        <span class="info-tile-label">Student Number</span>
+                                        <strong id="studentNumberDisplay">--</strong>
+                                        <input type="hidden" id="studentNumber" name="studentNumber">
+                                    </div>
+                                    <div class="info-tile compact">
+                                        <span class="info-tile-label">Batch</span>
+                                        <strong id="batchDisplay">--</strong>
+                                        <input type="hidden" id="batch" name="batch">
+                                    </div>
+                                    <div class="info-tile compact status-pill-tile">
+                                        <span class="info-tile-label">Status</span>
+                                        <span class="status-pill" id="heroStatusLabel">Active</span>
+                                        <select id="studentStatus" name="studentStatus" class="status-select" aria-label="Update student status">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="graduated">Graduated</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="identity-meta">
+                                    <span class="meta-label">Last Login</span>
+                                    <span class="meta-value" id="heroLastLogin">--</span>
+                                </div>
+                            </div>
+                            <div class="overview-learning">
+                                <div class="learning-stats-grid">
+                                    <div>
+                                        <span>Overall Progress</span>
+                                        <strong id="learningProgressStat">0%</strong>
+                                    </div>
+                                    <div>
+                                        <span>Badges Earned</span>
+                                        <strong id="badgesEarnedStat">0</strong>
+                                    </div>
+                                    <div>
+                                        <span>Certificates</span>
+                                        <strong id="certificatesSidebarStat">0</strong>
+                                    </div>
+                                    <div>
+                                        <span>Simulation Score</span>
+                                        <strong id="simulationScoreStat">--</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overview-progress-row">
+                            <div class="overview-progress-label">
+                                <span>Profile Completion</span>
+                                <strong id="heroCompletion">0%</strong>
+                            </div>
+                            <div class="overview-progress-bar">
+                                <div class="completion-bar-fill" id="completionBarFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="profile-card">
+                        <div class="card-header">
+                            <h2>Basic Information</h2>
+                            <p class="card-subtitle centered-subtitle">Shared across every role for consistent records.</p>
+                        </div>
+                        <div class="field-grid two-cols">
+                            <div class="field-group">
+                                <label for="fullName">Full Name</label>
+                                <input type="text" id="fullName" name="fullName" autocomplete="name" required>
+                            </div>
+                            <div class="field-group">
+                                <label for="emailAddress">Email Address</label>
+                                <input type="email" id="emailAddress" name="email" required>
+                            </div>
+                        </div>
+                        <div class="field-grid two-cols">
+                            <div class="field-group">
+                                <label for="roleField">Role</label>
+                                <input type="text" id="roleField" name="role" readonly>
+                            </div>
+                            <div class="field-group field-placeholder" aria-hidden="true"></div>
+                        </div>
+                        <input type="hidden" id="statusField" name="status">
+                        <div class="card-inline-actions right">
+                            <button type="button" class="btn-save secondary" data-section="basic-info">Save Basic Info</button>
+                        </div>
+                    </article>
+
+                    <article class="profile-card">
+                        <div class="card-header">
+                            <h2>Personal Information</h2>
+                            <p class="card-subtitle centered-subtitle">Fields necessary for identity and communication.</p>
+                        </div>
+                        <div class="field-grid two-cols">
+                            <div class="field-group">
+                                <label for="contactNumber">Contact Number</label>
+                                <input type="tel" id="contactNumber" name="contactNumber" maxlength="11" pattern="\d{11}" inputmode="numeric">
+                            </div>
+                            <div class="field-group">
+                                <label for="birthdate">Birthdate</label>
+                                <input type="date" id="birthdate" name="birthdate">
+                            </div>
+                            <div class="field-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" name="gender">
                                     <option value="">Select gender</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
+                                    <option value="nonbinary">Non-binary</option>
+                                    <option value="prefer_not">Prefer not to say</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="studentNumber">Student Number *</label>
-                                <input type="text" id="studentNumber" name="studentNumber" required placeholder="Enter your student number" pattern="[0-9]*" inputmode="numeric" onkeypress="return /[0-9]/i.test(event.key)">
+                            <div class="field-group">
+                                <label for="emergencyName">Emergency Contact Name</label>
+                                <input type="text" id="emergencyName" name="emergencyName" pattern="^[A-Za-z\s]+$">
                             </div>
-                            <div class="form-group">
-                                <label for="batch">Batch *</label>
-                                <select id="batch" name="batch" required>
-                                    <option value="">Select batch year</option>
-                                    <option value="2022">2022</option>
-                                    <option value="2023">2023</option>
-                                    <option value="2024">2024</option>
-                                    <option value="2025">2025</option>
+                            <div class="field-group">
+                                <label for="emergencyNumber">Emergency Contact Number</label>
+                                <input type="tel" id="emergencyNumber" name="emergencyNumber" maxlength="11" pattern="\d{11}" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Complete address"></textarea>
+                        </div>
+                        <div class="card-inline-actions right">
+                            <button type="button" class="btn-save secondary" data-section="personal-info">Save Personal Info</button>
+                        </div>
+                    </article>
+
+                    <article class="profile-card account-settings-card">
+                        <div class="card-header account-settings-header">
+                            <div class="account-settings-title">
+                            <h2>Account Settings</h2>
+                            <p class="card-subtitle centered-subtitle">Security options and last activity data.</p>
+                        </div>
+                            <span class="card-icon lock-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="5" y="11" width="14" height="9" rx="2" ry="2"></rect>
+                                    <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                                    <circle cx="12" cy="15" r="1.5"></circle>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="account-settings-body">
+                            <div class="account-status-grid">
+                                <div class="status-tile">
+                                    <span class="status-label">Last Login</span>
+                                    <strong class="status-value" id="lastLoginField">--</strong>
+                                </div>
+                                <div class="status-tile">
+                                    <span class="status-label">Profile Completion</span>
+                                    <div class="status-value-group">
+                                        <strong class="status-value" id="completionField">0%</strong>
+                                        <span class="status-badge in-progress" id="completionBadge">In Progress</span>
+                                    </div>
+                                    <div class="status-progress">
+                                        <div class="status-progress-fill" id="completionStatusBar" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="account-divider" role="presentation"></div>
+                            <div class="account-settings-action-row">
+                                <button type="button" class="btn-primary btn-lock" id="changePasswordBtn">
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+
+
+                    <article class="profile-card role-card" data-role-card="instructor">
+                        <div class="card-header">
+                            <h2>Instructor Information</h2>
+                            <p class="card-subtitle sr-only">Keep your teaching credentials updated.</p>
+                        </div>
+                        <div class="field-grid two-cols">
+                            <div class="field-group">
+                                <label for="department">Department</label>
+                                <input type="text" id="department" name="department">
+                            </div>
+                            <div class="field-group">
+                                <label for="assignedClass">Assigned Class / Section</label>
+                                <input type="text" id="assignedClass" name="assignedClass">
+                            </div>
+                            <div class="field-group">
+                                <label for="experienceYears">Years of Experience</label>
+                                <input type="number" id="experienceYears" min="0" max="60">
+                            </div>
+                            <div class="field-group">
+                                <label for="licenseId">License / Certification ID</label>
+                                <input type="text" id="licenseId">
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="profile-card role-card" data-role-card="admin">
+                        <div class="card-header">
+                            <h2>Admin Information</h2>
+                            <p class="card-subtitle">System access metadata.</p>
+                        </div>
+                        <div class="field-grid two-cols">
+                            <div class="field-group">
+                                <label for="adminId">Admin ID</label>
+                                <input type="text" id="adminId">
+                            </div>
+                            <div class="field-group">
+                                <label for="permissionsLevel">Permissions Level</label>
+                                <select id="permissionsLevel">
+                                    <option value="standard">Standard</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="superadmin">Super Admin</option>
                                 </select>
                             </div>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h2 class="section-title">Contact Information</h2>
-                        
-                        <div class="form-group">
-                            <label for="address">Address *</label>
-                            <textarea id="address" name="address" required rows="3" placeholder="Enter your full address"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="contactNumber">Contact Number *</label>
-                                <input type="tel" id="contactNumber" name="contactNumber" required placeholder="e.g., 09123456789" maxlength="11" pattern="[0-9]*" inputmode="numeric" onkeypress="return /[0-9]/i.test(event.key)">
-                                <small style="color: #64748B; font-size: 12px; margin-top: 4px; display: block;">Maximum 11 digits (numbers only)</small>
+                            <div class="field-group">
+                                <label for="dateCreated">Date Created</label>
+                                <input type="text" id="dateCreated" readonly>
                             </div>
-                            <div class="form-group">
-                                <label for="birthday">Birthday *</label>
-                                <input type="date" id="birthday" name="birthday" required max="2010-12-31">
+                            <div class="field-group">
+                                <label for="createdBy">Created By</label>
+                                <input type="text" id="createdBy">
                             </div>
                         </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-cancel" onclick="goToDashboard()">Cancel</button>
-                        <button type="submit" class="btn-save">Save Changes</button>
-                    </div>
+                    </article>
+
                 </form>
-            </div>
-            <!-- Profile Completion Card -->
-            <aside class="profile-info-card">
-                <div class="info-card">
-                    <h3>Profile Completion</h3>
-                    <div class="completion-circle">
-                        <svg class="progress-ring" width="120" height="120">
-                            <circle class="progress-ring-circle-bg" cx="60" cy="60" r="54" fill="transparent" stroke="#E2E8F0" stroke-width="8"/>
-                            <circle class="progress-ring-circle" cx="60" cy="60" r="54" fill="transparent" stroke="#4ADE80" stroke-width="8" stroke-dasharray="339.292" stroke-dashoffset="339.292" transform="rotate(-90 60 60)"/>
-                        </svg>
-                        <div class="completion-percentage" id="completionPercent">0%</div>
-                    </div>
-                    <p class="completion-text">Complete all required fields to earn your Verified Student badge!</p>
-                </div>
-                <div class="info-card">
-                    <h3>Verification Status</h3>
-                    <div id="verificationStatusBox" class="verification-status-box">
-                        <span class="status-icon">⏳</span>
-                        <span class="status-text">Pending Verification</span>
-                    </div>
-                    <p class="status-description">Complete 80% of your profile to become verified.</p>
-                </div>
-            </aside>
-            </main>
+            </section>
         </div>
     </div>
     <!-- Logout Confirmation Modal -->
@@ -138,51 +305,350 @@
         </div>
     </div>
     <script>
-        const token = localStorage.getItem('studentToken');
-        
+        const token = localStorage.getItem('studentToken') || localStorage.getItem('adminToken') || localStorage.getItem('instructorToken');
         if (!token) {
-            window.location.href = '/student-login';
+            window.location.href = '/caresim-login';
         }
+
+        function enforceNumericInput(e) {
+            if (!e?.target) return;
+            const cleanValue = e.target.value.replace(/\D/g, '').slice(0, 11);
+            e.target.value = cleanValue;
+        }
+
+        function enforceLetterInput(e) {
+            if (!e?.target) return;
+            const cleanValue = e.target.value.replace(/[^A-Za-z\s]/g, '');
+            e.target.value = cleanValue;
+        }
+
+        const state = {
+            role: 'student',
+            photoFile: null,
+            photoUrl: '',
+            completion: 0,
+            lastLogin: '',
+            verification: false
+        };
+
+        const dom = {
+            form: document.getElementById('profileForm'),
+            fullName: document.getElementById('fullName'),
+            email: document.getElementById('emailAddress'),
+            role: document.getElementById('roleField'),
+            status: document.getElementById('statusField'),
+            contact: document.getElementById('contactNumber'),
+            birthdate: document.getElementById('birthdate'),
+            gender: document.getElementById('gender'),
+            address: document.getElementById('address'),
+            emergencyName: document.getElementById('emergencyName'),
+            emergencyNumber: document.getElementById('emergencyNumber'),
+            studentNumber: document.getElementById('studentNumber'),
+            batch: document.getElementById('batch'),
+            studentNumberDisplay: document.getElementById('studentNumberDisplay'),
+            batchDisplay: document.getElementById('batchDisplay'),
+            studentStatus: document.getElementById('studentStatus'),
+            department: document.getElementById('department'),
+            assignedClass: document.getElementById('assignedClass'),
+            experienceYears: document.getElementById('experienceYears'),
+            licenseId: document.getElementById('licenseId'),
+            adminId: document.getElementById('adminId'),
+            permissionsLevel: document.getElementById('permissionsLevel'),
+            dateCreated: document.getElementById('dateCreated'),
+            createdBy: document.getElementById('createdBy'),
+            lastLoginField: document.getElementById('lastLoginField'),
+            completionField: document.getElementById('completionField'),
+            heroName: document.getElementById('heroName'),
+            heroRole: document.getElementById('heroRole'),
+            heroStatus: document.getElementById('heroStatusLabel'),
+            heroLastLogin: document.getElementById('heroLastLogin'),
+            heroCompletion: document.getElementById('heroCompletion'),
+            completionPercent: document.getElementById('completionPercent'),
+            progressCircle: document.querySelector('.progress-ring-circle'),
+            completionBadge: document.getElementById('completionBadge'),
+            completionStatusBar: document.getElementById('completionStatusBar'),
+            profilePhotoInput: document.getElementById('profilePhotoInput'),
+            photoFrame: document.getElementById('photoFrame'),
+            photoImage: document.getElementById('profilePhotoImage'),
+            photoInitial: document.getElementById('profilePhotoInitial'),
+            learningProgressStat: document.getElementById('learningProgressStat'),
+            badgesEarnedStat: document.getElementById('badgesEarnedStat'),
+            certificatesSidebarStat: document.getElementById('certificatesSidebarStat'),
+            simulationScoreStat: document.getElementById('simulationScoreStat'),
+            uploadPhotoBtn: document.getElementById('uploadPhotoBtn'),
+            removePhotoBtn: document.getElementById('removePhotoBtn'),
+            changePasswordBtn: document.getElementById('changePasswordBtn'),
+        };
+
+        if (dom.studentStatus) {
+            dom.studentStatus.addEventListener('change', () => {
+                if (dom.heroStatus) dom.heroStatus.textContent = capitalize(dom.studentStatus.value || 'active');
+            });
+        }
+
+        const verificationIcons = {
+            verified: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.25 6.25L8.125 14.375L3.75 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+            pending: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 5V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+        };
+
+        function capitalize(text = '') {
+            return text.charAt(0).toUpperCase() + text.slice(1);
+        }
+
+        function setValue(el, value = '') {
+            if (!el) return;
+            const val = value ?? '';
+            const tag = el.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+                el.value = val;
+            } else {
+                el.textContent = val;
+            }
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '--';
+            try {
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return date.toLocaleString();
+            } catch {
+                return value;
+            }
+        }
+
+        function updateCompletion(percent = 0) {
+            state.completion = Math.max(0, Math.min(100, Number(percent) || 0));
+            const rounded = Math.round(state.completion);
+            if (dom.heroCompletion) dom.heroCompletion.textContent = `${rounded}%`;
+            if (dom.completionField) {
+                const tag = dom.completionField.tagName?.toLowerCase();
+                if (tag === 'input') dom.completionField.value = `${rounded}%`;
+                else dom.completionField.textContent = `${rounded}%`;
+            }
+            const completionBarFill = document.getElementById('completionBarFill');
+            if (completionBarFill) completionBarFill.style.width = `${rounded}%`;
+            if (dom.completionStatusBar) dom.completionStatusBar.style.width = `${rounded}%`;
+            if (dom.completionBadge) {
+                if (rounded >= 100) {
+                    dom.completionBadge.textContent = 'Complete';
+                    dom.completionBadge.classList.remove('in-progress');
+                } else {
+                    dom.completionBadge.textContent = 'In Progress';
+                    dom.completionBadge.classList.add('in-progress');
+                }
+            }
+        }
+
+
+        function updatePhotoPreview(src = '', fallbackName = '') {
+            if (src) {
+                dom.photoImage.src = src;
+                dom.photoImage.style.display = 'block';
+                dom.photoInitial.style.display = 'none';
+                state.photoUrl = src;
+            } else {
+                dom.photoImage.style.display = 'none';
+                dom.photoInitial.style.display = 'flex';
+                dom.photoInitial.textContent = (fallbackName || '?').charAt(0).toUpperCase();
+                state.photoUrl = '';
+            }
+        }
+
+        function toggleRoleCards(role) {
+            document.querySelectorAll('[data-role-card]').forEach(card => {
+                const allowedRoles = card.getAttribute('data-role-card').split(',').map(r => r.trim());
+                card.style.display = allowedRoles.includes(role) ? 'block' : 'none';
+            });
+        }
+
+        function applyFieldPermissions() {
+            const isAdmin = state.role === 'admin';
+            if (dom.role) dom.role.readOnly = !isAdmin;
+            if (dom.studentNumber) dom.studentNumber.readOnly = !isAdmin;
+            if (dom.batch) dom.batch.readOnly = !isAdmin;
+            if (dom.studentStatus) dom.studentStatus.disabled = !isAdmin;
+        }
+
+        function updateLearningSummary(learning = {}) {
+            const lessons = learning.lessonsCompleted ?? 0;
+            const totalLessons = learning.totalLessons ?? 6;
+            const quizzes = learning.quizzesCompleted ?? 0;
+            const totalQuizzes = learning.totalQuizzes ?? 6;
+            const simulations = learning.simulationsCompleted ?? 0;
+            const totalSims = learning.totalSimulations ?? 3;
+            const certificates = learning.certificatesEarned ?? 0;
+            const totalCerts = learning.totalCertificates ?? 3;
+            const badges = learning.badgesEarned ?? certificates;
+            const simulationScore = learning.simulationScore ?? '--';
+            const progress = learning.overallProgress ?? state.completion;
+
+            if (dom.learningProgressStat) dom.learningProgressStat.textContent = `${Math.round(progress)}%`;
+            if (dom.badgesEarnedStat) dom.badgesEarnedStat.textContent = badges;
+            if (dom.certificatesSidebarStat) dom.certificatesSidebarStat.textContent = certificates;
+            if (dom.simulationScoreStat) dom.simulationScoreStat.textContent = simulationScore;
+        }
+
         async function loadProfile() {
             try {
                 const response = await fetch('/api/user/profile', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const data = await response.json();
-                if (response.ok && data.data) {
-                    const profile = data.data;
-                    
-                    if (profile.name || profile.fullName) document.getElementById('fullName').value = profile.name || profile.fullName;
-                    if (profile.gender) document.getElementById('gender').value = profile.gender;
-                    if (profile.studentNumber) document.getElementById('studentNumber').value = profile.studentNumber;
-                    if (profile.batch) document.getElementById('batch').value = profile.batch;
-                    if (profile.address) document.getElementById('address').value = profile.address;
-                    if (profile.contactNumber) document.getElementById('contactNumber').value = profile.contactNumber;
-                    if (profile.birthday) document.getElementById('birthday').value = profile.birthday;
-                    
-                    
-                    updateCompletion(data.data.profileCompletion || 0);
-                    updateVerificationStatus(data.data.isVerified || data.data.verified || false);
+                
+                // Handle unauthorized - redirect to login
+                if (response.status === 401) {
+                    localStorage.removeItem('studentToken');
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('instructorToken');
+                    window.location.href = '/caresim-login';
+                    return;
                 }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Non-JSON response received:', text.substring(0, 200));
+                    showAlertModal(`Server error: Received non-JSON response (Status: ${response.status}). The API endpoint might not be working correctly.`, 'Error');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.error || errorData.message || `Failed to load profile (Status: ${response.status})`;
+                    throw new Error(errorMsg);
+                }
+                
+                const payload = await response.json();
+                const data = payload.data || payload || {};
+                const profile = data.profile || data;
+                const learning = data.learning || {};
+                const studentInfo = data.studentInfo || {};
+                const instructorInfo = data.instructorInfo || {};
+                const adminInfo = data.adminInfo || {};
+                const emergency = data.emergencyContact || profile.emergencyContact || {};
+                const settings = data.settings || {};
+                state.role = (data.role || profile.role || 'student').toLowerCase();
+                state.lastLogin = settings.lastLogin || data.lastLogin || '';
+
+                setValue(dom.fullName, profile.name || profile.fullName || '');
+                setValue(dom.email, data.email || profile.email || '');
+                setValue(dom.role, capitalize(state.role));
+                setValue(dom.status, data.status || profile.status || 'active');
+                setValue(dom.contact, profile.contact || profile.contactNumber || '');
+                setValue(dom.birthdate, profile.birthdate || profile.birthday || '');
+                setValue(dom.gender, profile.gender || '');
+                setValue(dom.address, profile.address || '');
+                setValue(dom.emergencyName, emergency.name || '');
+                setValue(dom.emergencyNumber, emergency.contact || emergency.number || '');
+
+                setValue(dom.studentNumber, studentInfo.studentNumber || profile.studentNumber || '');
+                setValue(dom.batch, studentInfo.batch || profile.batch || '');
+                if (dom.studentNumberDisplay) dom.studentNumberDisplay.textContent = dom.studentNumber.value || '--';
+                if (dom.batchDisplay) dom.batchDisplay.textContent = dom.batch.value || '--';
+                setValue(dom.studentStatus, studentInfo.status || profile.status || 'active');
+
+                setValue(dom.department, instructorInfo.department || '');
+                setValue(dom.assignedClass, instructorInfo.assignedClass || '');
+                setValue(dom.experienceYears, instructorInfo.yearsOfExperience || '');
+                setValue(dom.licenseId, instructorInfo.licenseId || '');
+
+                setValue(dom.adminId, adminInfo.adminId || data.adminId || '');
+                setValue(dom.permissionsLevel, adminInfo.permissionsLevel || 'standard');
+                setValue(dom.dateCreated, formatDateTime(adminInfo.dateCreated || data.createdAt || ''));
+                setValue(dom.createdBy, adminInfo.createdBy || '');
+
+                if (dom.heroName) dom.heroName.textContent = profile.name || profile.fullName || 'CareSim User';
+                if (dom.heroRole) dom.heroRole.textContent = 'CareSim Student';
+                if (dom.heroStatus) dom.heroStatus.textContent = capitalize(data.status || profile.status || 'active');
+                if (dom.heroLastLogin) dom.heroLastLogin.textContent = formatDateTime(state.lastLogin);
+                setValue(dom.lastLoginField, formatDateTime(state.lastLogin));
+
+                updateLearningSummary(learning);
+                updateCompletion(data.profileCompletion ?? settings.profileCompletion ?? learning.overallProgress ?? 0);
+
+                const pictureUrl = profile.pictureURL || data.pictureURL || '';
+                updatePhotoPreview(pictureUrl, profile.name || '');
+
+                toggleRoleCards(state.role);
+                applyFieldPermissions();
             } catch (error) {
                 console.error('Error loading profile:', error);
+                const errorMessage = error.message || 'Unable to load profile information. Please try again.';
+                showAlertModal(errorMessage, 'Error');
             }
         }
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                name: document.getElementById('fullName').value,
-                fullName: document.getElementById('fullName').value,
-                gender: document.getElementById('gender').value,
-                studentNumber: document.getElementById('studentNumber').value,
-                batch: document.getElementById('batch').value,
-                address: document.getElementById('address').value,
-                contactNumber: document.getElementById('contactNumber').value,
-                birthday: document.getElementById('birthday').value
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const contactValue = dom.contact.value.trim();
+            if (!/^\d{11}$/.test(contactValue)) {
+                showAlertModal('Contact number must be exactly 11 digits.', 'Validation');
+                dom.contact.focus();
+                return;
+            }
+            const emergencyNumberValue = dom.emergencyNumber.value.trim();
+            if (emergencyNumberValue && !/^\d{11}$/.test(emergencyNumberValue)) {
+                showAlertModal('Emergency contact number must be exactly 11 digits.', 'Validation');
+                dom.emergencyNumber.focus();
+                return;
+            }
+            const emergencyNameValue = dom.emergencyName.value.trim();
+            if (emergencyNameValue && !/^[A-Za-z\s]+$/.test(emergencyNameValue)) {
+                showAlertModal('Emergency contact name should contain letters and spaces only.', 'Validation');
+                dom.emergencyName.focus();
+                return;
+            }
+            const payload = {
+                role: state.role,
+                email: dom.email.value,
+                status: dom.status.value,
+                profile: {
+                    name: dom.fullName.value,
+                    fullName: dom.fullName.value,
+                    contact: dom.contact.value,
+                    contactNumber: dom.contact.value,
+                    birthdate: dom.birthdate.value,
+                    gender: dom.gender.value,
+                    address: dom.address.value,
+                    emergencyContact: {
+                        name: dom.emergencyName.value,
+                        contact: dom.emergencyNumber.value
+                    }
+                },
+                settings: {
+                    lastLogin: state.lastLogin,
+                    profileCompletion: state.completion
+                }
             };
+
+            if (state.role === 'student') {
+                payload.studentInfo = {
+                    studentNumber: dom.studentNumber.value,
+                    batch: dom.batch.value,
+                    status: dom.studentStatus.value
+                };
+            }
+            if (state.role === 'instructor') {
+                payload.instructorInfo = {
+                    department: dom.department.value,
+                    assignedClass: dom.assignedClass.value,
+                    yearsOfExperience: dom.experienceYears.value,
+                    licenseId: dom.licenseId.value
+                };
+            }
+            if (state.role === 'admin') {
+                payload.adminInfo = {
+                    adminId: dom.adminId.value,
+                    permissionsLevel: dom.permissionsLevel.value,
+                    dateCreated: dom.dateCreated.value,
+                    createdBy: dom.createdBy.value
+                };
+            }
+
+            if (state.photoFile) {
+                payload.profile.photoUpload = await fileToBase64(state.photoFile);
+            }
             try {
                 const response = await fetch('/api/user/profile', {
                     method: 'PUT',
@@ -190,77 +656,51 @@
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    console.error('Non-JSON response received:', text.substring(0, 200));
-                    showAlertModal('Server error: Received HTML instead of JSON. The API endpoint might not be working. Status: ' + response.status, 'Error');
-                    return;
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || 'Failed to save profile');
                 }
-                const data = await response.json();
-                if (response.ok && data.success) {
                     showAlertModal('Profile updated successfully!', 'Success');
-                    updateCompletion(data.data.profileCompletion || 0);
-                    updateVerificationStatus(data.data.isVerified || data.data.verified || false);
-                    
-                    
-                    const updatedProfileData = { ...data.data };
-                    localStorage.setItem('lastProfileUpdate', JSON.stringify(updatedProfileData));
-                } else {
-                    console.error('Profile update failed:', data);
-                    showAlertModal(data.error || 'Failed to update profile. Please check the console for details.', 'Error');
-                }
+                loadProfile();
+                state.photoFile = null;
             } catch (error) {
                 console.error('Error saving profile:', error);
-                showAlertModal('Failed to save profile. Error: ' + error.message + '. Please check the console for details.', 'Error');
-            }
-        });
-        function updateCompletion(percent) {
-            const circle = document.querySelector('.progress-ring-circle');
-            const percentText = document.getElementById('completionPercent');
-            const circumference = 2 * Math.PI * 54;
-            const offset = circumference - (percent / 100) * circumference;
-            
-            circle.style.strokeDashoffset = offset;
-            percentText.textContent = Math.round(percent) + '%';
-        }
-        function updateVerificationStatus(isVerified) {
-            const statusBox = document.getElementById('verificationStatusBox');
-            if (isVerified) {
-                statusBox.innerHTML = '<span class="status-icon">✅</span><span class="status-text">Verified Student</span>';
-                statusBox.className = 'verification-status-box verified';
-            } else {
-                statusBox.innerHTML = '<span class="status-icon">⏳</span><span class="status-text">Pending Verification</span>';
-                statusBox.className = 'verification-status-box';
+                showAlertModal(error.message || 'Unable to save profile. Please try again.', 'Error');
             }
         }
-        function goToDashboard() {
-            window.location.href = '/student-dashboard?refresh=' + Date.now();
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
-        function toggleProfileMenu() {
+
+        function handlePhotoSelection(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            state.photoFile = file;
+            const reader = new FileReader();
+            reader.onload = () => updatePhotoPreview(reader.result, dom.fullName.value);
+            reader.readAsDataURL(file);
         }
-        function logout() {
-            document.getElementById('logoutModal').style.display = 'flex';
+
+        function removePhoto() {
+            state.photoFile = null;
+            dom.profilePhotoInput.value = '';
+            updatePhotoPreview('', dom.fullName.value);
         }
-        
-        function closeLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'none';
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('profile-dark');
+            const isDark = document.body.classList.contains('profile-dark');
+            dom.darkModeToggle.textContent = isDark ? 'Light Mode' : 'Dark Mode';
         }
-        
-        function confirmLogout() {
-            localStorage.removeItem('studentToken');
-            localStorage.removeItem('studentData');
-            window.location.href = '/student-login';
-        }
-        
-        window.onclick = function(event) {
-            const logoutModal = document.getElementById('logoutModal');
-            if (event.target === logoutModal) {
-                closeLogoutModal();
-            }
-        };
         
         function showAlertModal(message, title = 'Notice') {
             const modal = document.getElementById('alertModal');
@@ -271,9 +711,47 @@
             msg.textContent = message;
             modal.style.display = 'flex';
         }
+
         function closeAlertModal() {
             const modal = document.getElementById('alertModal');
             if (modal) modal.style.display = 'none';
+        }
+
+        function goToDashboard() {
+            window.location.href = '/student-dashboard?refresh=' + Date.now();
+        }
+
+        function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            ['studentToken', 'adminToken', 'instructorToken', 'studentData'].forEach(key => localStorage.removeItem(key));
+            window.location.href = '/caresim-login';
+        }
+
+        window.onclick = function(event) {
+            const logoutModal = document.getElementById('logoutModal');
+            const alertModal = document.getElementById('alertModal');
+            if (event.target === logoutModal) closeLogoutModal();
+            if (event.target === alertModal) closeAlertModal();
+        };
+
+        if (dom.form) dom.form.addEventListener('submit', handleFormSubmit);
+        if (dom.contact) dom.contact.addEventListener('input', enforceNumericInput);
+        if (dom.emergencyNumber) dom.emergencyNumber.addEventListener('input', enforceNumericInput);
+        if (dom.emergencyName) dom.emergencyName.addEventListener('input', enforceLetterInput);
+        if (dom.uploadPhotoBtn && dom.profilePhotoInput) {
+            dom.uploadPhotoBtn.addEventListener('click', () => dom.profilePhotoInput.click());
+        }
+        if (dom.profilePhotoInput) dom.profilePhotoInput.addEventListener('change', handlePhotoSelection);
+        if (dom.removePhotoBtn) dom.removePhotoBtn.addEventListener('click', removePhoto);
+        if (dom.changePasswordBtn) {
+            dom.changePasswordBtn.addEventListener('click', () => showAlertModal('Use the security menu to change your password.', 'Heads up'));
         }
 
         loadProfile();

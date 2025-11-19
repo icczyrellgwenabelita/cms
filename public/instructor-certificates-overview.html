@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificates Overview - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+</head>
+<body class="student-portal">
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
+                    <a href="/instructor-certificates-overview" class="nav-tab active">Certificates</a>
+                    <a href="/instructor-announcements" class="nav-tab">Announcements</a>
+                    <a href="/instructor-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <nav class="breadcrumb">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Certificates Overview</span>
+        </nav>
+
+        <div class="certificates-header">
+            <h1>
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 12V19C22 19.5304 21.7893 20.0391 21.4142 20.4142C21.0391 20.7893 20.5304 21 20 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 3H18C19.1046 3 20 3.89543 20 5V11H4V5C4 3.89543 4.89543 3 6 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 17L14 19L18 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Certificates Overview
+            </h1>
+            <p>Track student certificate completion for lessons, simulations, and the overall course.</p>
+        </div>
+
+        <div class="certificates-stats-row">
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Students with Certificates</h3>
+                </div>
+                <div class="instructor-stat-value">18</div>
+                <p class="instructor-stat-subtext">Out of 32 students</p>
+            </div>
+
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 3L2 9L12 15L22 9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 15L12 21L22 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 9V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M22 9V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Lesson Certificates Issued</h3>
+                </div>
+                <div class="instructor-stat-value">54</div>
+                <p class="instructor-stat-subtext">Across all lessons</p>
+            </div>
+
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 17L10 11L13 14L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M14 7H20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Simulation Certificates Issued</h3>
+                </div>
+                <div class="instructor-stat-value">20</div>
+                <p class="instructor-stat-subtext">Completed all simulations</p>
+            </div>
+
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1L15.09 7.36L22 8.27L17 13.14L18.18 20.02L12 16.9L5.82 20.02L7 13.14L2 8.27L8.91 7.36L12 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Overall Course Certificates</h3>
+                </div>
+                <div class="instructor-stat-value">10</div>
+                <p class="instructor-stat-subtext">Fully completed course</p>
+            </div>
+        </div>
+
+        <div class="certificates-tabs">
+            <button class="certificates-tab active" data-tab="all">All Certificates</button>
+            <button class="certificates-tab" data-tab="lesson">Lesson</button>
+            <button class="certificates-tab" data-tab="simulation">Simulation</button>
+            <button class="certificates-tab" data-tab="overall">Overall</button>
+        </div>
+
+        <div class="certificates-layout">
+            <div class="instructor-card certificates-card">
+                <div class="instructor-card-header">
+                    <h2>Student Certificates Status</h2>
+                </div>
+                <div class="certificates-table-wrapper">
+                    <table class="certificates-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Lesson Certificates</th>
+                                <th>Simulation Certificate</th>
+                                <th>Overall Course Certificate</th>
+                                <th>View</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Destine April</strong>
+                                    <p class="student-meta">Batch 2025 • STU-2025-001</p>
+                                </td>
+                                <td><span class="certificate-count complete">3 / 3</span></td>
+                                <td><span class="status-pill issued">Issued</span></td>
+                                <td><span class="status-pill issued">Issued</span></td>
+                                <td><button class="view-button">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Juan Cruz</strong>
+                                    <p class="student-meta">Batch 2025 • STU-2025-004</p>
+                                </td>
+                                <td><span class="certificate-count partial">2 / 3</span></td>
+                                <td><span class="status-pill issued">Issued</span></td>
+                                <td><span class="status-pill locked">Locked</span></td>
+                                <td><button class="view-button">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Maria Santos</strong>
+                                    <p class="student-meta">Batch 2026 • STU-2026-002</p>
+                                </td>
+                                <td><span class="certificate-count partial">1 / 3</span></td>
+                                <td><span class="status-pill pending">Not yet</span></td>
+                                <td><span class="status-pill pending">Not eligible</span></td>
+                                <td><button class="view-button">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Carlos Reyes</strong>
+                                    <p class="student-meta">Batch 2024 • STU-2024-010</p>
+                                </td>
+                                <td><span class="certificate-count complete">3 / 3</span></td>
+                                <td><span class="status-pill issued">Issued</span></td>
+                                <td><span class="status-pill issued">Issued</span></td>
+                                <td><button class="view-button">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Emily Rodriguez</strong>
+                                    <p class="student-meta">Batch 2026 • STU-2026-006</p>
+                                </td>
+                                <td><span class="certificate-count partial">2 / 3</span></td>
+                                <td><span class="status-pill pending">Not yet</span></td>
+                                <td><span class="status-pill locked">Locked</span></td>
+                                <td><button class="view-button">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Michael Chen</strong>
+                                    <p class="student-meta">Batch 2025 • STU-2025-011</p>
+                                </td>
+                                <td><span class="certificate-count partial">2 / 3</span></td>
+                                <td><span class="status-pill issued">Issued</span></td>
+                                <td><span class="status-pill pending">Not eligible</span></td>
+                                <td><button class="view-button">View Details</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="instructor-card certificates-summary-card">
+                <div class="instructor-card-header">
+                    <h2>Completion Summary by Certificate Type</h2>
+                </div>
+                <div class="certificates-summary-list">
+                    <div class="summary-line">
+                        <span>Lesson Certificates</span>
+                        <strong>18 / 32 students</strong>
+                    </div>
+                    <div class="summary-line">
+                        <span>Simulation Certificates</span>
+                        <strong>20 / 32 students</strong>
+                    </div>
+                    <div class="summary-line">
+                        <span>Overall Course Certificates</span>
+                        <strong>10 / 32 students</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/instructor-login';
+            }
+        }
+
+        const certificateTabs = document.querySelectorAll('.certificates-tab');
+
+        certificateTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                certificateTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
+

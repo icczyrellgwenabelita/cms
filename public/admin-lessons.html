@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSim Admin Portal - Lessons</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/admin-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab active">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab">Users</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    <div class="portal-container">
+        <!-- Lessons Management Section -->
+        <section class="content-section">
+            <div class="section-header">
+                <h1 class="section-title">Lessons Management</h1>
+                <button class="btn-primary" onclick="createNewLesson()">
+                    <i class="fas fa-plus"></i> Create Lesson
+                </button>
+            </div>
+            <div class="lessons-grid" id="lessonsContainer">
+                <!-- Lesson cards will be inserted here -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirmation</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 id="alertTitle">Notice</h2>
+                <button class="history-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+            window.location.href = '/admin-login';
+        }
+
+        // Static data storage (will be replaced with Firebase later)
+        let staticLessons = [];
+
+        // Initialize static data
+        function initializeData() {
+            // Load from localStorage or initialize default
+            const saved = localStorage.getItem('adminLessons');
+            if (saved) {
+                staticLessons = JSON.parse(saved);
+            } else {
+                // Initialize with default lessons
+                for (let i = 1; i <= 6; i++) {
+                    staticLessons.push({
+                        slot: i,
+                        lessonName: `Lesson ${i}`,
+                        lessonDescription: '',
+                        content: '',
+                        tools: {}
+                    });
+                }
+                saveToStorage();
+            }
+            loadLessons();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('adminLessons', JSON.stringify(staticLessons));
+        }
+
+        // Lessons Management
+        function loadLessons() {
+            const container = document.getElementById('lessonsContainer');
+            container.innerHTML = staticLessons.map(lesson => {
+                const toolsCount = lesson.tools ? Object.keys(lesson.tools).length : 0;
+                return `
+                    <div class="lesson-card">
+                        <div class="lesson-card-header">
+                            <span class="lesson-number">Lesson ${lesson.slot}</span>
+                        </div>
+                        <h3 class="lesson-name">${lesson.lessonName || 'Untitled Lesson'}</h3>
+                        <p class="lesson-description">${lesson.lessonDescription || 'No description'}</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-tools-count"><i class="fas fa-wrench"></i> ${toolsCount} tool${toolsCount !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="lesson-card-actions">
+                            <button class="btn-card-action btn-edit" onclick="editLesson(${lesson.slot})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-card-action btn-tools" onclick="manageTools(${lesson.slot})">
+                                <i class="fas fa-wrench"></i> Tools
+                            </button>
+                            <button class="btn-card-action btn-view" onclick="viewLesson(${lesson.slot})">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createNewLesson() {
+            // Navigate to editor page with new lesson
+            window.location.href = `/admin-lesson-editor?action=create`;
+        }
+
+        function editLesson(slot) {
+            // Navigate to editor page
+            window.location.href = `/admin-lesson-editor?slot=${slot}&action=edit`;
+        }
+
+        function manageTools(slot) {
+            // Navigate to editor page with tools tab active
+            window.location.href = `/admin-lesson-editor?slot=${slot}&action=edit&tab=tools`;
+        }
+
+        function viewLesson(slot) {
+            // Navigate to editor page with preview tab active
+            window.location.href = `/admin-lesson-editor?slot=${slot}&action=edit&tab=preview`;
+        }
+
+        // Utility functions
+        function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminData');
+            window.location.href = '/admin-login';
+        }
+
+        function showAlertModal(message, title = 'Notice') {
+            const modal = document.getElementById('alertModal');
+            const msg = document.getElementById('alertMessage');
+            const ttl = document.getElementById('alertTitle');
+            if (!modal || !msg || !ttl) return alert(message);
+            ttl.textContent = title;
+            msg.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Initialize
+        initializeData();
+    </script>
+</body>
+</html>

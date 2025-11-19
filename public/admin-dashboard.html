@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CareSim Admin Portal</title>
+    <title>CareSim Admin Portal - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
     <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
     <link rel="shortcut icon" type="image/png" href="asat.png">
@@ -15,76 +19,239 @@
     <header class="portal-header">
         <div class="header-content">
             <div class="logo">
-                <img src="caresimm.png" alt="CareSim" class="header-logo">
-                <span class="logo-text">Admin</span>
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
             </div>
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="/admin-dashboard" class="nav-tab active">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab">Users</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
     </header>
     <div class="portal-container">
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Lessons Management Section -->
-            <section class="lessons-section">
-                <div class="section-header">
-                    <h1 class="section-title">Lessons Management</h1>
-                </div>
-                <div class="lessons-grid" id="lessonsContainer">
-                    <!-- Lesson cards will be inserted here -->
-                </div>
-            </section>
-            <!-- Quizzes Management Section -->
-            <section class="quizzes-section">
-                <div class="section-header">
-                    <h1 class="section-title">Quizzes Management</h1>
-                </div>
-                
-                <!-- Lesson Tabs -->
-                <div class="lesson-tabs" id="lessonTabs">
-                    <!-- Lesson tabs will be dynamically generated -->
-                </div>
-                
-                <!-- Quizzes Grid for Selected Lesson -->
-                <div class="quizzes-grid" id="quizzesContainer">
-                    <!-- Quiz cards will be inserted here for the selected lesson -->
-                </div>
-            </section>
-        </main>
-    </div>
-    <!-- Lesson Edit Modal -->
-    <div id="lessonModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="lessonModalTitle">Edit Lesson</h2>
-                <button class="modal-close" onclick="closeLessonModal()">&times;</button>
-            </div>
-            <form id="lessonForm" onsubmit="saveLesson(event)">
-                <input type="hidden" id="lessonSlot" value="">
-                <div class="form-group">
-                    <label for="lessonName">Lesson Name *</label>
-                    <input type="text" id="lessonName" required>
-                </div>
-                <div class="form-group">
-                    <label for="lessonDescription">Lesson Description</label>
-                    <textarea id="lessonDescription" rows="4"></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeLessonModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Lesson</button>
-                </div>
-            </form>
+        <!-- Welcome Section -->
+        <div class="dashboard-welcome">
+            <h1 class="welcome-title">Welcome back, Admin!</h1>
+            <p class="welcome-subtitle" id="currentDateTime"></p>
         </div>
+
+        <!-- Statistics Cards Section -->
+        <section class="dashboard-section">
+            <h2 class="section-heading">Overview Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-value" id="totalUsers">0</h3>
+                        <p class="stat-label">Total Users</p>
+                        <p class="stat-change positive" id="usersChange">+2 this week</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-success">
+                    <div class="stat-icon"><i class="fas fa-book"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-value" id="totalLessons">6</h3>
+                        <p class="stat-label">Total Lessons</p>
+                        <p class="stat-change">All active</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-info">
+                    <div class="stat-icon"><i class="fas fa-question-circle"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-value" id="totalQuizzes">60</h3>
+                        <p class="stat-label">Total Quizzes</p>
+                        <p class="stat-change">10 per lesson</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-value" id="activeUsers">0</h3>
+                        <p class="stat-label">Active Users</p>
+                        <p class="stat-change positive" id="activeChange">100% active</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-secondary">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-value" id="completionRate">0%</h3>
+                        <p class="stat-label">Avg. Completion</p>
+                        <p class="stat-change" id="completionChange">Across all lessons</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-value" id="avgScore">0</h3>
+                        <p class="stat-label">Avg. Quiz Score</p>
+                        <p class="stat-change" id="scoreChange">Out of 10</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Grid: Recent Activity & Quick Actions -->
+        <div class="dashboard-grid">
+            <!-- Recent Activity Section -->
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Activity</h2>
+                    <button class="btn-link" onclick="refreshActivity()">Refresh</button>
+                </div>
+                <div class="activity-list" id="activityList">
+                    <!-- Activity items will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Quick Actions Section -->
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Actions</h2>
+                </div>
+                <div class="quick-actions-grid">
+                    <a href="/admin-lessons" class="quick-action-card">
+                        <div class="quick-action-icon"><i class="fas fa-plus-circle"></i></div>
+                        <h3>Create Lesson</h3>
+                        <p>Add a new lesson</p>
+                    </a>
+                    <a href="/admin-quizzes" class="quick-action-card">
+                        <div class="quick-action-icon"><i class="fas fa-question-circle"></i></div>
+                        <h3>Add Question</h3>
+                        <p>Create new quiz</p>
+                    </a>
+                    <a href="/admin-users" class="quick-action-card">
+                        <div class="quick-action-icon"><i class="fas fa-user-plus"></i></div>
+                        <h3>Add User</h3>
+                        <p>Register new user</p>
+                    </a>
+                    <a href="/admin-users" class="quick-action-card">
+                        <div class="quick-action-icon"><i class="fas fa-clipboard-list"></i></div>
+                        <h3>View Reports</h3>
+                        <p>Analytics & insights</p>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- Dashboard Grid: Recent Users & System Status -->
+        <div class="dashboard-grid">
+            <!-- Recent Users Section -->
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Users</h2>
+                    <a href="/admin-users" class="btn-link">View All</a>
+                </div>
+                <div class="recent-users-table">
+                    <table class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentUsersTableBody">
+                            <!-- Recent users will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- System Status Section -->
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">System Status</h2>
+                    <span class="status-indicator online" id="systemStatus">Online</span>
+                </div>
+                <div class="system-status-list">
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span class="status-label">Database</span>
+                            <span class="status-value" id="dbStatus">Connected</span>
+                        </div>
+                        <div class="status-badge status-online"></div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span class="status-label">API Server</span>
+                            <span class="status-value" id="apiStatus">Running</span>
+                        </div>
+                        <div class="status-badge status-online"></div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span class="status-label">Storage</span>
+                            <span class="status-value" id="storageStatus">Available</span>
+                        </div>
+                        <div class="status-badge status-online"></div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span class="status-label">Last Backup</span>
+                            <span class="status-value" id="backupStatus">Today 12:00 AM</span>
+                        </div>
+                        <div class="status-badge status-online"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Performance Metrics Section -->
+        <section class="dashboard-card full-width">
+            <div class="card-header">
+                <h2 class="card-title">Performance Metrics</h2>
+                <div class="time-filter">
+                    <button class="filter-btn active" onclick="setTimeFilter('today')">Today</button>
+                    <button class="filter-btn" onclick="setTimeFilter('week')">This Week</button>
+                    <button class="filter-btn" onclick="setTimeFilter('month')">This Month</button>
+                </div>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-label">Total Logins</div>
+                    <div class="metric-value" id="totalLogins">0</div>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: 0%" id="loginsBar"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Quiz Attempts</div>
+                    <div class="metric-value" id="quizAttempts">0</div>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: 0%" id="quizzesBar"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Lessons Completed</div>
+                    <div class="metric-value" id="lessonsCompleted">0</div>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: 0%" id="lessonsBar"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Active Sessions</div>
+                    <div class="metric-value" id="activeSessions">0</div>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: 0%" id="sessionsBar"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
+
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="history-modal" style="display: none;">
         <div class="history-modal-content logout-modal-content">
             <div class="history-modal-header">
-                <h2>Confirm Logout</h2>
+                <h2>Confirmation</h2>
                 <button class="history-close" onclick="closeLogoutModal()">&times;</button>
             </div>
             <div class="logout-modal-body">
@@ -96,583 +263,170 @@
             </div>
         </div>
     </div>
-    <!-- Quiz Edit Modal -->
-    <div id="quizModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="quizModalTitle">Edit Quiz</h2>
-                <button class="modal-close" onclick="closeQuizModal()">&times;</button>
-            </div>
-            <form id="quizForm" onsubmit="saveQuiz(event)">
-                <input type="hidden" id="quizLesson" value="">
-                <input type="hidden" id="quizSlot" value="">
-                <div class="form-group">
-                    <label for="quizLessonDisplay">Lesson</label>
-                    <input type="text" id="quizLessonDisplay" readonly disabled>
-                </div>
-                <div class="form-group">
-                    <label for="quizQuestion">Question *</label>
-                    <textarea id="quizQuestion" rows="3" maxlength="90" required></textarea>
-                    <div class="char-counter">
-                        <span id="questionCharCount">0</span>/90
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="quizAnswerA">Answer A *</label>
-                    <input type="text" id="quizAnswerA" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="answerACharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="quizAnswerB">Answer B *</label>
-                    <input type="text" id="quizAnswerB" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="answerBCharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="quizAnswerC">Answer C *</label>
-                    <input type="text" id="quizAnswerC" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="answerCCharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="quizAnswerD">Answer D *</label>
-                    <input type="text" id="quizAnswerD" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="answerDCharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="quizCorrectAnswer">Correct Answer *</label>
-                    <select id="quizCorrectAnswer" required>
-                        <option value="">Select correct answer</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="quizExplanation">Explanation</label>
-                    <textarea id="quizExplanation" rows="4" placeholder="Enter explanation"></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeQuizModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Quiz</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
     <script>
         const token = localStorage.getItem('adminToken');
         
         if (!token) {
             window.location.href = '/admin-login';
         }
-        async function loadLessons() {
-            try {
-                const response = await fetch('/api/admin/lessons', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    const container = document.getElementById('lessonsContainer');
-                    container.innerHTML = data.lessons.map(lesson => `
-                        <div class="lesson-card">
-                            <div class="lesson-card-header">
-                                <span class="lesson-number">Lesson ${lesson.slot}</span>
-                                <button class="btn-edit" onclick="editLesson(${lesson.slot})">Edit</button>
-                            </div>
-                            <h3 class="lesson-name">${lesson.lessonName || ''}</h3>
-                            <p class="lesson-description">${lesson.lessonDescription || ''}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    if (response.status === 401) {
-                        logout();
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading lessons:', error);
-            }
-        }
-        let currentLesson = 1;
-        let lessonsData = [];
-        function getLessonDisplayName(lessonSlot) {
-            const lessonNames = {
-                1: 'Monitoring Vital Signs',
-                2: 'Medication Assistance',
-                3: 'Meal Preparation and Feeding',
-                4: 'Safe Patient Transfer',
-                5: 'Bathing and Grooming the Elderly',
-                6: 'Emergency Response (CPR Basics)'
+
+        // Update current date/time
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             };
-            return `Lesson ${lessonSlot}: ${lessonNames[lessonSlot] || `Lesson ${lessonSlot}`}`;
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
         }
-        async function loadLessonsForTabs() {
+
+        // Load statistics (static for now - will connect to Firebase later)
+        async function loadStatistics() {
             try {
-                const response = await fetch('/api/admin/lessons', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    lessonsData = data.lessons;
-                    renderLessonTabs();
-                }
+                // Static data - replace with API call later
+                const staticUsers = [
+                    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'student', status: 'active', joinedDate: '2024-01-15' },
+                    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'student', status: 'active', joinedDate: '2024-01-20' },
+                    { id: 3, name: 'Admin User', email: 'admin@example.com', role: 'admin', status: 'active', joinedDate: '2024-01-10' }
+                ];
+
+                const totalUsers = staticUsers.length;
+                const activeUsers = staticUsers.filter(u => u.status === 'active').length;
+                const totalLessons = 6;
+                const totalQuizzes = 60;
+
+                document.getElementById('totalUsers').textContent = totalUsers;
+                document.getElementById('totalLessons').textContent = totalLessons;
+                document.getElementById('totalQuizzes').textContent = totalQuizzes;
+                document.getElementById('activeUsers').textContent = activeUsers;
+                document.getElementById('completionRate').textContent = '75%';
+                document.getElementById('avgScore').textContent = '8.2';
+
+                // TODO: Replace with actual API call
+                // const response = await fetch('/api/admin/statistics', {
+                //     headers: { 'Authorization': `Bearer ${token}` }
+                // });
+                // const data = await response.json();
+                // Update statistics from API response
             } catch (error) {
-                console.error('Error loading lessons for tabs:', error);
+                console.error('Error loading statistics:', error);
             }
         }
-        function renderLessonTabs() {
-            const tabsContainer = document.getElementById('lessonTabs');
-            tabsContainer.innerHTML = lessonsData.map(lesson => {
-                const lessonName = lesson.lessonName || `Lesson ${lesson.slot}`;
-                const isActive = lesson.slot === currentLesson ? 'active' : '';
-                return `
-                    <button class="lesson-tab ${isActive}" onclick="selectLesson(${lesson.slot})">
-                        ${lessonName}
-                    </button>
-                `;
-            }).join('');
-        }
-        function selectLesson(lessonSlot) {
-            currentLesson = lessonSlot;
-            renderLessonTabs();
-            loadQuizzes(lessonSlot);
-        }
-        async function loadQuizzes(lessonSlot = currentLesson) {
-            try {
-                console.log(`Loading quizzes for lesson ${lessonSlot}`);
-                const response = await fetch(`/api/admin/quizzes/${lessonSlot}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                console.log(`Response status: ${response.status}`);
-                const data = await response.json();
-                console.log('Response data:', data);
-                if (response.ok && data.success) {
-                    const container = document.getElementById('quizzesContainer');
-                    const lessonName = getLessonDisplayName(lessonSlot);
-                    
-                    if (!data.quizzes || data.quizzes.length === 0) {
-                        container.innerHTML = `
-                            <div class="quizzes-section-header">
-                                <h2>${lessonName}</h2>
-                            </div>
-                            <div class="quizzes-grid-inner">
-                                ${Array.from({ length: 10 }, (_, i) => `
-                                    <div class="quiz-card">
-                                        <div class="quiz-card-header">
-                                            <span class="quiz-number">Question ${i + 1}</span>
-                                            <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${i + 1})">Edit</button>
-                                        </div>
-                                        <h3 class="quiz-question">(No question set)</h3>
-                                        <div class="quiz-answers">
-                                            <div class="answer-item">
-                                                <span class="answer-label">A:</span>
-                                                <span>(Not set)</span>
-                                            </div>
-                                            <div class="answer-item">
-                                                <span class="answer-label">B:</span>
-                                                <span>(Not set)</span>
-                                            </div>
-                                            <div class="answer-item">
-                                                <span class="answer-label">C:</span>
-                                                <span>(Not set)</span>
-                                            </div>
-                                            <div class="answer-item">
-                                                <span class="answer-label">D:</span>
-                                                <span>(Not set)</span>
-                                            </div>
-                                        </div>
-                                        <div class="explanation-section">
-                                            <label class="explanation-label">Explanation:</label>
-                                            <div class="explanation-text"><span class="explanation-empty">No explanation set. Click Edit to add one.</span></div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = `
-                            <div class="quizzes-section-header">
-                                <h2>${lessonName}</h2>
-                            </div>
-                            <div class="quizzes-grid-inner">
-                                ${data.quizzes.map(quiz => `
-                                    <div class="quiz-card">
-                                        <div class="quiz-card-header">
-                                            <span class="quiz-number">Question ${quiz.slot}</span>
-                                            <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${quiz.slot})">Edit</button>
-                                        </div>
-                                        <h3 class="quiz-question">${quiz.question || '(No question set)'}</h3>
-                                        <div class="quiz-answers">
-                                            <div class="answer-item ${quiz.correctAnswer === 'A' ? 'correct' : ''}">
-                                                <span class="answer-label">A:</span>
-                                                <span>${quiz.answerA || '(Not set)'}</span>
-                                            </div>
-                                            <div class="answer-item ${quiz.correctAnswer === 'B' ? 'correct' : ''}">
-                                                <span class="answer-label">B:</span>
-                                                <span>${quiz.answerB || '(Not set)'}</span>
-                                            </div>
-                                            <div class="answer-item ${quiz.correctAnswer === 'C' ? 'correct' : ''}">
-                                                <span class="answer-label">C:</span>
-                                                <span>${quiz.answerC || '(Not set)'}</span>
-                                            </div>
-                                            <div class="answer-item ${quiz.correctAnswer === 'D' ? 'correct' : ''}">
-                                                <span class="answer-label">D:</span>
-                                                <span>${quiz.answerD || '(Not set)'}</span>
-                                            </div>
-                                        </div>
-                                        ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct Answer: ${quiz.correctAnswer}</div>` : ''}
-                                        <div class="explanation-section">
-                                            <label class="explanation-label">Explanation:</label>
-                                            <div class="explanation-text">${quiz.explanation || '<span class="explanation-empty">No explanation set. Click Edit to add one.</span>'}</div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
-                    }
-                } else {
-                    if (response.status === 401) {
-                        logout();
-                    } else {
-                        console.error('Failed to load quizzes:', data);
-                        const container = document.getElementById('quizzesContainer');
-                        const lessonName = getLessonDisplayName(lessonSlot);
-                        container.innerHTML = `
-                            <div class="quizzes-section-header">
-                                <h2>${lessonName}</h2>
-                                <p class="quizzes-count" style="color: #EF4444;">Error loading quizzes: ${data.error || 'Unknown error'}</p>
-                            </div>
-                        `;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading quizzes:', error);
-                const container = document.getElementById('quizzesContainer');
-                const lessonName = getLessonDisplayName(lessonSlot);
-                container.innerHTML = `
-                    <div class="quizzes-section-header">
-                        <h2>${lessonName}</h2>
-                        <p class="quizzes-count" style="color: #EF4444;">Error: ${error.message}</p>
+
+        // Load recent activity
+        function loadRecentActivity() {
+            const activities = [
+                { type: 'user', action: 'New user registered', user: 'John Doe', time: '2 hours ago', icon: 'fa-user' },
+                { type: 'quiz', action: 'Quiz completed', user: 'Jane Smith', lesson: 'Lesson 1', time: '3 hours ago', icon: 'fa-check-circle' },
+                { type: 'lesson', action: 'Lesson updated', user: 'Admin', lesson: 'Lesson 3', time: '5 hours ago', icon: 'fa-edit' },
+                { type: 'user', action: 'User verified', user: 'John Doe', time: '1 day ago', icon: 'fa-check' },
+                { type: 'quiz', action: 'New question added', user: 'Admin', lesson: 'Lesson 2', time: '2 days ago', icon: 'fa-plus' }
+            ];
+
+            const container = document.getElementById('activityList');
+            container.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon"><i class="fas ${activity.icon}"></i></div>
+                    <div class="activity-content">
+                        <p class="activity-text">
+                            <strong>${activity.user}</strong> ${activity.action}
+                            ${activity.lesson ? `<span class="activity-meta">in ${activity.lesson}</span>` : ''}
+                        </p>
+                        <span class="activity-time">${activity.time}</span>
                     </div>
-                `;
-            }
+                </div>
+            `).join('');
         }
-        function editLesson(slot) {
-            fetch(`/api/admin/lessons`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const lesson = data.lessons.find(l => l.slot === slot);
-                    document.getElementById('lessonSlot').value = slot;
-                    document.getElementById('lessonName').value = lesson.lessonName || '';
-                    document.getElementById('lessonDescription').value = lesson.lessonDescription || '';
-                    document.getElementById('lessonModalTitle').textContent = `Edit Lesson ${slot}`;
-                    document.getElementById('lessonModal').style.display = 'flex';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading lesson:', error);
-                showAlertModal('Failed to load lesson data', 'Error');
-            });
+
+        // Load recent users
+        function loadRecentUsers() {
+            const recentUsers = [
+                { name: 'John Doe', email: 'john@example.com', role: 'student', status: 'active' },
+                { name: 'Jane Smith', email: 'jane@example.com', role: 'student', status: 'active' },
+                { name: 'Admin User', email: 'admin@example.com', role: 'admin', status: 'active' }
+            ];
+
+            const tbody = document.getElementById('recentUsersTableBody');
+            tbody.innerHTML = recentUsers.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="role-badge role-${user.role}">${user.role}</span></td>
+                    <td><span class="status-badge status-${user.status}"></span></td>
+                </tr>
+            `).join('');
         }
-        function closeLessonModal() {
-            document.getElementById('lessonModal').style.display = 'none';
-            document.getElementById('lessonForm').reset();
+
+        // Load performance metrics
+        function loadPerformanceMetrics() {
+            // Static data - replace with API call later
+            document.getElementById('totalLogins').textContent = '24';
+            document.getElementById('quizAttempts').textContent = '156';
+            document.getElementById('lessonsCompleted').textContent = '42';
+            document.getElementById('activeSessions').textContent = '8';
+
+            // Animate progress bars
+            setTimeout(() => {
+                document.getElementById('loginsBar').style.width = '60%';
+                document.getElementById('quizzesBar').style.width = '85%';
+                document.getElementById('lessonsBar').style.width = '70%';
+                document.getElementById('sessionsBar').style.width = '40%';
+            }, 100);
         }
-        async function saveLesson(e) {
-            e.preventDefault();
-            const slot = parseInt(document.getElementById('lessonSlot').value);
-            const lessonName = document.getElementById('lessonName').value;
-            const lessonDescription = document.getElementById('lessonDescription').value;
-            try {
-                const response = await fetch(`/api/admin/lessons/${slot}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        lessonName,
-                        lessonDescription
-                    })
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    showAlertModal('Lesson saved successfully!', 'Success');
-                    closeLessonModal();
-                    loadLessons();
-                } else {
-                    showAlertModal(data.error || 'Failed to save lesson', 'Error');
-                }
-            } catch (error) {
-                console.error('Error saving lesson:', error);
-                showAlertModal('Failed to save lesson', 'Error');
-            }
+
+        function refreshActivity() {
+            loadRecentActivity();
+            showToast('Activity refreshed');
         }
-        function editQuiz(lesson, slot) {
-            fetch(`/api/admin/quizzes/${lesson}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const quiz = data.quizzes.find(q => q.slot === slot);
-                    const lessonName = getLessonDisplayName(lesson);
-                    
-                    document.getElementById('quizLesson').value = lesson;
-                    document.getElementById('quizSlot').value = slot;
-                    document.getElementById('quizLessonDisplay').value = lessonName;
-                    document.getElementById('quizQuestion').value = quiz.question || '';
-                    document.getElementById('quizAnswerA').value = quiz.answerA || '';
-                    document.getElementById('quizAnswerB').value = quiz.answerB || '';
-                    document.getElementById('quizAnswerC').value = quiz.answerC || '';
-                    document.getElementById('quizAnswerD').value = quiz.answerD || '';
-                    document.getElementById('quizCorrectAnswer').value = quiz.correctAnswer || '';
-                    document.getElementById('quizExplanation').value = quiz.explanation || '';
-                    document.getElementById('quizModalTitle').textContent = `Edit Question ${slot} - ${lessonName}`;
-                    document.getElementById('quizModal').style.display = 'flex';
-                    
-                    setTimeout(() => {
-                        updateCharCount('quizQuestion', 'questionCharCount', 90);
-                        updateCharCount('quizAnswerA', 'answerACharCount', 30);
-                        updateCharCount('quizAnswerB', 'answerBCharCount', 30);
-                        updateCharCount('quizAnswerC', 'answerCCharCount', 30);
-                        updateCharCount('quizAnswerD', 'answerDCharCount', 30);
-                        setupCharCounters();
-                    }, 100);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading quiz:', error);
-                showAlertModal('Failed to load quiz data', 'Error');
-            });
+
+        function setTimeFilter(period) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            // Reload metrics with new filter
+            loadPerformanceMetrics();
         }
-        
-        function updateCharCount(inputId, counterId, maxLength) {
-            const input = document.getElementById(inputId);
-            const counter = document.getElementById(counterId);
-            if (input && counter) {
-                const currentLength = input.value.length;
-                counter.textContent = currentLength;
-                if (currentLength >= maxLength) {
-                    counter.parentElement.classList.add('char-limit-reached');
-                } else {
-                    counter.parentElement.classList.remove('char-limit-reached');
-                }
-            }
+
+        function showToast(message) {
+            // Simple toast notification
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
         }
-        
-        function setupCharCounters() {
-            const questionInput = document.getElementById('quizQuestion');
-            const answerAInput = document.getElementById('quizAnswerA');
-            const answerBInput = document.getElementById('quizAnswerB');
-            const answerCInput = document.getElementById('quizAnswerC');
-            const answerDInput = document.getElementById('quizAnswerD');
-            
-            if (questionInput) {
-                questionInput.addEventListener('input', function() {
-                    updateCharCount('quizQuestion', 'questionCharCount', 90);
-                });
-            }
-            if (answerAInput) {
-                answerAInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerA', 'answerACharCount', 30);
-                });
-            }
-            if (answerBInput) {
-                answerBInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerB', 'answerBCharCount', 30);
-                });
-            }
-            if (answerCInput) {
-                answerCInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerC', 'answerCCharCount', 30);
-                });
-            }
-            if (answerDInput) {
-                answerDInput.addEventListener('input', function() {
-                    updateCharCount('quizAnswerD', 'answerDCharCount', 30);
-                });
-            }
-            
-        }
-        
-        
-        async function saveExplanation(lesson, slot, explanation) {
-            try {
-                const response = await fetch(`/api/admin/quizzes/${lesson}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    const quiz = data.quizzes.find(q => q.slot === slot);
-                    
-                    const updateResponse = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            question: quiz.question || '',
-                            answerA: quiz.answerA || '',
-                            answerB: quiz.answerB || '',
-                            answerC: quiz.answerC || '',
-                            answerD: quiz.answerD || '',
-                            correctAnswer: quiz.correctAnswer || '',
-                            explanation: explanation
-                        })
-                    });
-                    
-                    const updateData = await updateResponse.json();
-                    if (updateResponse.ok && updateData.success) {
-                        console.log('Explanation saved successfully');
-                    }
-                }
-            } catch (error) {
-                console.error('Error saving explanation:', error);
-            }
-        }
-        
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(setupCharCounters, 100);
-            });
-        } else {
-            setTimeout(setupCharCounters, 100);
-        }
-        function closeQuizModal() {
-            document.getElementById('quizModal').style.display = 'none';
-            document.getElementById('quizForm').reset();
-            updateCharCount('quizQuestion', 'questionCharCount', 90);
-            updateCharCount('quizAnswerA', 'answerACharCount', 30);
-            updateCharCount('quizAnswerB', 'answerBCharCount', 30);
-            updateCharCount('quizAnswerC', 'answerCCharCount', 30);
-            updateCharCount('quizAnswerD', 'answerDCharCount', 30);
-        }
-        async function saveQuiz(e) {
-            e.preventDefault();
-            const lesson = parseInt(document.getElementById('quizLesson').value);
-            const slot = parseInt(document.getElementById('quizSlot').value);
-            const question = document.getElementById('quizQuestion').value;
-            const answerA = document.getElementById('quizAnswerA').value;
-            const answerB = document.getElementById('quizAnswerB').value;
-            const answerC = document.getElementById('quizAnswerC').value;
-            const answerD = document.getElementById('quizAnswerD').value;
-            const correctAnswer = document.getElementById('quizCorrectAnswer').value;
-            const explanation = document.getElementById('quizExplanation').value;
-            try {
-                const response = await fetch(`/api/admin/quizzes/${lesson}/${slot}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question,
-                        answerA,
-                        answerB,
-                        answerC,
-                        answerD,
-                        correctAnswer,
-                        explanation
-                    })
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    showAlertModal('Quiz saved successfully!', 'Success');
-                    closeQuizModal();
-                    loadQuizzes(lesson);
-                } else {
-                    showAlertModal(data.error || 'Failed to save quiz', 'Error');
-                }
-            } catch (error) {
-                console.error('Error saving quiz:', error);
-                showAlertModal('Failed to save quiz', 'Error');
-            }
-        }
+
         function logout() {
             document.getElementById('logoutModal').style.display = 'flex';
         }
-        
+
         function closeLogoutModal() {
             document.getElementById('logoutModal').style.display = 'none';
         }
-        
+
         function confirmLogout() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminData');
             window.location.href = '/admin-login';
         }
-        window.onclick = function(event) {
-            const lessonModal = document.getElementById('lessonModal');
-            const quizModal = document.getElementById('quizModal');
-            const logoutModal = document.getElementById('logoutModal');
-            if (event.target === lessonModal) {
-                closeLessonModal();
-            }
-            if (event.target === quizModal) {
-                closeQuizModal();
-            }
-            if (event.target === logoutModal) {
-                closeLogoutModal();
-            }
-        }
-        loadLessons();
-        loadLessonsForTabs().then(() => {
-            loadQuizzes(currentLesson);
-        });
-    </script>
-    <!-- Alert Modal -->
-    <div id="alertModal" class="history-modal" style="display: none;">
-        <div class="history-modal-content">
-            <div class="history-modal-header">
-                <h2 id="alertTitle">Notice</h2>
-                <button class="history-close" onclick="closeAlertModal()">&times;</button>
-            </div>
-            <div class="history-modal-body">
-                <p id="alertMessage"></p>
-            </div>
-            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
-            </div>
-        </div>
-    </div>
-    <script>
-    function showAlertModal(message, title = 'Notice') {
-        const modal = document.getElementById('alertModal');
-        const msg = document.getElementById('alertMessage');
-        const ttl = document.getElementById('alertTitle');
-        if (!modal || !msg || !ttl) return alert(message);
-        ttl.textContent = title;
-        msg.textContent = message;
-        modal.style.display = 'flex';
-    }
-    function closeAlertModal() {
-        const modal = document.getElementById('alertModal');
-        if (modal) modal.style.display = 'none';
-    }
+
+        // Initialize
+        updateDateTime();
+        setInterval(updateDateTime, 60000); // Update every minute
+        loadStatistics();
+        loadRecentActivity();
+        loadRecentUsers();
+        loadPerformanceMetrics();
     </script>
 </body>
 </html>

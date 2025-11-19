@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificates - CareSim Student Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab">Lessons</a>
+                    <a href="/student-assessment" class="nav-tab">Assessment</a>
+                    <a href="/student-certificates" class="nav-tab active">Certificates</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container certificates-page-container">
+        <!-- Breadcrumb -->
+        <nav class="certificates-breadcrumb">
+            <a href="/student-dashboard">Home</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Certificates</span>
+        </nav>
+
+        <div class="certificates-page-header">
+            <h1>Certificates</h1>
+            <p class="page-subtitle">View and download your course completion certificates</p>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="certificates-summary">
+            <div class="summary-card">
+                <div class="summary-item">
+                    <span class="summary-label">Overall Status</span>
+                    <span class="summary-value status-eligible" id="overallStatus">Eligible</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Final Grade</span>
+                    <span class="summary-value" id="finalGrade">86%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Lessons Completed</span>
+                    <span class="summary-value" id="lessonsCompleted">4 / 6</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Simulations Passed</span>
+                    <span class="summary-value" id="simulationsPassed">2 / 3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Lesson Completion Certificates -->
+        <section class="certificates-section">
+            <h2 class="section-title">Lesson Completion Certificates</h2>
+            <div class="certificates-grid" id="lessonCertificatesGrid">
+                <!-- Lesson certificates will be inserted here -->
+            </div>
+        </section>
+
+        <!-- Section 2: Simulation Certificate -->
+        <section class="certificates-section">
+            <h2 class="section-title">Simulation Completion Certificate</h2>
+            <div class="certificate-card-large" id="simulationCertificateCard">
+                <div class="certificate-card-header">
+                    <h3>Simulation Completion Certificate</h3>
+                    <span class="certificate-status status-available" id="simulationStatus">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 2L6 6L2 7L6 10L8 14L10 10L14 7L10 6L8 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Available
+                    </span>
+                </div>
+                <div class="certificate-card-body">
+                    <div class="certificate-requirements">
+                        <strong>Requirements:</strong>
+                        <ul>
+                            <li>Pass all 3 simulations</li>
+                            <li id="simReq1">Vital Signs: <span class="req-status passed">Passed</span></li>
+                            <li id="simReq2">Medication Assistance: <span class="req-status passed">Passed</span></li>
+                            <li id="simReq3">Feeding: <span class="req-status pending">Pending</span></li>
+                        </ul>
+                    </div>
+                    <div class="certificate-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Date Issued:</span>
+                            <span class="meta-value" id="simulationDateIssued">--</span>
+                        </div>
+                    </div>
+                    <div class="certificate-actions">
+                        <button type="button" class="btn-cert-view" id="viewSimulationCertBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 3C4.667 3 2.5 5.5 2.5 8C2.5 10.5 4.667 13 8 13C11.333 13 13.5 10.5 13.5 8C13.5 5.5 11.333 3 8 3ZM8 11.333C6.16 11.333 4.667 9.84 4.667 8C4.667 6.16 6.16 4.667 8 4.667C9.84 4.667 11.333 6.16 11.333 8C11.333 9.84 9.84 11.333 8 11.333Z" fill="currentColor"/>
+                                <circle cx="8" cy="8" r="1.667" fill="currentColor"/>
+                            </svg>
+                            View Requirements
+                        </button>
+                        <button type="button" class="btn-cert-download" id="downloadSimulationCertBtn" disabled>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 11.333L4 7.333H6.667V2.667H9.333V7.333H12L8 11.333Z" fill="currentColor"/>
+                                <path d="M2.667 13.333H13.333V14.667H2.667V13.333Z" fill="currentColor"/>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Overall Course Certificate -->
+        <section class="certificates-section">
+            <h2 class="section-title">Overall Course Certificate (ASAT)</h2>
+            <div class="certificate-card-large certificate-card-premium" id="courseCertificateCard">
+                <div class="certificate-card-header">
+                    <h3>CareSim Course Completion Certificate</h3>
+                    <span class="certificate-status status-locked" id="courseStatus">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                            <path d="M5 7V5C5 3.34315 6.34315 2 8 2C9.65685 2 11 3.34315 11 5V7" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Locked
+                    </span>
+                </div>
+                <div class="certificate-card-body">
+                    <div class="certificate-requirements">
+                        <strong>Requirements:</strong>
+                        <ul>
+                            <li id="courseReq1">All lessons completed <span class="req-status passed">✓</span></li>
+                            <li id="courseReq2">All quizzes passed <span class="req-status passed">✓</span></li>
+                            <li id="courseReq3">All simulations passed <span class="req-status pending">✗</span></li>
+                            <li id="courseReq4">Final grade ≥ 75% <span class="req-status passed">✓</span></li>
+                        </ul>
+                    </div>
+                    <div class="certificate-progress">
+                        <strong>Progress:</strong> <span id="courseProgress">3/4 conditions met</span>
+                    </div>
+                    <div class="certificate-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Date Issued:</span>
+                            <span class="meta-value" id="courseDateIssued">--</span>
+                        </div>
+                    </div>
+                    <div class="certificate-actions">
+                        <button type="button" class="btn-cert-view" id="viewCourseProgressBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 3C4.667 3 2.5 5.5 2.5 8C2.5 10.5 4.667 13 8 13C11.333 13 13.5 10.5 13.5 8C13.5 5.5 11.333 3 8 3ZM8 11.333C6.16 11.333 4.667 9.84 4.667 8C4.667 6.16 6.16 4.667 8 4.667C9.84 4.667 11.333 6.16 11.333 8C11.333 9.84 9.84 11.333 8 11.333Z" fill="currentColor"/>
+                                <circle cx="8" cy="8" r="1.667" fill="currentColor"/>
+                            </svg>
+                            View Progress
+                        </button>
+                        <button type="button" class="btn-cert-download" id="downloadCourseCertBtn" disabled>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 11.333L4 7.333H6.667V2.667H9.333V7.333H12L8 11.333Z" fill="currentColor"/>
+                                <path d="M2.667 13.333H13.333V14.667H2.667V13.333Z" fill="currentColor"/>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Certificate View Modal -->
+    <div id="certificateModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content certificate-modal-content">
+            <div class="modal-header">
+                <h2 id="modalCertificateTitle">Certificate</h2>
+                <button type="button" class="modal-close" id="closeCertificateModal">&times;</button>
+            </div>
+            <div class="modal-body certificate-modal-body">
+                <div class="certificate-preview">
+                    <div class="certificate-preview-header">
+                        <div class="cert-logo-container">
+                            <div class="cert-logo-placeholder">ASAT</div>
+                            <div class="cert-logo-placeholder">CareSim</div>
+                        </div>
+                    </div>
+                    <div class="certificate-preview-body">
+                        <p class="certificate-intro">This certifies that</p>
+                        <h3 class="certificate-student-name" id="modalStudentName">Student Name</h3>
+                        <p class="certificate-description" id="modalCertificateDescription">
+                            has successfully completed<br>
+                            Lesson 1: Vital Signs Monitoring
+                        </p>
+                        <div class="certificate-footer">
+                            <div class="certificate-date">
+                                <strong>Date:</strong> <span id="modalCertificateDate">Nov 18, 2025</span>
+                            </div>
+                            <div class="certificate-id">
+                                <strong>Certificate ID:</strong> <span id="modalCertificateId">L1-2025-0001</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="certificate-modal-actions">
+                    <button type="button" class="btn-primary" id="downloadFromModalBtn">Download PDF</button>
+                    <button type="button" class="btn-outline" id="closeModalBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('studentToken');
+        if (!token) {
+            window.location.href = '/caresim-login';
+        }
+
+        let certificatesData = {
+            studentName: 'Loading...',
+            lessons: [],
+            simulations: [],
+            finalGrade: 0,
+            overallStatus: 'Not Yet Eligible'
+        };
+
+        // Load certificates data
+        async function loadCertificatesData() {
+            try {
+                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    const payload = data.data;
+                    
+                    // Get student name
+                    certificatesData.studentName = payload.name || payload.profile?.name || 'Student';
+                    
+                    // Get lessons
+                    certificatesData.lessons = payload.lessons || [];
+                    
+                    // Calculate final grade (placeholder - will come from backend)
+                    const quizScores = certificatesData.lessons
+                        .map(lesson => lesson.recentQuizScore)
+                        .filter(score => typeof score === 'number');
+                    certificatesData.finalGrade = quizScores.length
+                        ? Math.round(quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length)
+                        : 0;
+                    
+                    // Update summary
+                    updateSummary();
+                    
+                    // Render lesson certificates
+                    renderLessonCertificates();
+                    
+                    // Update simulation certificate
+                    updateSimulationCertificate();
+                    
+                    // Update course certificate
+                    updateCourseCertificate();
+                }
+            } catch (error) {
+                console.error('Error loading certificates data:', error);
+                // Use default data for demo
+                loadDefaultData();
+            }
+        }
+
+        function loadDefaultData() {
+            certificatesData.studentName = 'John Michael Cruz';
+            certificatesData.lessons = [
+                { slot: 1, lessonName: 'Vital Signs Monitoring', status: 'completed', quizAttempts: 2, recentQuizScore: 85 },
+                { slot: 2, lessonName: 'Medication Assistance', status: 'completed', quizAttempts: 1, recentQuizScore: 90 },
+                { slot: 3, lessonName: 'Meal Prep & Feeding', status: 'completed', quizAttempts: 1, recentQuizScore: 80 },
+                { slot: 4, lessonName: 'Safe Transfer Techniques', status: 'in_progress', quizAttempts: 0 },
+                { slot: 5, lessonName: 'Personal Care', status: 'not_started', quizAttempts: 0 },
+                { slot: 6, lessonName: 'Emergency Response', status: 'not_started', quizAttempts: 0 }
+            ];
+            certificatesData.finalGrade = 85;
+            certificatesData.simulations = [
+                { name: 'Vital Signs', status: 'pass' },
+                { name: 'Medication', status: 'pass' },
+                { name: 'Feeding', status: 'pending' }
+            ];
+            
+            updateSummary();
+            renderLessonCertificates();
+            updateSimulationCertificate();
+            updateCourseCertificate();
+        }
+
+        function updateSummary() {
+            const completedLessons = certificatesData.lessons.filter(l => l.status === 'completed').length;
+            const totalLessons = certificatesData.lessons.length;
+            const passedSims = certificatesData.simulations?.filter(s => s.status === 'pass').length || 0;
+            const totalSims = certificatesData.simulations?.length || 3;
+            
+            document.getElementById('finalGrade').textContent = `${certificatesData.finalGrade}%`;
+            document.getElementById('lessonsCompleted').textContent = `${completedLessons} / ${totalLessons}`;
+            document.getElementById('simulationsPassed').textContent = `${passedSims} / ${totalSims}`;
+            
+            const isEligible = completedLessons === totalLessons && 
+                              passedSims === totalSims && 
+                              certificatesData.finalGrade >= 75;
+            
+            const statusEl = document.getElementById('overallStatus');
+            statusEl.textContent = isEligible ? 'Eligible' : 'Not Yet Eligible';
+            statusEl.className = `summary-value ${isEligible ? 'status-eligible' : 'status-not-eligible'}`;
+        }
+
+        function renderLessonCertificates() {
+            const grid = document.getElementById('lessonCertificatesGrid');
+            grid.innerHTML = '';
+            
+            certificatesData.lessons.forEach(lesson => {
+                const isCompleted = lesson.status === 'completed';
+                const hasQuiz = lesson.quizAttempts > 0;
+                const quizPassed = hasQuiz && (lesson.recentQuizScore >= 50);
+                const isIssued = isCompleted && quizPassed;
+                
+                const status = isIssued ? 'issued' : (isCompleted && hasQuiz ? 'available' : 'locked');
+                const dateIssued = isIssued ? formatDate(new Date()) : '--';
+                const certId = isIssued ? `L${lesson.slot}-2025-${String(lesson.slot).padStart(4, '0')}` : '--';
+                
+                const card = document.createElement('div');
+                card.className = 'certificate-card';
+                card.innerHTML = `
+                    <div class="certificate-card-header">
+                        <h3>Lesson ${lesson.slot}</h3>
+                        <span class="certificate-status status-${status}">
+                            ${getStatusIcon(status)}
+                            ${status === 'issued' ? 'Issued' : status === 'available' ? 'Available' : 'Locked'}
+                        </span>
+                    </div>
+                    <div class="certificate-card-body">
+                        <div class="certificate-info">
+                            <p><strong>${lesson.lessonName || `Lesson ${lesson.slot}`}</strong></p>
+                        </div>
+                        <div class="certificate-requirements">
+                            <strong>Requirements:</strong>
+                            <ul>
+                                <li>Complete lesson content</li>
+                                <li>Pass quiz (≥ 50%)</li>
+                            </ul>
+                        </div>
+                        <div class="certificate-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Date Issued:</span>
+                                <span class="meta-value">${dateIssued}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Certificate ID:</span>
+                                <span class="meta-value">${certId}</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <button type="button" class="btn-cert-view view-cert-btn" 
+                                    data-lesson-slot="${lesson.slot}" 
+                                    data-lesson-name="${lesson.lessonName || `Lesson ${lesson.slot}`}"
+                                    data-cert-id="${certId}"
+                                    data-date="${dateIssued}"
+                                    ${!isIssued ? 'disabled' : ''}>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 3C4.667 3 2.5 5.5 2.5 8C2.5 10.5 4.667 13 8 13C11.333 13 13.5 10.5 13.5 8C13.5 5.5 11.333 3 8 3ZM8 11.333C6.16 11.333 4.667 9.84 4.667 8C4.667 6.16 6.16 4.667 8 4.667C9.84 4.667 11.333 6.16 11.333 8C11.333 9.84 9.84 11.333 8 11.333Z" fill="currentColor"/>
+                                    <circle cx="8" cy="8" r="1.667" fill="currentColor"/>
+                                </svg>
+                                View Certificate
+                            </button>
+                            <button type="button" class="btn-cert-download download-cert-btn" 
+                                    data-lesson-slot="${lesson.slot}"
+                                    ${!isIssued ? 'disabled' : ''}>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 11.333L4 7.333H6.667V2.667H9.333V7.333H12L8 11.333Z" fill="currentColor"/>
+                                    <path d="M2.667 13.333H13.333V14.667H2.667V13.333Z" fill="currentColor"/>
+                                </svg>
+                                Download PDF
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            // Attach event listeners
+            document.querySelectorAll('.view-cert-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!this.disabled) {
+                        showCertificateModal(
+                            this.dataset.lessonName,
+                            this.dataset.certId,
+                            this.dataset.date,
+                            'lesson'
+                        );
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.download-cert-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!this.disabled) {
+                        downloadCertificate(this.dataset.lessonSlot, 'lesson');
+                    }
+                });
+            });
+        }
+
+        function updateSimulationCertificate() {
+            const passedSims = certificatesData.simulations?.filter(s => s.status === 'pass').length || 0;
+            const totalSims = certificatesData.simulations?.length || 3;
+            const allPassed = passedSims === totalSims;
+            
+            const statusEl = document.getElementById('simulationStatus');
+            if (allPassed) {
+                statusEl.className = 'certificate-status status-issued';
+                statusEl.innerHTML = getStatusIcon('issued') + ' Issued';
+                document.getElementById('simulationDateIssued').textContent = formatDate(new Date());
+                document.getElementById('downloadSimulationCertBtn').disabled = false;
+            } else if (passedSims > 0) {
+                statusEl.className = 'certificate-status status-available';
+                statusEl.innerHTML = getStatusIcon('available') + ' Available';
+            } else {
+                statusEl.className = 'certificate-status status-locked';
+                statusEl.innerHTML = getStatusIcon('locked') + ' Locked';
+            }
+            
+            // Update requirement statuses
+            const sims = certificatesData.simulations || [
+                { name: 'Vital Signs', status: 'pass' },
+                { name: 'Medication', status: 'pass' },
+                { name: 'Feeding', status: 'pending' }
+            ];
+            
+            if (sims[0]) {
+                const req1 = document.getElementById('simReq1');
+                req1.innerHTML = `Vital Signs: <span class="req-status ${sims[0].status === 'pass' ? 'passed' : 'pending'}">${sims[0].status === 'pass' ? 'Passed' : 'Pending'}</span>`;
+            }
+            if (sims[1]) {
+                const req2 = document.getElementById('simReq2');
+                req2.innerHTML = `Medication Assistance: <span class="req-status ${sims[1].status === 'pass' ? 'passed' : 'pending'}">${sims[1].status === 'pass' ? 'Passed' : 'Pending'}</span>`;
+            }
+            if (sims[2]) {
+                const req3 = document.getElementById('simReq3');
+                req3.innerHTML = `Feeding: <span class="req-status ${sims[2].status === 'pass' ? 'passed' : 'pending'}">${sims[2].status === 'pass' ? 'Passed' : 'Pending'}</span>`;
+            }
+        }
+
+        function updateCourseCertificate() {
+            const completedLessons = certificatesData.lessons.filter(l => l.status === 'completed').length;
+            const totalLessons = certificatesData.lessons.length;
+            const allLessonsDone = completedLessons === totalLessons;
+            
+            const allQuizzesPassed = certificatesData.lessons.every(l => 
+                !l.quizAttempts || l.quizAttempts === 0 || (l.recentQuizScore >= 50)
+            );
+            
+            const passedSims = certificatesData.simulations?.filter(s => s.status === 'pass').length || 0;
+            const totalSims = certificatesData.simulations?.length || 3;
+            const allSimsPassed = passedSims === totalSims;
+            
+            const gradeMet = certificatesData.finalGrade >= 75;
+            
+            const conditionsMet = [allLessonsDone, allQuizzesPassed, allSimsPassed, gradeMet];
+            const metCount = conditionsMet.filter(c => c).length;
+            
+            // Update requirement statuses
+            document.getElementById('courseReq1').innerHTML = 
+                `All lessons completed <span class="req-status ${allLessonsDone ? 'passed' : 'pending'}">${allLessonsDone ? '✓' : '✗'}</span>`;
+            document.getElementById('courseReq2').innerHTML = 
+                `All quizzes passed <span class="req-status ${allQuizzesPassed ? 'passed' : 'pending'}">${allQuizzesPassed ? '✓' : '✗'}</span>`;
+            document.getElementById('courseReq3').innerHTML = 
+                `All simulations passed <span class="req-status ${allSimsPassed ? 'passed' : 'pending'}">${allSimsPassed ? '✓' : '✗'}</span>`;
+            document.getElementById('courseReq4').innerHTML = 
+                `Final grade ≥ 75% <span class="req-status ${gradeMet ? 'passed' : 'pending'}">${gradeMet ? '✓' : '✗'}</span>`;
+            
+            document.getElementById('courseProgress').textContent = `${metCount}/4 conditions met`;
+            
+            const allMet = metCount === 4;
+            const statusEl = document.getElementById('courseStatus');
+            if (allMet) {
+                statusEl.className = 'certificate-status status-issued';
+                statusEl.innerHTML = getStatusIcon('issued') + ' Issued';
+                document.getElementById('courseDateIssued').textContent = formatDate(new Date());
+                document.getElementById('downloadCourseCertBtn').disabled = false;
+            } else {
+                statusEl.className = 'certificate-status status-locked';
+                statusEl.innerHTML = getStatusIcon('locked') + ' Locked';
+            }
+        }
+
+        function getStatusIcon(status) {
+            if (status === 'issued') {
+                return '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            } else if (status === 'available') {
+                return '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L6 6L2 7L6 10L8 14L10 10L14 7L10 6L8 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            } else {
+                return '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M5 7V5C5 3.34315 6.34315 2 8 2C9.65685 2 11 3.34315 11 5V7" stroke="currentColor" stroke-width="2"/></svg>';
+            }
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function showCertificateModal(lessonName, certId, date, type) {
+            document.getElementById('modalCertificateTitle').textContent = 
+                type === 'lesson' ? 'Lesson Completion Certificate' : 'Certificate';
+            document.getElementById('modalStudentName').textContent = certificatesData.studentName;
+            document.getElementById('modalCertificateDescription').innerHTML = 
+                type === 'lesson' 
+                    ? `has successfully completed<br>${lessonName}`
+                    : 'has successfully completed the course';
+            document.getElementById('modalCertificateDate').textContent = date;
+            document.getElementById('modalCertificateId').textContent = certId;
+            document.getElementById('certificateModal').style.display = 'flex';
+        }
+
+        function downloadCertificate(id, type) {
+            // Placeholder - will generate PDF later
+            alert('PDF download will be available soon!');
+        }
+
+        // Modal close handlers
+        document.getElementById('closeCertificateModal').addEventListener('click', function() {
+            document.getElementById('certificateModal').style.display = 'none';
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('certificateModal').style.display = 'none';
+        });
+
+        document.getElementById('downloadFromModalBtn').addEventListener('click', function() {
+            downloadCertificate(null, 'lesson');
+        });
+
+        // View progress buttons
+        document.getElementById('viewSimulationCertBtn').addEventListener('click', function() {
+            alert('Viewing simulation requirements...');
+        });
+
+        document.getElementById('viewCourseProgressBtn').addEventListener('click', function() {
+            alert('Viewing course progress...');
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('studentToken');
+            window.location.href = '/caresim-login';
+        }
+
+        // Initialize
+        loadCertificatesData();
+    </script>
+</body>
+</html>
+

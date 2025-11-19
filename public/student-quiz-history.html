@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz History - CareSim Student Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab">Lessons</a>
+                    <a href="/student-assessment" class="nav-tab active">Assessment</a>
+                    <a href="/student-certificates" class="nav-tab">Certificates</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container assessment-page-container">
+        <!-- Breadcrumb -->
+        <nav class="assessment-breadcrumb">
+            <a href="/student-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <a href="/student-assessment">Assessment</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Quiz History</span>
+        </nav>
+
+        <div class="assessment-page-header">
+            <div class="page-header-with-back">
+                <a href="/student-assessment" class="btn-back">Back</a>
+                <div class="page-header-content-centered">
+                    <h1>Quiz History</h1>
+                    <p class="page-subtitle">View all your quiz attempts and track your progress</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="assessment-filters">
+            <div class="filter-group">
+                <label for="lessonFilter">Filter by Lesson</label>
+                <select id="lessonFilter" class="form-select">
+                    <option value="">All Lessons</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="dateFilter">Date Range (Optional)</label>
+                <input type="date" id="dateFilter" class="form-input">
+            </div>
+            <button type="button" id="clearFiltersBtn" class="btn-outline">Clear Filters</button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="assessment-summary-grid">
+            <div class="summary-stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Average Quiz Score</span>
+                    <strong class="stat-value" id="avgScore">--</strong>
+                </div>
+            </div>
+            <div class="summary-stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Quizzes Taken</span>
+                    <strong class="stat-value" id="totalQuizzes">--</strong>
+                </div>
+            </div>
+            <div class="summary-stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Best Score Overall</span>
+                    <strong class="stat-value" id="bestScore">--</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz History Table -->
+        <div class="assessment-table-container">
+            <table class="assessment-table">
+                <thead>
+                    <tr>
+                        <th>Lesson</th>
+                        <th>Attempt</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="quizHistoryTableBody">
+                    <!-- Table rows will be inserted here -->
+                </tbody>
+            </table>
+            <div id="emptyHistory" class="empty-state" style="display: none;">
+                <p>No quiz attempts found. <a href="/student-quiz-take">Take your first quiz</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('studentToken');
+        if (!token) {
+            window.location.href = '/caresim-login';
+        }
+
+        let quizHistory = [];
+        let filteredHistory = [];
+
+        // Load quiz history (static data for now)
+        function loadQuizHistory() {
+            // Static sample data - replace with API call later
+            quizHistory = [
+                {
+                    lesson: "Vital Signs Monitoring",
+                    attempt: 1,
+                    score: 6,
+                    total: 10,
+                    percentage: 60,
+                    date: "2025-11-10"
+                },
+                {
+                    lesson: "Vital Signs Monitoring",
+                    attempt: 2,
+                    score: 8,
+                    total: 10,
+                    percentage: 80,
+                    date: "2025-11-11"
+                },
+                {
+                    lesson: "Vital Signs Monitoring",
+                    attempt: 3,
+                    score: 9,
+                    total: 10,
+                    percentage: 90,
+                    date: "2025-11-12"
+                },
+                {
+                    lesson: "Medication Assistance",
+                    attempt: 1,
+                    score: 7,
+                    total: 10,
+                    percentage: 70,
+                    date: "2025-11-15"
+                }
+            ];
+
+            filteredHistory = [...quizHistory];
+            renderHistory();
+            updateSummary();
+            loadLessonFilter();
+        }
+
+        // Load lessons for filter dropdown
+        async function loadLessonFilter() {
+            try {
+                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.data?.lessons) {
+                    const lessonFilter = document.getElementById('lessonFilter');
+                    const lessons = [...new Set(quizHistory.map(q => q.lesson))];
+                    
+                    lessons.forEach(lesson => {
+                        const option = document.createElement('option');
+                        option.value = lesson;
+                        option.textContent = lesson;
+                        lessonFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+            }
+        }
+
+        // Render history table
+        function renderHistory() {
+            const tbody = document.getElementById('quizHistoryTableBody');
+            const emptyState = document.getElementById('emptyHistory');
+            
+            if (filteredHistory.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            filteredHistory.forEach(quiz => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${quiz.lesson}</td>
+                    <td>${quiz.attempt}</td>
+                    <td><strong>${quiz.score}/${quiz.total}</strong></td>
+                    <td><span class="percentage-badge percentage-${getPercentageClass(quiz.percentage)}">${quiz.percentage}%</span></td>
+                    <td>${formatDate(quiz.date)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get percentage class for styling
+        function getPercentageClass(percentage) {
+            if (percentage >= 90) return 'excellent';
+            if (percentage >= 80) return 'good';
+            if (percentage >= 70) return 'fair';
+            return 'poor';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Update summary cards
+        function updateSummary() {
+            if (filteredHistory.length === 0) {
+                document.getElementById('avgScore').textContent = '--';
+                document.getElementById('totalQuizzes').textContent = '0';
+                document.getElementById('bestScore').textContent = '--';
+                return;
+            }
+
+            const total = filteredHistory.length;
+            const avgPercentage = Math.round(
+                filteredHistory.reduce((sum, q) => sum + q.percentage, 0) / total
+            );
+            const best = Math.max(...filteredHistory.map(q => q.percentage));
+
+            document.getElementById('avgScore').textContent = `${avgPercentage}%`;
+            document.getElementById('totalQuizzes').textContent = total;
+            document.getElementById('bestScore').textContent = `${best}%`;
+        }
+
+        // Filter handlers
+        document.getElementById('lessonFilter').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('dateFilter').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+            document.getElementById('lessonFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            applyFilters();
+        });
+
+        function applyFilters() {
+            const lessonFilter = document.getElementById('lessonFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            filteredHistory = quizHistory.filter(quiz => {
+                const matchLesson = !lessonFilter || quiz.lesson === lessonFilter;
+                const matchDate = !dateFilter || quiz.date === dateFilter;
+                return matchLesson && matchDate;
+            });
+
+            renderHistory();
+            updateSummary();
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('studentToken');
+            window.location.href = '/caresim-login';
+        }
+
+        // Initialize
+        loadQuizHistory();
+    </script>
+</body>
+</html>
+

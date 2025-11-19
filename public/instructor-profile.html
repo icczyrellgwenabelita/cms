@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Profile - CareSim Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+</head>
+<body class="student-portal">
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
+                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
+                    <a href="/instructor-announcements" class="nav-tab">Announcements</a>
+                    <a href="/instructor-profile" class="nav-tab active">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <nav class="breadcrumb">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Instructor Profile</span>
+        </nav>
+
+        <div class="instructor-profile-header-card">
+            <div class="profile-avatar">
+                <span class="profile-avatar-initial">JD</span>
+                <div class="profile-avatar-actions">
+                    <button class="btn-upload">Upload Photo</button>
+                    <button class="btn-remove-picture outline">Remove Photo</button>
+                </div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-info-top">
+                    <div>
+                        <h1>Janelle Diaz</h1>
+                        <p class="profile-role">Instructor</p>
+                    </div>
+                    <span class="status-pill active">Active</span>
+                </div>
+                <p class="profile-email">janelle.diaz@caresim.edu</p>
+                <p class="profile-meta">Last login: Nov 18, 2025 • Oversees 32 students</p>
+            </div>
+        </div>
+
+        <div class="instructor-profile-layout">
+            <div class="profile-main-column">
+                <section class="instructor-card profile-card">
+                    <div class="instructor-card-header">
+                        <h2>Basic Information</h2>
+                    </div>
+                    <form class="instructor-form-grid">
+                        <div class="form-field">
+                            <label for="instructorName">Full Name</label>
+                            <input type="text" id="instructorName" value="Janelle Diaz">
+                        </div>
+                        <div class="form-field">
+                            <label for="instructorEmail">Email Address</label>
+                            <input type="email" id="instructorEmail" value="janelle.diaz@caresim.edu">
+                        </div>
+                        <div class="form-field">
+                            <label for="instructorContact">Contact Number</label>
+                            <input type="text" id="instructorContact" value="+63 912 345 6789">
+                        </div>
+                        <div class="form-field">
+                            <label for="instructorDepartment">Department / Program</label>
+                            <input type="text" id="instructorDepartment" value="Caregiving NC II">
+                        </div>
+                        <div class="form-field">
+                            <label for="instructorId">Instructor ID</label>
+                            <input type="text" id="instructorId" value="INS-2025-004" readonly>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="instructor-card profile-card account-settings-card">
+                    <div class="instructor-card-header">
+                        <h2>Account Settings</h2>
+                    </div>
+                    <div class="account-settings-content">
+                        <p class="account-note">Keep your account secure by updating your password regularly.</p>
+                        <button class="btn-primary">Change Password</button>
+                    </div>
+                    <div class="form-actions right">
+                        <button class="btn-save" type="button">Save Changes</button>
+                        <button class="btn-cancel" type="button">Cancel</button>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="profile-side-column">
+                <section class="instructor-card profile-card">
+                    <div class="instructor-card-header">
+                        <h2>Teaching Snapshot</h2>
+                    </div>
+                    <div class="teaching-snapshot">
+                        <div class="snapshot-item">
+                            <span>Total Students</span>
+                            <strong>32</strong>
+                        </div>
+                        <div class="snapshot-item">
+                            <span>Quizzes Overseen</span>
+                            <strong>12</strong>
+                        </div>
+                        <div class="snapshot-item">
+                            <span>Simulations Overseen</span>
+                            <strong>3</strong>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/instructor-login';
+            }
+        }
+    </script>
+</body>
+</html>
+

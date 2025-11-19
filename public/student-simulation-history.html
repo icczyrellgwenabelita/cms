@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation History - CareSim Student Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab">Lessons</a>
+                    <a href="/student-assessment" class="nav-tab active">Assessment</a>
+                    <a href="/student-certificates" class="nav-tab">Certificates</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container assessment-page-container">
+        <!-- Breadcrumb -->
+        <nav class="assessment-breadcrumb">
+            <a href="/student-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <a href="/student-assessment">Assessment</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Simulation History</span>
+        </nav>
+
+        <div class="assessment-page-header">
+            <div class="page-header-with-back">
+                <a href="/student-assessment" class="btn-back">Back</a>
+                <div class="page-header-content-centered">
+                    <h1>Simulation History</h1>
+                    <p class="page-subtitle">Track your 3D simulation attempts and results</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="simulation-summary-cards">
+            <div class="simulation-summary-card status-passed">
+                <div class="simulation-card-header">
+                    <h3>Simulation 1: Vital Signs</h3>
+                    <span class="status-badge status-passed-badge">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Passed
+                    </span>
+                </div>
+            </div>
+            <div class="simulation-summary-card status-passed">
+                <div class="simulation-card-header">
+                    <h3>Simulation 2: Medication</h3>
+                    <span class="status-badge status-passed-badge">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Passed
+                    </span>
+                </div>
+            </div>
+            <div class="simulation-summary-card status-pending">
+                <div class="simulation-card-header">
+                    <h3>Simulation 3: Feeding</h3>
+                    <span class="status-badge status-pending-badge">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                            <path d="M8 5V8L10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Pending
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed History Table -->
+        <div class="assessment-table-container">
+            <h2 class="table-section-title">Detailed History</h2>
+            <table class="assessment-table">
+                <thead>
+                    <tr>
+                        <th>Simulation</th>
+                        <th>Attempt</th>
+                        <th>Result</th>
+                        <th>Time</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="simulationHistoryTableBody">
+                    <!-- Table rows will be inserted here -->
+                </tbody>
+            </table>
+            <div id="emptySimHistory" class="empty-state" style="display: none;">
+                <p>No simulation attempts found.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const token = localStorage.getItem('studentToken');
+        if (!token) {
+            window.location.href = '/caresim-login';
+        }
+
+        let simulationHistory = [];
+
+        // Load simulation history (static data for now)
+        function loadSimulationHistory() {
+            // Static sample data - replace with API call later
+            simulationHistory = [
+                {
+                    simulation: "Vital Signs",
+                    attempt: 1,
+                    result: "fail",
+                    time: "06:23",
+                    date: "2025-11-09"
+                },
+                {
+                    simulation: "Vital Signs",
+                    attempt: 2,
+                    result: "pass",
+                    time: "05:02",
+                    date: "2025-11-10"
+                },
+                {
+                    simulation: "Medication",
+                    attempt: 1,
+                    result: "pass",
+                    time: "04:11",
+                    date: "2025-11-11"
+                },
+                {
+                    simulation: "Feeding",
+                    attempt: 1,
+                    result: "pending",
+                    time: "--",
+                    date: "--"
+                }
+            ];
+
+            renderHistory();
+        }
+
+        // Render history table
+        function renderHistory() {
+            const tbody = document.getElementById('simulationHistoryTableBody');
+            const emptyState = document.getElementById('emptySimHistory');
+            
+            if (simulationHistory.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            simulationHistory.forEach(sim => {
+                const row = document.createElement('tr');
+                const resultBadge = getResultBadge(sim.result);
+                
+                row.innerHTML = `
+                    <td><strong>${sim.simulation}</strong></td>
+                    <td>${sim.attempt}</td>
+                    <td>${resultBadge}</td>
+                    <td>${sim.time}</td>
+                    <td>${sim.date === '--' ? '--' : formatDate(sim.date)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get result badge HTML
+        function getResultBadge(result) {
+            if (result === 'pass') {
+                return `<span class="status-badge status-passed-badge">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Pass
+                </span>`;
+            } else if (result === 'fail') {
+                return `<span class="status-badge status-failed-badge">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Fail
+                </span>`;
+            } else {
+                return `<span class="status-badge status-pending-badge">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                        <path d="M8 5V8L10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Pending
+                </span>`;
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('studentToken');
+            window.location.href = '/caresim-login';
+        }
+
+        // Initialize
+        loadSimulationHistory();
+    </script>
+</body>
+</html>
+

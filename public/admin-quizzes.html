@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSim Admin Portal - Quizzes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/admin-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab active">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab">Users</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    <div class="portal-container">
+        <!-- Quizzes Management Section -->
+        <section class="content-section">
+            <div class="section-header">
+                <h1 class="section-title">Quizzes Management</h1>
+                <button class="btn-primary" id="addQuestionBtn" onclick="openAddQuestionModal()">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+            </div>
+            
+            <!-- Lesson Tabs -->
+            <div class="lesson-tabs" id="lessonTabs">
+                <!-- Lesson tabs will be dynamically generated -->
+            </div>
+            
+            <!-- Quizzes Grid for Selected Lesson -->
+            <div class="quizzes-grid" id="quizzesContainer">
+                <!-- Quiz cards will be inserted here for the selected lesson -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Add Question Modal -->
+    <div id="addQuestionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Question</h2>
+                <button class="modal-close" onclick="closeAddQuestionModal()">&times;</button>
+            </div>
+            <form id="addQuestionForm" onsubmit="saveNewQuestion(event)">
+                <input type="hidden" id="newQuestionLesson" value="">
+                <div class="form-group">
+                    <label for="newQuestionLessonDisplay">Lesson</label>
+                    <input type="text" id="newQuestionLessonDisplay" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label for="newQuestion">Question</label>
+                    <textarea id="newQuestion" rows="3" maxlength="90" required></textarea>
+                    <div class="char-counter">
+                        <span id="newQuestionCharCount">0</span>/90
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newAnswerA">Answer A</label>
+                    <input type="text" id="newAnswerA" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="newAnswerACharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newAnswerB">Answer B</label>
+                    <input type="text" id="newAnswerB" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="newAnswerBCharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newAnswerC">Answer C</label>
+                    <input type="text" id="newAnswerC" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="newAnswerCCharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newAnswerD">Answer D</label>
+                    <input type="text" id="newAnswerD" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="newAnswerDCharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newCorrectAnswer">Correct Answer</label>
+                    <select id="newCorrectAnswer" required>
+                        <option value="">Select correct answer</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newExplanation">Explanation</label>
+                    <textarea id="newExplanation" rows="4" placeholder="Enter explanation"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddQuestionModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Edit Modal -->
+    <div id="quizModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="quizModalTitle">Edit Quiz</h2>
+                <button class="modal-close" onclick="closeQuizModal()">&times;</button>
+            </div>
+            <form id="quizForm" onsubmit="saveQuiz(event)">
+                <input type="hidden" id="quizLesson" value="">
+                <input type="hidden" id="quizSlot" value="">
+                <div class="form-group">
+                    <label for="quizLessonDisplay">Lesson</label>
+                    <input type="text" id="quizLessonDisplay" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label for="quizQuestion">Question</label>
+                    <textarea id="quizQuestion" rows="3" maxlength="90" required></textarea>
+                    <div class="char-counter">
+                        <span id="questionCharCount">0</span>/90
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerA">Answer A</label>
+                    <input type="text" id="quizAnswerA" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="answerACharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerB">Answer B</label>
+                    <input type="text" id="quizAnswerB" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="answerBCharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerC">Answer C</label>
+                    <input type="text" id="quizAnswerC" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="answerCCharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quizAnswerD">Answer D</label>
+                    <input type="text" id="quizAnswerD" maxlength="30" required>
+                    <div class="char-counter">
+                        <span id="answerDCharCount">0</span>/30
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quizCorrectAnswer">Correct Answer</label>
+                    <select id="quizCorrectAnswer" required>
+                        <option value="">Select correct answer</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quizExplanation">Explanation</label>
+                    <textarea id="quizExplanation" rows="4" placeholder="Enter explanation"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeQuizModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirmation</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 id="alertTitle">Notice</h2>
+                <button class="history-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+            window.location.href = '/admin-login';
+        }
+
+        // Static data storage (will be replaced with Firebase later)
+        let staticLessons = [];
+        let staticQuizzes = {};
+        let currentLesson = 1;
+
+        // Initialize static data
+        function initializeData() {
+            // Load lessons from localStorage
+            const savedLessons = localStorage.getItem('adminLessons');
+            if (savedLessons) {
+                staticLessons = JSON.parse(savedLessons);
+            } else {
+                // Initialize with default lessons
+                for (let i = 1; i <= 6; i++) {
+                    staticLessons.push({
+                        slot: i,
+                        lessonName: `Lesson ${i}`,
+                        lessonDescription: ''
+                    });
+                }
+            }
+
+            // Load quizzes from localStorage
+            const savedQuizzes = localStorage.getItem('adminQuizzes');
+            if (savedQuizzes) {
+                staticQuizzes = JSON.parse(savedQuizzes);
+            } else {
+                // Initialize quizzes for each lesson
+                for (let lesson = 1; lesson <= 6; lesson++) {
+                    staticQuizzes[lesson] = [];
+                    for (let i = 1; i <= 10; i++) {
+                        staticQuizzes[lesson].push({
+                            lesson: lesson,
+                            slot: i,
+                            question: '',
+                            answerA: '',
+                            answerB: '',
+                            answerC: '',
+                            answerD: '',
+                            correctAnswer: '',
+                            explanation: ''
+                        });
+                    }
+                }
+                saveQuizzesToStorage();
+            }
+
+            loadLessonsForTabs();
+            loadQuizzes(currentLesson);
+        }
+
+        function saveQuizzesToStorage() {
+            localStorage.setItem('adminQuizzes', JSON.stringify(staticQuizzes));
+        }
+
+        // Quizzes Management
+        function getLessonDisplayName(lessonSlot) {
+            const lessonNames = {
+                1: 'Monitoring Vital Signs',
+                2: 'Medication Assistance',
+                3: 'Meal Preparation and Feeding',
+                4: 'Safe Patient Transfer',
+                5: 'Bathing and Grooming the Elderly',
+                6: 'Emergency Response (CPR Basics)'
+            };
+            return `Lesson ${lessonSlot}: ${lessonNames[lessonSlot] || `Lesson ${lessonSlot}`}`;
+        }
+
+        function loadLessonsForTabs() {
+            const tabsContainer = document.getElementById('lessonTabs');
+            tabsContainer.innerHTML = staticLessons.map(lesson => {
+                const lessonName = lesson.lessonName || `Lesson ${lesson.slot}`;
+                const isActive = lesson.slot === currentLesson ? 'active' : '';
+                return `
+                    <button class="lesson-tab ${isActive}" onclick="selectLesson(${lesson.slot})">
+                        ${lessonName}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectLesson(lessonSlot) {
+            currentLesson = lessonSlot;
+            renderLessonTabs();
+            loadQuizzes(lessonSlot);
+        }
+
+        function renderLessonTabs() {
+            const tabsContainer = document.getElementById('lessonTabs');
+            tabsContainer.innerHTML = staticLessons.map(lesson => {
+                const lessonName = lesson.lessonName || `Lesson ${lesson.slot}`;
+                const isActive = lesson.slot === currentLesson ? 'active' : '';
+                return `
+                    <button class="lesson-tab ${isActive}" onclick="selectLesson(${lesson.slot})">
+                        ${lessonName}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function loadQuizzes(lessonSlot = currentLesson) {
+            const container = document.getElementById('quizzesContainer');
+            const lessonName = getLessonDisplayName(lessonSlot);
+            const quizzes = staticQuizzes[lessonSlot] || [];
+            
+            container.innerHTML = `
+                <div class="quizzes-section-header">
+                    <h2>${lessonName}</h2>
+                </div>
+                <div class="quizzes-grid-inner">
+                    ${quizzes.map(quiz => `
+                        <div class="quiz-card">
+                            <div class="quiz-card-header">
+                                <span class="quiz-number">Question ${quiz.slot}</span>
+                                <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${quiz.slot})">Edit</button>
+                            </div>
+                            <h3 class="quiz-question">${quiz.question || '(No question set)'}</h3>
+                            <div class="quiz-answers">
+                                <div class="answer-item ${quiz.correctAnswer === 'A' ? 'correct' : ''}">
+                                    <span class="answer-label">A:</span>
+                                    <span>${quiz.answerA || '(Not set)'}</span>
+                                </div>
+                                <div class="answer-item ${quiz.correctAnswer === 'B' ? 'correct' : ''}">
+                                    <span class="answer-label">B:</span>
+                                    <span>${quiz.answerB || '(Not set)'}</span>
+                                </div>
+                                <div class="answer-item ${quiz.correctAnswer === 'C' ? 'correct' : ''}">
+                                    <span class="answer-label">C:</span>
+                                    <span>${quiz.answerC || '(Not set)'}</span>
+                                </div>
+                                <div class="answer-item ${quiz.correctAnswer === 'D' ? 'correct' : ''}">
+                                    <span class="answer-label">D:</span>
+                                    <span>${quiz.answerD || '(Not set)'}</span>
+                                </div>
+                            </div>
+                            ${quiz.correctAnswer ? `<div class="correct-answer-badge">Correct Answer: ${quiz.correctAnswer}</div>` : ''}
+                            <div class="explanation-section">
+                                <label class="explanation-label">Explanation:</label>
+                                <div class="explanation-text">${quiz.explanation || '<span class="explanation-empty">No explanation set. Click Edit to add one.</span>'}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function openAddQuestionModal() {
+            const lessonName = getLessonDisplayName(currentLesson);
+            document.getElementById('newQuestionLesson').value = currentLesson;
+            document.getElementById('newQuestionLessonDisplay').value = lessonName;
+            document.getElementById('addQuestionModal').style.display = 'flex';
+            document.getElementById('addQuestionForm').reset();
+            setupNewQuestionCharCounters();
+        }
+
+        function closeAddQuestionModal() {
+            document.getElementById('addQuestionModal').style.display = 'none';
+        }
+
+        function saveNewQuestion(e) {
+            e.preventDefault();
+            const lesson = parseInt(document.getElementById('newQuestionLesson').value);
+            const question = document.getElementById('newQuestion').value;
+            const answerA = document.getElementById('newAnswerA').value;
+            const answerB = document.getElementById('newAnswerB').value;
+            const answerC = document.getElementById('newAnswerC').value;
+            const answerD = document.getElementById('newAnswerD').value;
+            const correctAnswer = document.getElementById('newCorrectAnswer').value;
+            const explanation = document.getElementById('newExplanation').value;
+
+            // Find next available slot
+            const quizzes = staticQuizzes[lesson] || [];
+            const nextSlot = quizzes.length + 1;
+
+            quizzes.push({
+                lesson: lesson,
+                slot: nextSlot,
+                question: question,
+                answerA: answerA,
+                answerB: answerB,
+                answerC: answerC,
+                answerD: answerD,
+                correctAnswer: correctAnswer,
+                explanation: explanation
+            });
+
+            saveQuizzesToStorage();
+            showAlertModal('Question added successfully! (Static - will save to database later)', 'Success');
+            closeAddQuestionModal();
+            loadQuizzes(lesson);
+        }
+
+        function editQuiz(lesson, slot) {
+            const quizzes = staticQuizzes[lesson] || [];
+            const quiz = quizzes.find(q => q.slot === slot);
+            if (!quiz) return;
+
+            const lessonName = getLessonDisplayName(lesson);
+            
+            document.getElementById('quizLesson').value = lesson;
+            document.getElementById('quizSlot').value = slot;
+            document.getElementById('quizLessonDisplay').value = lessonName;
+            document.getElementById('quizQuestion').value = quiz.question || '';
+            document.getElementById('quizAnswerA').value = quiz.answerA || '';
+            document.getElementById('quizAnswerB').value = quiz.answerB || '';
+            document.getElementById('quizAnswerC').value = quiz.answerC || '';
+            document.getElementById('quizAnswerD').value = quiz.answerD || '';
+            document.getElementById('quizCorrectAnswer').value = quiz.correctAnswer || '';
+            document.getElementById('quizExplanation').value = quiz.explanation || '';
+            document.getElementById('quizModalTitle').textContent = `Edit Question ${slot} - ${lessonName}`;
+            document.getElementById('quizModal').style.display = 'flex';
+            
+            setTimeout(() => {
+                updateCharCount('quizQuestion', 'questionCharCount', 90);
+                updateCharCount('quizAnswerA', 'answerACharCount', 30);
+                updateCharCount('quizAnswerB', 'answerBCharCount', 30);
+                updateCharCount('quizAnswerC', 'answerCCharCount', 30);
+                updateCharCount('quizAnswerD', 'answerDCharCount', 30);
+                setupCharCounters();
+            }, 100);
+        }
+
+        function closeQuizModal() {
+            document.getElementById('quizModal').style.display = 'none';
+            document.getElementById('quizForm').reset();
+            updateCharCount('quizQuestion', 'questionCharCount', 90);
+            updateCharCount('quizAnswerA', 'answerACharCount', 30);
+            updateCharCount('quizAnswerB', 'answerBCharCount', 30);
+            updateCharCount('quizAnswerC', 'answerCCharCount', 30);
+            updateCharCount('quizAnswerD', 'answerDCharCount', 30);
+        }
+
+        function saveQuiz(e) {
+            e.preventDefault();
+            const lesson = parseInt(document.getElementById('quizLesson').value);
+            const slot = parseInt(document.getElementById('quizSlot').value);
+            const question = document.getElementById('quizQuestion').value;
+            const answerA = document.getElementById('quizAnswerA').value;
+            const answerB = document.getElementById('quizAnswerB').value;
+            const answerC = document.getElementById('quizAnswerC').value;
+            const answerD = document.getElementById('quizAnswerD').value;
+            const correctAnswer = document.getElementById('quizCorrectAnswer').value;
+            const explanation = document.getElementById('quizExplanation').value;
+
+            const quizzes = staticQuizzes[lesson] || [];
+            const quiz = quizzes.find(q => q.slot === slot);
+            if (quiz) {
+                quiz.question = question;
+                quiz.answerA = answerA;
+                quiz.answerB = answerB;
+                quiz.answerC = answerC;
+                quiz.answerD = answerD;
+                quiz.correctAnswer = correctAnswer;
+                quiz.explanation = explanation;
+            }
+
+            saveQuizzesToStorage();
+            showAlertModal('Quiz saved successfully! (Static - will save to database later)', 'Success');
+            closeQuizModal();
+            loadQuizzes(lesson);
+        }
+
+        // Character counters
+        function updateCharCount(inputId, counterId, maxLength) {
+            const input = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            if (input && counter) {
+                const currentLength = input.value.length;
+                counter.textContent = currentLength;
+                if (currentLength >= maxLength) {
+                    counter.parentElement.classList.add('char-limit-reached');
+                } else {
+                    counter.parentElement.classList.remove('char-limit-reached');
+                }
+            }
+        }
+
+        function setupCharCounters() {
+            const questionInput = document.getElementById('quizQuestion');
+            const answerAInput = document.getElementById('quizAnswerA');
+            const answerBInput = document.getElementById('quizAnswerB');
+            const answerCInput = document.getElementById('quizAnswerC');
+            const answerDInput = document.getElementById('quizAnswerD');
+            
+            if (questionInput) {
+                questionInput.addEventListener('input', function() {
+                    updateCharCount('quizQuestion', 'questionCharCount', 90);
+                });
+            }
+            if (answerAInput) {
+                answerAInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerA', 'answerACharCount', 30);
+                });
+            }
+            if (answerBInput) {
+                answerBInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerB', 'answerBCharCount', 30);
+                });
+            }
+            if (answerCInput) {
+                answerCInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerC', 'answerCCharCount', 30);
+                });
+            }
+            if (answerDInput) {
+                answerDInput.addEventListener('input', function() {
+                    updateCharCount('quizAnswerD', 'answerDCharCount', 30);
+                });
+            }
+        }
+
+        function setupNewQuestionCharCounters() {
+            const questionInput = document.getElementById('newQuestion');
+            const answerAInput = document.getElementById('newAnswerA');
+            const answerBInput = document.getElementById('newAnswerB');
+            const answerCInput = document.getElementById('newAnswerC');
+            const answerDInput = document.getElementById('newAnswerD');
+            
+            if (questionInput) {
+                questionInput.addEventListener('input', function() {
+                    updateCharCount('newQuestion', 'newQuestionCharCount', 90);
+                });
+            }
+            if (answerAInput) {
+                answerAInput.addEventListener('input', function() {
+                    updateCharCount('newAnswerA', 'newAnswerACharCount', 30);
+                });
+            }
+            if (answerBInput) {
+                answerBInput.addEventListener('input', function() {
+                    updateCharCount('newAnswerB', 'newAnswerBCharCount', 30);
+                });
+            }
+            if (answerCInput) {
+                answerCInput.addEventListener('input', function() {
+                    updateCharCount('newAnswerC', 'newAnswerCCharCount', 30);
+                });
+            }
+            if (answerDInput) {
+                answerDInput.addEventListener('input', function() {
+                    updateCharCount('newAnswerD', 'newAnswerDCharCount', 30);
+                });
+            }
+        }
+
+        // Utility functions
+        function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminData');
+            window.location.href = '/admin-login';
+        }
+
+        function showAlertModal(message, title = 'Notice') {
+            const modal = document.getElementById('alertModal');
+            const msg = document.getElementById('alertMessage');
+            const ttl = document.getElementById('alertTitle');
+            if (!modal || !msg || !ttl) return alert(message);
+            ttl.textContent = title;
+            msg.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Modal close on outside click
+        window.onclick = function(event) {
+            const modals = ['quizModal', 'logoutModal', 'addQuestionModal', 'alertModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    if (modalId === 'quizModal') closeQuizModal();
+                    else if (modalId === 'logoutModal') closeLogoutModal();
+                    else if (modalId === 'addQuestionModal') closeAddQuestionModal();
+                    else if (modalId === 'alertModal') closeAlertModal();
+                }
+            });
+        }
+
+        // Initialize
+        initializeData();
+    </script>
+</body>
+</html>
+

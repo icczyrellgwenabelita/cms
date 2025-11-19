@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcements - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
+                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
+                    <a href="/instructor-announcements" class="nav-tab active">Announcements</a>
+                    <a href="/instructor-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Announcements</span>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="announcements-header">
+            <h1>
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 11V13M7 7H11L15 3V21L11 17H7C5.93913 17 4.92172 16.5786 4.17157 15.8284C3.42143 15.0783 3 14.0609 3 13V11C3 9.93913 3.42143 8.92172 4.17157 8.17157C4.92172 7.42143 5.93913 7 7 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19 10V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Announcements
+            </h1>
+            <p>Create and manage updates for your students.</p>
+        </div>
+
+        <!-- Content Layout -->
+        <div class="announcement-layout">
+            <!-- Form Card -->
+            <div class="instructor-card announcement-form-card">
+                <div class="instructor-card-header">
+                    <h2>New Announcement</h2>
+                    <p class="card-subtitle">Share important reminders or highlights.</p>
+                </div>
+                <form class="announcement-form">
+                    <div class="form-field">
+                        <label for="announcementTitle">Title</label>
+                        <input type="text" id="announcementTitle" placeholder="Enter announcement title">
+                    </div>
+                    <div class="form-field">
+                        <label for="announcementAudience">Audience</label>
+                        <select id="announcementAudience">
+                            <option>All Students</option>
+                            <option>Batch 2025</option>
+                            <option>Batch 2026</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="announcementMessage">Message</label>
+                        <textarea id="announcementMessage" rows="6" placeholder="Write the announcement message"></textarea>
+                    </div>
+                    <div class="form-field checkbox-field">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="pinAnnouncement">
+                            <span>Pin to top</span>
+                        </label>
+                    </div>
+                    <div class="announcement-actions">
+                        <button type="button" class="btn-save">Post Announcement</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- List Card -->
+            <div class="instructor-card announcement-list-card">
+                <div class="instructor-card-header">
+                    <h2>Announcement List</h2>
+                    <p class="card-subtitle">Recent updates visible to students.</p>
+                </div>
+
+                <div class="announcement-list">
+                    <div class="announcement-item pinned">
+                        <div class="announcement-item-header">
+                            <div>
+                                <h3>Simulation Week Reminders <span class="announcement-badge">Pinned</span></h3>
+                                <p class="announcement-meta">Nov 18, 2025 • Audience: All Students</p>
+                            </div>
+                            <div class="announcement-item-actions">
+                                <button class="announcement-action-btn">Edit</button>
+                                <button class="announcement-action-btn danger">Delete</button>
+                            </div>
+                        </div>
+                        <p class="announcement-preview">Please review your simulation checklists before Friday. Ensure all required readings are completed and bring your ID badges for verification.</p>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="announcement-item-header">
+                            <div>
+                                <h3>Batch 2025 Quiz Schedule</h3>
+                                <p class="announcement-meta">Nov 16, 2025 • Audience: Batch 2025</p>
+                            </div>
+                            <div class="announcement-item-actions">
+                                <button class="announcement-action-btn">Edit</button>
+                                <button class="announcement-action-btn danger">Delete</button>
+                            </div>
+                        </div>
+                        <p class="announcement-preview">Next set of quizzes will run from Nov 20–25. Please check the LMS calendar for exact times and ensure you have a stable connection.</p>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="announcement-item-header">
+                            <div>
+                                <h3>CareSim Orientation Recording</h3>
+                                <p class="announcement-meta">Nov 12, 2025 • Audience: All Students</p>
+                            </div>
+                            <div class="announcement-item-actions">
+                                <button class="announcement-action-btn">Edit</button>
+                                <button class="announcement-action-btn danger">Delete</button>
+                            </div>
+                        </div>
+                        <p class="announcement-preview">If you missed the orientation, the recording is now available under Resources > Orientation 2025. Please watch it by Nov 20.</p>
+                    </div>
+
+                    <div class="announcement-empty-state hidden">
+                        <p>No announcements yet. Create your first update using the form above.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/instructor-login';
+            }
+        }
+    </script>
+</body>
+</html>
+
+

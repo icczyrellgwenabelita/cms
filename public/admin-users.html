@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSim Admin Portal - Users</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/admin-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab active">Users</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    <div class="portal-container">
+        <!-- Users Management Section -->
+        <section class="content-section">
+            <div class="section-header">
+                <h1 class="section-title">User Management</h1>
+                <button class="btn-primary" onclick="openAddUserModal()">
+                    <i class="fas fa-plus"></i> Add New User
+                </button>
+            </div>
+
+            <!-- Role-Based Tabs -->
+            <div class="user-role-tabs">
+                <button class="user-role-tab active" onclick="switchRoleTab('students')" id="tabStudents">
+                    <i class="fas fa-user-graduate"></i> Students
+                </button>
+                <button class="user-role-tab" onclick="switchRoleTab('instructors')" id="tabInstructors">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructors
+                </button>
+                <button class="user-role-tab" onclick="switchRoleTab('admins')" id="tabAdmins">
+                    <i class="fas fa-user-shield"></i> Admins
+                </button>
+                <button class="user-role-tab" onclick="switchRoleTab('public')" id="tabPublic">
+                    <i class="fas fa-users"></i> Public Users
+                </button>
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="users-filters">
+                <div class="search-group">
+                    <input type="text" id="searchName" placeholder="Search by name" class="search-input">
+                    <input type="text" id="searchEmail" placeholder="Search by email" class="search-input">
+                </div>
+                <div class="filter-group">
+                    <select id="filterStatus" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="active"><i class="fas fa-circle" style="color: #10B981;"></i> Active</option>
+                        <option value="deactivated"><i class="fas fa-circle" style="color: #EF4444;"></i> Deactivated</option>
+                        <option value="pending"><i class="fas fa-circle" style="color: #F59E0B;"></i> Pending</option>
+                    </select>
+                    <select id="sortBy" class="filter-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name">Sort by Name</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Students Tab Content -->
+            <div id="studentsTab" class="role-tab-content active">
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Student Number</th>
+                                <th>Batch</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Students will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Instructors Tab Content -->
+            <div id="instructorsTab" class="role-tab-content">
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Assigned Students</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instructorsTableBody">
+                            <!-- Instructors will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Admins Tab Content -->
+            <div id="adminsTab" class="role-tab-content">
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Created By</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsTableBody">
+                            <!-- Admins will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Public Users Tab Content -->
+            <div id="publicTab" class="role-tab-content">
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Account Created</th>
+                                <th>Converted To Student?</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="publicTableBody">
+                            <!-- Public users will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Add New User</h2>
+                <button class="modal-close" onclick="closeAddUserModal()">&times;</button>
+            </div>
+            <form id="addUserForm" onsubmit="saveNewUser(event)">
+                <div class="form-section">
+                    <h3 class="form-section-title">Basic Information</h3>
+                    <div class="form-group">
+                        <label for="addUserName">Full Name</label>
+                        <input type="text" id="addUserName" required placeholder="Enter full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="addUserEmail">Email Address</label>
+                        <input type="email" id="addUserEmail" required placeholder="Enter email address">
+                    </div>
+                    <div class="form-group">
+                        <label for="addUserPassword">Password</label>
+                        <div class="password-input-group">
+                            <div class="password-input-wrapper">
+                                <input type="password" id="addUserPassword" required placeholder="Enter password">
+                                <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('addUserPassword', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn-generate-password" onclick="generatePassword()">Auto-Generate</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="addUserRole">Role</label>
+                        <select id="addUserRole" required onchange="toggleRoleFields()">
+                            <option value="">Select role</option>
+                            <option value="student">Student</option>
+                            <option value="instructor">Instructor</option>
+                            <option value="admin">Admin</option>
+                            <option value="public">Public</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Student-Specific Fields -->
+                <div id="studentFields" class="role-specific-fields" style="display: none;">
+                    <h3 class="form-section-title">Student Information</h3>
+                    <div class="form-group">
+                        <label for="addStudentNumber">Student Number</label>
+                        <input type="text" id="addStudentNumber" placeholder="Enter student number">
+                    </div>
+                    <div class="form-group">
+                        <label for="addBatch">Batch</label>
+                        <input type="text" id="addBatch" placeholder="Enter batch">
+                    </div>
+                    <div class="form-group">
+                        <label for="addStudentPhone">Contact Number</label>
+                        <input type="tel" id="addStudentPhone" placeholder="Enter contact number">
+                    </div>
+                    <div class="form-group">
+                        <label for="addStudentBirthday">Birthday</label>
+                        <input type="date" id="addStudentBirthday">
+                    </div>
+                    <div class="form-group">
+                        <label for="addStudentAddress">Address</label>
+                        <textarea id="addStudentAddress" rows="3" placeholder="Enter address"></textarea>
+                    </div>
+                </div>
+
+                <!-- Instructor-Specific Fields -->
+                <div id="instructorFields" class="role-specific-fields" style="display: none;">
+                    <h3 class="form-section-title">Instructor Information</h3>
+                    <div class="form-group">
+                        <label for="addInstructorDepartment">Department/Position</label>
+                        <input type="text" id="addInstructorDepartment" placeholder="Enter department or position">
+                    </div>
+                    <div class="form-group">
+                        <label for="addInstructorPhone">Contact Number</label>
+                        <input type="tel" id="addInstructorPhone" placeholder="Enter contact number">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Page -->
+    <div id="editUserPage" class="user-edit-page" style="display: none;">
+        <div class="edit-page-header">
+            <button class="btn-back" onclick="closeEditUserPage()"><i class="fas fa-arrow-left"></i> Back to Users</button>
+            <h1 id="editPageTitle">Edit User</h1>
+        </div>
+        <div class="edit-page-content">
+            <form id="editUserForm" onsubmit="saveUserEdit(event)">
+                <input type="hidden" id="editUserId" value="">
+                
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h2 class="form-section-title">Basic Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editUserName">Name</label>
+                            <input type="text" id="editUserName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserEmail">Email</label>
+                            <input type="email" id="editUserEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editUserPhone">Phone</label>
+                            <input type="tel" id="editUserPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserBirthday">Birthday</label>
+                            <input type="date" id="editUserBirthday">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserAddress">Address</label>
+                        <textarea id="editUserAddress" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Account Details -->
+                <div class="form-section">
+                    <h2 class="form-section-title">Account Details</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editUserRole">Role</label>
+                            <select id="editUserRole" required onchange="toggleEditRoleFields()">
+                                <option value="student">Student</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="admin">Admin</option>
+                                <option value="public">Public</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserStatus">Status</label>
+                            <select id="editUserStatus" required>
+                                <option value="active"><i class="fas fa-circle" style="color: #10B981;"></i> Active</option>
+                                <option value="deactivated"><i class="fas fa-circle" style="color: #EF4444;"></i> Deactivated</option>
+                                <option value="pending"><i class="fas fa-circle" style="color: #F59E0B;"></i> Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn-secondary" onclick="resetPassword()">Reset Password</button>
+                    </div>
+                </div>
+
+                <!-- Student-Specific Fields -->
+                <div id="editStudentFields" class="role-specific-fields" style="display: none;">
+                    <h2 class="form-section-title">Student Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editStudentNumber">Student Number</label>
+                            <input type="text" id="editStudentNumber">
+                        </div>
+                        <div class="form-group">
+                            <label for="editBatch">Batch</label>
+                            <input type="text" id="editBatch">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Completion</label>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="profileProgressBar">
+                                <div class="progress-fill" id="profileProgressFill" style="width: 0%"></div>
+                            </div>
+                            <span id="profileProgressText">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructor-Specific Fields -->
+                <div id="editInstructorFields" class="role-specific-fields" style="display: none;">
+                    <h2 class="form-section-title">Instructor Information</h2>
+                    <div class="form-group">
+                        <label for="editInstructorDepartment">Department/Position</label>
+                        <input type="text" id="editInstructorDepartment">
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Students</label>
+                        <input type="text" id="editAssignedStudents" readonly placeholder="Will be calculated from database">
+                    </div>
+                </div>
+
+                <div class="edit-page-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEditUserPage()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Details Popup -->
+    <div id="userDetailsPopup" class="user-details-popup" style="display: none;">
+        <div class="popup-content">
+            <button class="popup-close" onclick="closeUserDetailsPopup()">&times;</button>
+            <div class="user-details-header">
+                <div class="user-avatar" id="userDetailsAvatar"><i class="fas fa-user"></i></div>
+                <h3 id="userDetailsName"></h3>
+                <p id="userDetailsEmail"></p>
+            </div>
+            <div class="user-details-body">
+                <div class="detail-item">
+                    <span class="detail-label">Role:</span>
+                    <span id="userDetailsRole"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status:</span>
+                    <span id="userDetailsStatus"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Last Login:</span>
+                    <span id="userDetailsLastLogin"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Account Created:</span>
+                    <span id="userDetailsCreated"></span>
+                </div>
+            </div>
+            <div class="user-details-actions">
+                <button class="btn-primary" onclick="editUserFromPopup()">Edit User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirmation</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 id="alertTitle">Notice</h2>
+                <button class="history-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+            window.location.href = '/admin-login';
+        }
+
+        // Static data storage (will be replaced with Firebase later)
+        let staticUsers = [];
+        let currentRoleTab = 'students';
+        let currentEditUserId = null;
+
+        // Initialize static data
+        function initializeData() {
+            const saved = localStorage.getItem('adminUsers');
+            if (saved) {
+                staticUsers = JSON.parse(saved);
+            } else {
+                // Initialize with default users
+                staticUsers = [
+                    {
+                        id: 1,
+                        name: 'John Doe',
+                        email: 'john@example.com',
+                        role: 'student',
+                        status: 'active',
+                        studentNumber: 'STU001',
+                        batch: '2024-A',
+                        phone: '+1234567890',
+                        birthday: '2000-01-15',
+                        address: '123 Main St',
+                        lastLogin: '2024-11-15 10:30 AM',
+                        progress: 75,
+                        createdAt: '2024-01-15'
+                    },
+                    {
+                        id: 2,
+                        name: 'Jane Smith',
+                        email: 'jane@example.com',
+                        role: 'student',
+                        status: 'active',
+                        studentNumber: 'STU002',
+                        batch: '2024-A',
+                        phone: '+1234567891',
+                        birthday: '2000-02-20',
+                        address: '456 Oak Ave',
+                        lastLogin: '2024-11-16 09:15 AM',
+                        progress: 60,
+                        createdAt: '2024-01-20'
+                    },
+                    {
+                        id: 3,
+                        name: 'Dr. Sarah Johnson',
+                        email: 'sarah@example.com',
+                        role: 'instructor',
+                        status: 'active',
+                        department: 'Medical Sciences',
+                        phone: '+1234567892',
+                        assignedStudents: 25,
+                        lastLogin: '2024-11-16 08:00 AM',
+                        createdAt: '2024-01-10'
+                    },
+                    {
+                        id: 4,
+                        name: 'Admin User',
+                        email: 'admin@example.com',
+                        role: 'admin',
+                        status: 'active',
+                        createdBy: 'System',
+                        lastLogin: '2024-11-16 11:00 AM',
+                        createdAt: '2024-01-01'
+                    },
+                    {
+                        id: 5,
+                        name: 'Public User',
+                        email: 'public@example.com',
+                        role: 'public',
+                        status: 'active',
+                        convertedToStudent: false,
+                        createdAt: '2024-11-01'
+                    }
+                ];
+                saveToStorage();
+            }
+            loadUsers();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('adminUsers', JSON.stringify(staticUsers));
+        }
+
+        // Role Tab Management
+        function switchRoleTab(role) {
+            currentRoleTab = role;
+            
+            // Update tab buttons
+            document.querySelectorAll('.user-role-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab${role.charAt(0).toUpperCase() + role.slice(1)}`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.role-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${role}Tab`).classList.add('active');
+            
+            // Reload users for current tab
+            loadUsers();
+        }
+
+        // Load Users based on current tab and filters
+        function loadUsers() {
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+            const searchEmail = document.getElementById('searchEmail').value.toLowerCase();
+            const filterStatus = document.getElementById('filterStatus').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            let filtered = staticUsers.filter(user => {
+                const matchesRole = user.role === currentRoleTab || 
+                    (currentRoleTab === 'students' && user.role === 'student') ||
+                    (currentRoleTab === 'instructors' && user.role === 'instructor') ||
+                    (currentRoleTab === 'admins' && user.role === 'admin') ||
+                    (currentRoleTab === 'public' && user.role === 'public');
+                
+                const matchesName = !searchName || user.name.toLowerCase().includes(searchName);
+                const matchesEmail = !searchEmail || user.email.toLowerCase().includes(searchEmail);
+                const matchesStatus = !filterStatus || user.status === filterStatus;
+                
+                return matchesRole && matchesName && matchesEmail && matchesStatus;
+            });
+            
+            // Sort
+            if (sortBy === 'newest') {
+                filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            } else if (sortBy === 'oldest') {
+                filtered.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+            } else if (sortBy === 'name') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            }
+            
+            // Render based on current tab
+            if (currentRoleTab === 'students') {
+                renderStudentsTable(filtered);
+            } else if (currentRoleTab === 'instructors') {
+                renderInstructorsTable(filtered);
+            } else if (currentRoleTab === 'admins') {
+                renderAdminsTable(filtered);
+            } else if (currentRoleTab === 'public') {
+                renderPublicTable(filtered);
+            }
+        }
+
+        function renderStudentsTable(students) {
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = students.map(user => `
+                <tr>
+                    <td><a href="#" onclick="showUserDetails(${user.id}); return false;" class="user-name-link">${user.name}</a></td>
+                    <td>${user.email}</td>
+                    <td>${user.studentNumber || 'N/A'}</td>
+                    <td>${user.batch || 'N/A'}</td>
+                    <td>
+                        <label class="status-toggle">
+                            <input type="checkbox" ${user.status === 'active' ? 'checked' : ''} 
+                                   onchange="toggleUserStatus(${user.id}, this.checked)">
+                            <span class="status-badge status-${user.status}">${user.status === 'active' ? 'Active' : 'Deactivated'}</span>
+                        </label>
+                    </td>
+                    <td>${user.lastLogin || 'Never'}</td>
+                    <td>
+                        <div class="progress-indicator">
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" style="width: ${user.progress || 0}%"></div>
+                            </div>
+                            <span>${user.progress || 0}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit-small" onclick="editUser(${user.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action btn-disable-small" onclick="toggleUserStatus(${user.id})" title="${user.status === 'active' ? 'Disable' : 'Enable'}">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                            </button>
+                            <button class="btn-action btn-view-small" onclick="viewUserProgress(${user.id})" title="View Progress"><i class="fas fa-chart-bar"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderInstructorsTable(instructors) {
+            const tbody = document.getElementById('instructorsTableBody');
+            tbody.innerHTML = instructors.map(user => `
+                <tr>
+                    <td><a href="#" onclick="showUserDetails(${user.id}); return false;" class="user-name-link">${user.name}</a></td>
+                    <td>${user.email}</td>
+                    <td>${user.department || 'N/A'}</td>
+                    <td>
+                        <label class="status-toggle">
+                            <input type="checkbox" ${user.status === 'active' ? 'checked' : ''} 
+                                   onchange="toggleUserStatus(${user.id}, this.checked)">
+                            <span class="status-badge status-${user.status}">${user.status === 'active' ? 'Active' : 'Deactivated'}</span>
+                        </label>
+                    </td>
+                    <td>${user.assignedStudents || 0}</td>
+                    <td>${user.lastLogin || 'Never'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit-small" onclick="editUser(${user.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action btn-disable-small" onclick="toggleUserStatus(${user.id})" title="${user.status === 'active' ? 'Disable' : 'Enable'}">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAdminsTable(admins) {
+            const tbody = document.getElementById('adminsTableBody');
+            tbody.innerHTML = admins.map(user => `
+                <tr>
+                    <td><a href="#" onclick="showUserDetails(${user.id}); return false;" class="user-name-link">${user.name}</a></td>
+                    <td>${user.email}</td>
+                    <td>${user.createdBy || 'System'}</td>
+                    <td>
+                        <label class="status-toggle">
+                            <input type="checkbox" ${user.status === 'active' ? 'checked' : ''} 
+                                   onchange="toggleUserStatus(${user.id}, this.checked)">
+                            <span class="status-badge status-${user.status}">${user.status === 'active' ? 'Active' : 'Deactivated'}</span>
+                        </label>
+                    </td>
+                    <td>${user.lastLogin || 'Never'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit-small" onclick="editUser(${user.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action btn-disable-small" onclick="toggleUserStatus(${user.id})" title="${user.status === 'active' ? 'Disable' : 'Enable'}">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPublicTable(publicUsers) {
+            const tbody = document.getElementById('publicTableBody');
+            tbody.innerHTML = publicUsers.map(user => `
+                <tr>
+                    <td><a href="#" onclick="showUserDetails(${user.id}); return false;" class="user-name-link">${user.name}</a></td>
+                    <td>${user.email}</td>
+                    <td>${user.createdAt || 'N/A'}</td>
+                    <td>${user.convertedToStudent ? '<i class="fas fa-check-circle" style="color: #10B981;"></i> Yes' : '<i class="fas fa-times-circle" style="color: #EF4444;"></i> No'}</td>
+                    <td>
+                        <label class="status-toggle">
+                            <input type="checkbox" ${user.status === 'active' ? 'checked' : ''} 
+                                   onchange="toggleUserStatus(${user.id}, this.checked)">
+                            <span class="status-badge status-${user.status}">${user.status === 'active' ? 'Active' : 'Deactivated'}</span>
+                        </label>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit-small" onclick="editUser(${user.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action btn-disable-small" onclick="toggleUserStatus(${user.id})" title="${user.status === 'active' ? 'Disable' : 'Enable'}">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                            </button>
+                            <button class="btn-action btn-convert-small" onclick="convertToStudent(${user.id})" title="Convert to Student"><i class="fas fa-graduation-cap"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Search and Filter Event Listeners
+        document.getElementById('searchName').addEventListener('input', loadUsers);
+        document.getElementById('searchEmail').addEventListener('input', loadUsers);
+        document.getElementById('filterStatus').addEventListener('change', loadUsers);
+        document.getElementById('sortBy').addEventListener('change', loadUsers);
+
+        // Add User Modal
+        function openAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'flex';
+            document.getElementById('addUserForm').reset();
+            document.getElementById('studentFields').style.display = 'none';
+            document.getElementById('instructorFields').style.display = 'none';
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'none';
+        }
+
+        function toggleRoleFields() {
+            const role = document.getElementById('addUserRole').value;
+            document.getElementById('studentFields').style.display = role === 'student' ? 'block' : 'none';
+            document.getElementById('instructorFields').style.display = role === 'instructor' ? 'block' : 'none';
+        }
+
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('addUserPassword').value = password;
+        }
+
+        function saveNewUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('addUserName').value;
+            const email = document.getElementById('addUserEmail').value;
+            const password = document.getElementById('addUserPassword').value;
+            const role = document.getElementById('addUserRole').value;
+            
+            const newUser = {
+                id: staticUsers.length > 0 ? Math.max(...staticUsers.map(u => u.id)) + 1 : 1,
+                name: name,
+                email: email,
+                role: role,
+                status: 'active',
+                createdAt: new Date().toISOString().split('T')[0]
+            };
+            
+            if (role === 'student') {
+                newUser.studentNumber = document.getElementById('addStudentNumber').value;
+                newUser.batch = document.getElementById('addBatch').value;
+                newUser.phone = document.getElementById('addStudentPhone').value;
+                newUser.birthday = document.getElementById('addStudentBirthday').value;
+                newUser.address = document.getElementById('addStudentAddress').value;
+                newUser.progress = 0;
+            } else if (role === 'instructor') {
+                newUser.department = document.getElementById('addInstructorDepartment').value;
+                newUser.phone = document.getElementById('addInstructorPhone').value;
+                newUser.assignedStudents = 0;
+            }
+            
+            staticUsers.push(newUser);
+            saveToStorage();
+            showAlertModal('User added successfully! (Static - will save to database later)', 'Success');
+            closeAddUserModal();
+            loadUsers();
+        }
+
+        // Edit User
+        function editUser(userId) {
+            currentEditUserId = userId;
+            const user = staticUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            // Hide main container and show edit page
+            document.querySelector('.portal-container').style.display = 'none';
+            document.getElementById('editUserPage').style.display = 'block';
+            
+            // Populate form
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editUserName').value = user.name || '';
+            document.getElementById('editUserEmail').value = user.email || '';
+            document.getElementById('editUserPhone').value = user.phone || '';
+            document.getElementById('editUserBirthday').value = user.birthday || '';
+            document.getElementById('editUserAddress').value = user.address || '';
+            document.getElementById('editUserRole').value = user.role || 'student';
+            document.getElementById('editUserStatus').value = user.status || 'active';
+            
+            if (user.role === 'student') {
+                document.getElementById('editStudentNumber').value = user.studentNumber || '';
+                document.getElementById('editBatch').value = user.batch || '';
+                document.getElementById('profileProgressFill').style.width = (user.progress || 0) + '%';
+                document.getElementById('profileProgressText').textContent = (user.progress || 0) + '%';
+            } else if (user.role === 'instructor') {
+                document.getElementById('editInstructorDepartment').value = user.department || '';
+                document.getElementById('editAssignedStudents').value = user.assignedStudents || 0;
+            }
+            
+            toggleEditRoleFields();
+            document.getElementById('editPageTitle').textContent = `Edit User: ${user.name}`;
+        }
+
+        function toggleEditRoleFields() {
+            const role = document.getElementById('editUserRole').value;
+            document.getElementById('editStudentFields').style.display = role === 'student' ? 'block' : 'none';
+            document.getElementById('editInstructorFields').style.display = role === 'instructor' ? 'block' : 'none';
+        }
+
+        function closeEditUserPage() {
+            document.getElementById('editUserPage').style.display = 'none';
+            document.querySelector('.portal-container').style.display = 'block';
+            currentEditUserId = null;
+        }
+
+        function saveUserEdit(e) {
+            e.preventDefault();
+            const userId = parseInt(document.getElementById('editUserId').value);
+            const user = staticUsers.find(u => u.id === userId);
+            
+            if (user) {
+                user.name = document.getElementById('editUserName').value;
+                user.email = document.getElementById('editUserEmail').value;
+                user.phone = document.getElementById('editUserPhone').value;
+                user.birthday = document.getElementById('editUserBirthday').value;
+                user.address = document.getElementById('editUserAddress').value;
+                user.role = document.getElementById('editUserRole').value;
+                user.status = document.getElementById('editUserStatus').value;
+                
+                if (user.role === 'student') {
+                    user.studentNumber = document.getElementById('editStudentNumber').value;
+                    user.batch = document.getElementById('editBatch').value;
+                } else if (user.role === 'instructor') {
+                    user.department = document.getElementById('editInstructorDepartment').value;
+                }
+            }
+            
+            saveToStorage();
+            showAlertModal('User updated successfully! (Static - will save to database later)', 'Success');
+            closeEditUserPage();
+            loadUsers();
+        }
+
+        function resetPassword() {
+            if (confirm('Generate a new password for this user?')) {
+                const newPassword = Math.random().toString(36).slice(-12);
+                showAlertModal(`New password generated: ${newPassword} (Static - will send email in production)`, 'Password Reset');
+            }
+        }
+
+        // User Actions
+        function toggleUserStatus(userId, isActive) {
+            const user = staticUsers.find(u => u.id === userId);
+            if (user) {
+                user.status = isActive ? 'active' : 'deactivated';
+                saveToStorage();
+                loadUsers();
+                showAlertModal(`User ${user.status === 'active' ? 'enabled' : 'disabled'} successfully! (Static)`, 'Success');
+            }
+        }
+
+        function viewUserProgress(userId) {
+            showAlertModal('View Progress feature - will navigate to Instructor Progress Page (Static)', 'Info');
+        }
+
+        function convertToStudent(userId) {
+            if (confirm('Convert this public user to a student account?')) {
+                const user = staticUsers.find(u => u.id === userId);
+                if (user) {
+                    user.role = 'student';
+                    user.convertedToStudent = true;
+                    user.studentNumber = 'STU' + String(userId).padStart(3, '0');
+                    user.batch = '2024-A';
+                    user.progress = 0;
+                    saveToStorage();
+                    loadUsers();
+                    showAlertModal('User converted to student successfully! (Static)', 'Success');
+                }
+            }
+        }
+
+        // User Details Popup
+        function showUserDetails(userId) {
+            const user = staticUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            document.getElementById('userDetailsName').textContent = user.name;
+            document.getElementById('userDetailsEmail').textContent = user.email;
+            document.getElementById('userDetailsRole').innerHTML = `<span class="role-badge role-${user.role}">${user.role}</span>`;
+            document.getElementById('userDetailsStatus').innerHTML = `<span class="status-badge status-${user.status}">${user.status === 'active' ? 'Active' : 'Deactivated'}</span>`;
+            document.getElementById('userDetailsLastLogin').textContent = user.lastLogin || 'Never';
+            document.getElementById('userDetailsCreated').textContent = user.createdAt || 'N/A';
+            
+            currentEditUserId = userId;
+            document.getElementById('userDetailsPopup').style.display = 'flex';
+        }
+
+        function closeUserDetailsPopup() {
+            document.getElementById('userDetailsPopup').style.display = 'none';
+        }
+
+        function editUserFromPopup() {
+            closeUserDetailsPopup();
+            if (currentEditUserId) {
+                editUser(currentEditUserId);
+            }
+        }
+
+        // Utility functions
+        function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminData');
+            window.location.href = '/admin-login';
+        }
+
+        function showAlertModal(message, title = 'Notice') {
+            const modal = document.getElementById('alertModal');
+            const msg = document.getElementById('alertMessage');
+            const ttl = document.getElementById('alertTitle');
+            if (!modal || !msg || !ttl) return alert(message);
+            ttl.textContent = title;
+            msg.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Modal close on outside click
+        window.onclick = function(event) {
+            const modals = ['logoutModal', 'addUserModal', 'alertModal', 'userDetailsPopup'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    if (modalId === 'logoutModal') closeLogoutModal();
+                    else if (modalId === 'addUserModal') closeAddUserModal();
+                    else if (modalId === 'alertModal') closeAlertModal();
+                    else if (modalId === 'userDetailsPopup') closeUserDetailsPopup();
+                }
+            });
+        }
+
+        // Initialize
+        initializeData();
+    </script>
+</body>
+</html>

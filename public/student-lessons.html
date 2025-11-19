@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lessons - CareSim Student Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab active">Lessons</a>
+                    <a href="/student-assessment" class="nav-tab">Assessment</a>
+                    <a href="/student-certificates" class="nav-tab">Certificates</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container lessons-page-container">
+        <!-- Left Panel: Lesson List -->
+        <aside class="lessons-list-panel">
+            <div class="lessons-list-header">
+                <h2>Lessons</h2>
+                <p class="lessons-subtitle">View and track your available lessons.</p>
+                <div class="lessons-progress-indicator">
+                    <div class="lessons-progress-bar">
+                        <div class="lessons-progress-fill" id="lessonsProgressFill" style="width: 0%"></div>
+                    </div>
+                    <span class="lessons-progress-text" id="lessonsProgressText">0 of 6 completed</span>
+                </div>
+            </div>
+            <div class="lessons-list" id="lessonsList">
+                <!-- Lesson cards will be inserted here -->
+            </div>
+        </aside>
+
+        <!-- Right Panel: Lesson Viewer -->
+        <main class="lesson-viewer-panel">
+            <div id="emptyState" class="empty-lesson-state">
+                <div class="empty-state-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 2H20V22H6V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3>Select a lesson to begin</h3>
+                <p>Choose a lesson from the list on the left to view its content and tools.</p>
+            </div>
+
+            <div id="lessonViewer" class="lesson-viewer" style="display: none;">
+                <!-- Breadcrumb -->
+                <nav class="lesson-breadcrumb">
+                    <a href="/student-dashboard">Dashboard</a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span>Lessons</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span id="breadcrumbLessonName">Lesson</span>
+                </nav>
+
+                <!-- Lesson Header -->
+                <div class="lesson-viewer-header">
+                    <h1 id="lessonViewerTitle">Lesson Title</h1>
+                    <p class="lesson-viewer-subtitle" id="lessonViewerDescription">Lesson description will appear here.</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="lesson-tabs">
+                    <button class="lesson-tab lesson-tab-btn-content active" data-tab="content" onclick="switchLessonTab('content')">
+                        <span class="tab-icon-wrapper">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 2H20V22H6V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span>Content</span>
+                    </button>
+                    <button class="lesson-tab lesson-tab-btn-tools" data-tab="tools" onclick="switchLessonTab('tools')">
+                        <span class="tab-icon-wrapper">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14.7 6.3C15.1 5.9 15.1 5.3 14.7 4.9L13.1 3.3C12.7 2.9 12.1 2.9 11.7 3.3L10.3 4.7L13.3 7.7L14.7 6.3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3 17.2V21H6.8L17.8 10L14 6.2L3 17.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span>Tools</span>
+                    </button>
+                </div>
+
+                <!-- Content Tab -->
+                <div id="contentTab" class="lesson-tab-content active">
+                    <div class="lesson-content-body" id="lessonContentBody">
+                        <!-- Lesson content will be inserted here -->
+                    </div>
+                    <div class="lesson-content-actions">
+                        <button class="btn-primary" id="markCompletedBtn" onclick="markLessonCompleted()">
+                            Mark as Completed
+                        </button>
+                        <button class="btn-outline" onclick="goToDashboard()">Back to Dashboard</button>
+                    </div>
+                </div>
+
+                <!-- Tools Tab -->
+                <div id="toolsTab" class="lesson-tab-content">
+                    <div class="tools-tab-header">
+                        <h2>Tools Used in This Lesson</h2>
+                        <p class="tools-subtitle" id="toolsSubtitle">These tools are required to complete this lesson.</p>
+                    </div>
+                    <div class="tools-grid" id="toolsGrid">
+                        <!-- Tool cards will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Tool Details Modal -->
+    <div id="toolModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content tool-modal-content">
+            <div class="history-modal-header">
+                <h2 id="toolModalTitle">Tool Name</h2>
+                <button class="history-close" onclick="closeToolModal()">&times;</button>
+            </div>
+            <div class="tool-modal-body">
+                <div class="tool-modal-tabs">
+                    <button class="tool-modal-tab active" data-tab="image" onclick="switchToolModalTab('image')">Image</button>
+                    <button class="tool-modal-tab" data-tab="3d" onclick="switchToolModalTab('3d')">3D View</button>
+                </div>
+                <div class="tool-modal-content-area">
+                    <div id="toolImageTab" class="tool-modal-tab-content active">
+                        <div class="tool-image-container">
+                            <img id="toolModalImage" src="" alt="Tool image" />
+                        </div>
+                    </div>
+                    <div id="tool3DTab" class="tool-modal-tab-content">
+                        <div class="tool-3d-placeholder">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <p>3D preview will be available in future versions.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tool-modal-info">
+                    <div class="tool-info-section">
+                        <h3>Description</h3>
+                        <p id="toolModalDescription">Tool description will appear here.</p>
+                    </div>
+                    <div class="tool-info-section">
+                        <h3>Purpose</h3>
+                        <p id="toolModalPurpose">Tool purpose will appear here.</p>
+                    </div>
+                    <div class="tool-info-section">
+                        <h3>Steps to Use</h3>
+                        <ol id="toolModalSteps">
+                            <!-- Steps will be inserted here -->
+                        </ol>
+                    </div>
+                    <div class="tool-info-section">
+                        <p class="tool-used-in">
+                            <strong>Used in:</strong> <span id="toolModalLessonName">Lesson Name</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeToolModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirm Logout</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 id="alertTitle">Notice</h2>
+                <button class="history-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('studentToken');
+        if (!token) {
+            window.location.href = '/caresim-login';
+        }
+
+        let allLessons = [];
+        let currentLesson = null;
+        let currentLessonSlot = null;
+        let studentProgress = {};
+
+        // Load lessons and student progress
+        async function loadLessons() {
+            try {
+                // Load lessons from localStorage (admin-created lessons)
+                const savedLessons = localStorage.getItem('adminLessons');
+                if (savedLessons) {
+                    allLessons = JSON.parse(savedLessons);
+                } else {
+                    // Initialize with default lessons if none exist
+                    for (let i = 1; i <= 6; i++) {
+                        allLessons.push({
+                            slot: i,
+                            lessonName: `Lesson ${i}`,
+                            lessonDescription: 'No description available.',
+                            content: '<p>Lesson content will be added by your instructor.</p>',
+                            images: [],
+                            tools: {}
+                        });
+                    }
+                }
+
+                // Load student progress from dashboard API
+                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.data && data.data.lessons) {
+                        data.data.lessons.forEach(lesson => {
+                            studentProgress[lesson.slot] = {
+                                status: lesson.status || 'not_started',
+                                progress: lesson.progress || 0
+                            };
+                        });
+                    }
+                }
+
+                renderLessonsList();
+                
+                // Check URL for lesson parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const lessonParam = urlParams.get('lesson');
+                if (lessonParam) {
+                    const slot = parseInt(lessonParam, 10);
+                    loadLesson(slot);
+                }
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+                showAlertModal('Failed to load lessons. Please try again.', 'Error');
+            }
+        }
+
+        function renderLessonsList() {
+            const container = document.getElementById('lessonsList');
+            if (!container) return;
+
+            if (allLessons.length === 0) {
+                container.innerHTML = '<p class="empty-lessons">No lessons available.</p>';
+                return;
+            }
+            
+            // Update progress indicator
+            updateLessonsProgress();
+
+            container.innerHTML = allLessons.map(lesson => {
+                const progress = studentProgress[lesson.slot] || {};
+                const status = progress.status || 'not_started';
+                const progressValue = progress.progress || 0;
+
+                // Determine status badge
+                let statusBadgeClass = 'not-started';
+                let statusBadgeText = 'Not Started';
+                if (status === 'completed') {
+                    statusBadgeClass = 'completed';
+                    statusBadgeText = 'Completed';
+                } else if (status === 'in_progress') {
+                    statusBadgeClass = 'in-progress';
+                    statusBadgeText = 'In Progress';
+                }
+
+                return `
+                    <div class="lesson-list-card ${status === 'completed' ? 'is-complete' : ''} ${currentLessonSlot === lesson.slot ? 'active' : ''}" 
+                         onclick="loadLesson(${lesson.slot})">
+                        <div class="lesson-list-card-header">
+                            <h3>${lesson.lessonName || `Lesson ${lesson.slot}`}</h3>
+                            <span class="lesson-status-badge ${statusBadgeClass}">${statusBadgeText}</span>
+                        </div>
+                        <p class="lesson-list-description">${lesson.lessonDescription || 'No description available.'}</p>
+                        <div class="lesson-list-footer">
+                            <div class="lesson-list-progress">
+                                <div class="lesson-list-progress-bar">
+                                    <div class="lesson-list-progress-fill" style="width: ${progressValue}%"></div>
+                                </div>
+                                <span>${progressValue}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateLessonsProgress() {
+            const totalLessons = allLessons.length;
+            let completedCount = 0;
+            
+            allLessons.forEach(lesson => {
+                const progress = studentProgress[lesson.slot] || {};
+                if (progress.status === 'completed') {
+                    completedCount++;
+                }
+            });
+            
+            const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+            
+            const progressFill = document.getElementById('lessonsProgressFill');
+            const progressText = document.getElementById('lessonsProgressText');
+            
+            if (progressFill) {
+                progressFill.style.width = `${progressPercent}%`;
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${completedCount} of ${totalLessons} completed`;
+            }
+        }
+
+        function loadLesson(slot) {
+            const lesson = allLessons.find(l => l.slot === slot);
+            if (!lesson) {
+                showAlertModal('Lesson not found.', 'Error');
+                return;
+            }
+
+            currentLesson = lesson;
+            currentLessonSlot = slot;
+
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('lesson', slot);
+            window.history.pushState({}, '', url);
+
+            // Hide empty state, show viewer
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('lessonViewer').style.display = 'block';
+
+            // Update breadcrumb
+            document.getElementById('breadcrumbLessonName').textContent = lesson.lessonName || `Lesson ${slot}`;
+
+            // Update header
+            document.getElementById('lessonViewerTitle').textContent = lesson.lessonName || `Lesson ${slot}`;
+            document.getElementById('lessonViewerDescription').textContent = lesson.lessonDescription || 'No description available.';
+
+            // Load content tab
+            const contentBody = document.getElementById('lessonContentBody');
+            if (contentBody) {
+                contentBody.innerHTML = lesson.content || '<p>No content available for this lesson.</p>';
+            }
+
+            // Load tools tab
+            loadToolsTab(lesson.tools || {}, lesson.lessonName || `Lesson ${slot}`);
+
+            // Update mark completed button
+            const progress = studentProgress[slot] || {};
+            const markBtn = document.getElementById('markCompletedBtn');
+            if (markBtn) {
+                if (progress.status === 'completed') {
+                    markBtn.textContent = 'Completed';
+                    markBtn.disabled = true;
+                    markBtn.classList.add('completed');
+                } else {
+                    markBtn.textContent = 'Mark as Completed';
+                    markBtn.disabled = false;
+                    markBtn.classList.remove('completed');
+                }
+            }
+
+            // Switch to content tab by default
+            switchLessonTab('content');
+
+            // Update active lesson in list
+            renderLessonsList();
+        }
+
+        function loadToolsTab(tools, lessonName) {
+            const toolsGrid = document.getElementById('toolsGrid');
+            const toolsSubtitle = document.getElementById('toolsSubtitle');
+            if (!toolsGrid) return;
+
+            if (toolsSubtitle) {
+                toolsSubtitle.textContent = `These tools are required to perform ${lessonName}.`;
+            }
+
+            const toolKeys = Object.keys(tools);
+            if (toolKeys.length === 0) {
+                toolsGrid.innerHTML = '<p class="empty-tools">No tools assigned to this lesson.</p>';
+                return;
+            }
+
+            toolsGrid.innerHTML = toolKeys.map(toolId => {
+                const tool = tools[toolId];
+                return `
+                    <div class="tool-card" onclick="openToolModal('${toolId}')">
+                        <div class="tool-card-image">
+                            ${tool.imageURL ? `<img src="${tool.imageURL}" alt="${tool.name || 'Tool'}" />` : '<div class="tool-placeholder">No Image</div>'}
+                        </div>
+                        <div class="tool-card-info">
+                            <h3>${tool.name || 'Unnamed Tool'}</h3>
+                            <p class="tool-card-tag">${tool.tag || 'General'}</p>
+                            <p class="tool-card-label">Used in this lesson</p>
+                            <button class="btn-view-tool" onclick="event.stopPropagation(); openToolModal('${toolId}')">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchLessonTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.lesson-tab').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tab) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Update tab content - hide all first
+            const contentTab = document.getElementById('contentTab');
+            const toolsTab = document.getElementById('toolsTab');
+            
+            if (contentTab) {
+                if (tab === 'content') {
+                    contentTab.classList.add('active');
+                } else {
+                    contentTab.classList.remove('active');
+                }
+            }
+            
+            if (toolsTab) {
+                if (tab === 'tools') {
+                    toolsTab.classList.add('active');
+                } else {
+                    toolsTab.classList.remove('active');
+                }
+            }
+        }
+
+        function openToolModal(toolId) {
+            if (!currentLesson || !currentLesson.tools || !currentLesson.tools[toolId]) {
+                showAlertModal('Tool information not available.', 'Error');
+                return;
+            }
+
+            const tool = currentLesson.tools[toolId];
+            const modal = document.getElementById('toolModal');
+
+            document.getElementById('toolModalTitle').textContent = tool.name || 'Unnamed Tool';
+            document.getElementById('toolModalDescription').textContent = tool.description || 'No description available.';
+            document.getElementById('toolModalPurpose').textContent = tool.purpose || 'No purpose specified.';
+            document.getElementById('toolModalLessonName').textContent = currentLesson.lessonName || `Lesson ${currentLessonSlot}`;
+
+            // Set image
+            const toolImage = document.getElementById('toolModalImage');
+            if (tool.imageURL) {
+                toolImage.src = tool.imageURL;
+                toolImage.style.display = 'block';
+            } else {
+                toolImage.style.display = 'none';
+            }
+
+            // Set steps
+            const stepsList = document.getElementById('toolModalSteps');
+            if (tool.steps && Array.isArray(tool.steps) && tool.steps.length > 0) {
+                stepsList.innerHTML = tool.steps.map(step => `<li>${step}</li>`).join('');
+            } else if (tool.steps && typeof tool.steps === 'string') {
+                stepsList.innerHTML = `<li>${tool.steps}</li>`;
+            } else {
+                stepsList.innerHTML = '<li>No steps provided.</li>';
+            }
+
+            // Switch to image tab by default
+            switchToolModalTab('image');
+            modal.style.display = 'flex';
+        }
+
+        function closeToolModal() {
+            document.getElementById('toolModal').style.display = 'none';
+        }
+
+        function switchToolModalTab(tab) {
+            document.querySelectorAll('.tool-modal-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+            });
+            document.getElementById('toolImageTab').classList.toggle('active', tab === 'image');
+            document.getElementById('tool3DTab').classList.toggle('active', tab === '3d');
+        }
+
+        async function markLessonCompleted() {
+            if (!currentLessonSlot) return;
+
+            try {
+                // Update local state
+                if (!studentProgress[currentLessonSlot]) {
+                    studentProgress[currentLessonSlot] = {};
+                }
+                studentProgress[currentLessonSlot].status = 'completed';
+                studentProgress[currentLessonSlot].progress = 100;
+
+                // Update UI
+                const markBtn = document.getElementById('markCompletedBtn');
+                if (markBtn) {
+                    markBtn.textContent = 'Completed';
+                    markBtn.disabled = true;
+                    markBtn.classList.add('completed');
+                }
+
+                // TODO: Update Firebase via API
+                // For now, just show success message
+                showAlertModal('Lesson marked as completed!', 'Success');
+                renderLessonsList();
+            } catch (error) {
+                console.error('Error marking lesson as completed:', error);
+                showAlertModal('Failed to update lesson status.', 'Error');
+            }
+        }
+
+        function goToDashboard() {
+            window.location.href = '/student-dashboard';
+        }
+
+        function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            localStorage.removeItem('studentToken');
+            localStorage.removeItem('studentData');
+            window.location.href = '/caresim-login';
+        }
+
+        function showAlertModal(message, title = 'Notice') {
+            const modal = document.getElementById('alertModal');
+            const msg = document.getElementById('alertMessage');
+            const ttl = document.getElementById('alertTitle');
+            if (!modal || !msg || !ttl) return alert(message);
+            ttl.textContent = title;
+            msg.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closeAlertModal() {
+            document.getElementById('alertModal').style.display = 'none';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Close modals on outside click
+            window.onclick = function(event) {
+                const logoutModal = document.getElementById('logoutModal');
+                const alertModal = document.getElementById('alertModal');
+                const toolModal = document.getElementById('toolModal');
+                if (event.target === logoutModal) closeLogoutModal();
+                if (event.target === alertModal) closeAlertModal();
+                if (event.target === toolModal) closeToolModal();
+            };
+
+            loadLessons();
+        });
+    </script>
+</body>
+</html>
+

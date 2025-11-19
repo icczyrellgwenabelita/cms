@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment - CareSim Student Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab">Lessons</a>
+                    <a href="/student-assessment" class="nav-tab active">Assessment</a>
+                    <a href="/student-certificates" class="nav-tab">Certificates</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container assessment-page-container">
+        <!-- Breadcrumb -->
+        <nav class="assessment-breadcrumb">
+            <a href="/student-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Assessment</span>
+        </nav>
+
+        <!-- Hero Section -->
+        <div class="assessment-hero">
+            <div class="assessment-hero-content">
+                <div class="assessment-hero-title-wrapper">
+                    <div class="assessment-hero-icon hero-icon-blue">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h1>Assessment</h1>
+                </div>
+                <p class="assessment-hero-subtitle">Track your quiz and simulation performance</p>
+            </div>
+        </div>
+
+        <!-- Performance Summary Row -->
+        <div class="assessment-performance-summary">
+            <div class="performance-stat-card stat-card-1">
+                <div class="performance-stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="performance-stat-content">
+                    <span class="performance-stat-label">Average Score</span>
+                    <strong class="performance-stat-value" id="avgScoreStat">--</strong>
+                </div>
+            </div>
+            <div class="performance-stat-card stat-card-2">
+                <div class="performance-stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="performance-stat-content">
+                    <span class="performance-stat-label">Quizzes Completed</span>
+                    <strong class="performance-stat-value" id="quizzesCompletedStat">0</strong>
+                </div>
+            </div>
+            <div class="performance-stat-card stat-card-3">
+                <div class="performance-stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="performance-stat-content">
+                    <span class="performance-stat-label">Best Score</span>
+                    <strong class="performance-stat-value" id="bestScoreStat">--</strong>
+                </div>
+            </div>
+            <div class="performance-stat-card stat-card-4">
+                <div class="performance-stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="performance-stat-content">
+                    <span class="performance-stat-label">Simulations Passed</span>
+                    <strong class="performance-stat-value" id="simulationsPassedStat">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Cards Grid -->
+        <div class="assessment-action-grid">
+            <div class="assessment-action-card action-card-quiz">
+                <div class="action-card-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2>Take a Quiz</h2>
+                <p>Test your knowledge by taking quizzes for completed lessons</p>
+                <a href="/student-quiz-take" class="btn-primary">Start Quiz</a>
+            </div>
+
+            <div class="assessment-action-card action-card-history">
+                <div class="action-card-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2>Quiz History</h2>
+                <p>View all your quiz attempts and track your progress over time</p>
+                <a href="/student-quiz-history" class="btn-primary">View History</a>
+            </div>
+
+            <div class="assessment-action-card action-card-simulation">
+                <div class="action-card-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2>Simulation History</h2>
+                <p>Track your 3D simulation attempts and results</p>
+                <a href="/student-simulation-history" class="btn-primary">View History</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('studentToken');
+        if (!token) {
+            window.location.href = '/caresim-login';
+        }
+
+        let dashboardData = null;
+
+        // Load dashboard data for performance stats
+        async function loadPerformanceStats() {
+            try {
+                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('studentToken');
+                    window.location.href = '/caresim-login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (response.ok && data.data) {
+                    dashboardData = data.data;
+                    updatePerformanceStats();
+                }
+            } catch (error) {
+                console.error('Error loading performance stats:', error);
+            }
+        }
+
+        // Update performance summary cards
+        function updatePerformanceStats() {
+            if (!dashboardData || !dashboardData.lessons) return;
+
+            const lessons = dashboardData.lessons;
+            
+            // Calculate quiz stats
+            let totalQuizzes = 0;
+            let totalScore = 0;
+            let bestScore = 0;
+            let quizzesWithScores = 0;
+
+            lessons.forEach(lesson => {
+                if (lesson.recentQuizScore !== null && lesson.recentQuizScore !== undefined) {
+                    totalQuizzes++;
+                    totalScore += lesson.recentQuizScore;
+                    if (lesson.recentQuizScore > bestScore) {
+                        bestScore = lesson.recentQuizScore;
+                    }
+                    quizzesWithScores++;
+                }
+            });
+
+            const avgScore = quizzesWithScores > 0 ? Math.round(totalScore / quizzesWithScores) : 0;
+
+            // Calculate simulations passed
+            let simsPassed = 0;
+            lessons.forEach(lesson => {
+                if (lesson.simStatus && lesson.simStatus.toLowerCase() === 'passed') {
+                    simsPassed++;
+                } else if (lesson.simHistory && Array.isArray(lesson.simHistory)) {
+                    const hasPassed = lesson.simHistory.some(entry => 
+                        String(entry.result || '').toLowerCase() === 'passed'
+                    );
+                    if (hasPassed) simsPassed++;
+                }
+            });
+
+            // Update DOM
+            document.getElementById('avgScoreStat').textContent = avgScore > 0 ? `${avgScore}%` : '--';
+            document.getElementById('quizzesCompletedStat').textContent = totalQuizzes;
+            document.getElementById('bestScoreStat').textContent = bestScore > 0 ? `${bestScore}%` : '--';
+            document.getElementById('simulationsPassedStat').textContent = simsPassed;
+        }
+
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('studentToken');
+            window.location.href = '/caresim-login';
+        }
+
+        // Initialize
+        loadPerformanceStats();
+    </script>
+</body>
+</html>
+

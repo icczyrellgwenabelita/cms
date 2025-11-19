@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Progress - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
+                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
+                    <a href="/instructor-announcements" class="nav-tab">Announcements</a>
+                    <a href="/instructor-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <a href="/instructor-class-list">Class List</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Destine April</span>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="student-progress-header">
+            <h1>Student Progress</h1>
+            <p>Overview of this student's learning, quizzes, and simulations.</p>
+        </div>
+
+        <!-- Student Info Card -->
+        <div class="student-info-card">
+            <div class="student-info-content">
+                <div class="student-avatar-large">
+                    <span class="avatar-initial">D</span>
+                </div>
+                <div class="student-info-details">
+                    <div class="student-name-row">
+                        <h2>Destine April</h2>
+                        <span class="status-pill active">Active</span>
+                    </div>
+                    <p class="student-role">CareSim Student</p>
+                    <div class="student-meta">
+                        <span class="meta-item">Batch: 2025</span>
+                        <span class="meta-item">Student Number: STU-2025-001</span>
+                    </div>
+                    <div class="overall-progress-section">
+                        <div class="progress-header-row">
+                            <span class="progress-label">Overall Progress</span>
+                            <span class="progress-percentage">64%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: 64%"></div>
+                        </div>
+                    </div>
+                    <div class="student-stats-row">
+                        <div class="mini-stat">
+                            <span class="mini-stat-value">5</span>
+                            <span class="mini-stat-label">Lessons Completed</span>
+                        </div>
+                        <div class="mini-stat">
+                            <span class="mini-stat-value">8</span>
+                            <span class="mini-stat-label">Quizzes Taken</span>
+                        </div>
+                        <div class="mini-stat">
+                            <span class="mini-stat-value">2</span>
+                            <span class="mini-stat-label">Simulations Passed</span>
+                        </div>
+                        <div class="mini-stat">
+                            <span class="mini-stat-value">1</span>
+                            <span class="mini-stat-label">Certificates Earned</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content - Two Columns -->
+        <div class="student-progress-grid">
+            <!-- Left Column -->
+            <div class="progress-left-column">
+                <!-- Lesson Progress Card -->
+                <div class="instructor-card">
+                    <div class="instructor-card-header">
+                        <h2>Lesson Progress</h2>
+                    </div>
+                    <div class="lesson-progress-list">
+                        <div class="lesson-progress-item">
+                            <div class="lesson-progress-header">
+                                <span class="lesson-name">Lesson 1 – Vital Signs Monitoring</span>
+                                <span class="lesson-status completed">Completed</span>
+                            </div>
+                            <div class="lesson-progress-bar-container">
+                                <div class="lesson-progress-bar-fill" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div class="lesson-progress-item">
+                            <div class="lesson-progress-header">
+                                <span class="lesson-name">Lesson 2 – Medication Assistance</span>
+                                <span class="lesson-status in-progress">In Progress</span>
+                            </div>
+                            <div class="lesson-progress-bar-container">
+                                <div class="lesson-progress-bar-fill" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <div class="lesson-progress-item">
+                            <div class="lesson-progress-header">
+                                <span class="lesson-name">Lesson 3 – Meal Prep & Feeding</span>
+                                <span class="lesson-status in-progress">In Progress</span>
+                            </div>
+                            <div class="lesson-progress-bar-container">
+                                <div class="lesson-progress-bar-fill" style="width: 20%"></div>
+                            </div>
+                        </div>
+                        <div class="lesson-progress-item">
+                            <div class="lesson-progress-header">
+                                <span class="lesson-name">Lesson 4 – Personal Care</span>
+                                <span class="lesson-status not-started">Not Started</span>
+                            </div>
+                            <div class="lesson-progress-bar-container">
+                                <div class="lesson-progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="lesson-progress-item">
+                            <div class="lesson-progress-header">
+                                <span class="lesson-name">Lesson 5 – Safety & Emergency</span>
+                                <span class="lesson-status not-started">Not Started</span>
+                            </div>
+                            <div class="lesson-progress-bar-container">
+                                <div class="lesson-progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructor Notes Card -->
+                <div class="instructor-card">
+                    <div class="instructor-card-header">
+                        <h2>Instructor Notes</h2>
+                    </div>
+                    <textarea class="instructor-notes-textarea" placeholder="Use this area to write feedback or reminders about this student." rows="6"></textarea>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="progress-right-column">
+                <!-- Quiz History Card -->
+                <div class="instructor-card">
+                    <div class="instructor-card-header">
+                        <h2>Quiz History</h2>
+                    </div>
+                    <div class="quiz-history-table-wrapper">
+                        <table class="quiz-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Lesson</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Lesson 1</td>
+                                    <td><span class="quiz-score">8/10 (80%)</span></td>
+                                    <td>Nov 10, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>Lesson 2</td>
+                                    <td><span class="quiz-score">7/10 (70%)</span></td>
+                                    <td>Nov 12, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>Lesson 1</td>
+                                    <td><span class="quiz-score">9/10 (90%)</span></td>
+                                    <td>Nov 8, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>Lesson 3</td>
+                                    <td><span class="quiz-score">6/10 (60%)</span></td>
+                                    <td>Nov 15, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>Lesson 2</td>
+                                    <td><span class="quiz-score">8/10 (80%)</span></td>
+                                    <td>Nov 11, 2025</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Simulation Results Card -->
+                <div class="instructor-card">
+                    <div class="instructor-card-header">
+                        <h2>Simulation Results</h2>
+                    </div>
+                    <div class="simulation-results-list">
+                        <div class="simulation-result-item">
+                            <div class="simulation-result-header">
+                                <span class="simulation-title">Simulation 1 – Vital Signs</span>
+                                <span class="simulation-status passed">Passed</span>
+                            </div>
+                            <div class="simulation-result-details">
+                                <span class="simulation-detail">Attempts: 2</span>
+                                <span class="simulation-detail">Last attempt: Nov 18, 2025</span>
+                            </div>
+                        </div>
+                        <div class="simulation-result-item">
+                            <div class="simulation-result-header">
+                                <span class="simulation-title">Simulation 2 – Medication</span>
+                                <span class="simulation-status pending">Pending</span>
+                            </div>
+                            <div class="simulation-result-details">
+                                <span class="simulation-detail">Attempts: 1</span>
+                                <span class="simulation-detail">Last attempt: Nov 17, 2025</span>
+                            </div>
+                        </div>
+                        <div class="simulation-result-item">
+                            <div class="simulation-result-header">
+                                <span class="simulation-title">Simulation 3 – Meal Prep</span>
+                                <span class="simulation-status not-started">Not Started</span>
+                            </div>
+                            <div class="simulation-result-details">
+                                <span class="simulation-detail">Attempts: 0</span>
+                                <span class="simulation-detail">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/instructor-login';
+            }
+        }
+    </script>
+</body>
+</html>
+

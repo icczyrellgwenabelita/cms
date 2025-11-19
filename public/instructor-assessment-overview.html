@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Overview - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+</head>
+<body class="student-portal">
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab active">Assessment</a>
+                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
+                    <a href="/instructor-announcements" class="nav-tab">Announcements</a>
+                    <a href="/instructor-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <nav class="breadcrumb">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Assessment Overview</span>
+        </nav>
+
+        <div class="assessment-header">
+            <h1>
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 19H5C3.89543 19 3 18.1046 3 17V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 15H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 11H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 7H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 21L19 23L23 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Assessment Overview
+            </h1>
+            <p>Review class quiz performance and simulation results.</p>
+        </div>
+
+        <div class="assessment-stats-row">
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Avg Quiz Score</h3>
+                </div>
+                <div class="instructor-stat-value">78%</div>
+                <p class="instructor-stat-subtext">Across all quizzes</p>
+            </div>
+
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M19 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 7H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M19 7H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 17H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M19 17H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Quizzes Taken</h3>
+                </div>
+                <div class="instructor-stat-value">124</div>
+                <p class="instructor-stat-subtext">Total attempts</p>
+            </div>
+
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 9V12L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">Simulation Pass Rate</h3>
+                </div>
+                <div class="instructor-stat-value">67%</div>
+                <p class="instructor-stat-subtext">Students passing required simulations</p>
+            </div>
+
+            <div class="instructor-stat-card">
+                <div class="instructor-stat-card-header">
+                    <div class="instructor-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="instructor-stat-title">At-Risk Students</h3>
+                </div>
+                <div class="instructor-stat-value">5</div>
+                <p class="instructor-stat-subtext">Need follow-up</p>
+            </div>
+        </div>
+
+        <div class="assessment-tabs">
+            <button class="assessment-tab active" data-tab="quiz">Quiz Analytics</button>
+            <button class="assessment-tab" data-tab="simulation">Simulation Analytics</button>
+        </div>
+
+        <div class="assessment-tab-panels">
+            <section class="assessment-panel active" id="quiz">
+                <div class="assessment-grid">
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>Quiz Performance by Lesson</h2>
+                        </div>
+                        <table class="assessment-table">
+                            <thead>
+                                <tr>
+                                    <th>Lesson</th>
+                                    <th>Avg Score</th>
+                                    <th>Attempts</th>
+                                    <th>Completion Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Lesson 1 – Vital Signs</strong></td>
+                                    <td>82%</td>
+                                    <td>45</td>
+                                    <td>92%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lesson 2 – Medication Assistance</strong></td>
+                                    <td>75%</td>
+                                    <td>38</td>
+                                    <td>80%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lesson 3 – Meal Preparation & Feeding</strong></td>
+                                    <td>68%</td>
+                                    <td>30</td>
+                                    <td>70%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="card-note">Data based on all submitted quizzes.</p>
+                    </div>
+
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>Low-Scoring Quizzes</h2>
+                        </div>
+                        <div class="low-scoring-list">
+                            <div class="low-score-item">
+                                <div class="low-score-icon">!</div>
+                                <div>
+                                    <p class="low-score-title">Lesson 3 – Meal Preparation & Feeding</p>
+                                    <span class="low-score-subtext">12 students below 60%</span>
+                                </div>
+                            </div>
+                            <div class="low-score-item">
+                                <div class="low-score-icon">!</div>
+                                <div>
+                                    <p class="low-score-title">Lesson 2 – Medication Assistance</p>
+                                    <span class="low-score-subtext">8 students below 60%</span>
+                                </div>
+                            </div>
+                            <div class="low-score-item">
+                                <div class="low-score-icon">!</div>
+                                <div>
+                                    <p class="low-score-title">Lesson 5 – Safety & Emergencies</p>
+                                    <span class="low-score-subtext">6 students below 60%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="assessment-panel" id="simulation">
+                <div class="assessment-grid">
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>Simulation Pass Rates</h2>
+                        </div>
+                        <table class="assessment-table">
+                            <thead>
+                                <tr>
+                                    <th>Simulation</th>
+                                    <th>Pass Rate</th>
+                                    <th>Students Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Simulation 1 – Vital Signs</strong></td>
+                                    <td>72%</td>
+                                    <td>25 / 32</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Simulation 2 – Medication Assistance</strong></td>
+                                    <td>60%</td>
+                                    <td>20 / 32</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Simulation 3 – Meal Preparation & Feeding</strong></td>
+                                    <td>55%</td>
+                                    <td>18 / 32</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="instructor-card assessment-card simulation-summary-card">
+                        <div class="instructor-card-header">
+                            <h2>Simulation Status Summary</h2>
+                        </div>
+                        <div class="simulation-summary">
+                            <div class="simulation-summary-item">
+                                <p class="summary-label">Completed all simulations</p>
+                                <p class="summary-value">18 students</p>
+                            </div>
+                            <div class="simulation-summary-item">
+                                <p class="summary-label">In progress</p>
+                                <p class="summary-value">9 students</p>
+                            </div>
+                            <div class="simulation-summary-item">
+                                <p class="summary-label">Not started</p>
+                                <p class="summary-value">5 students</p>
+                            </div>
+                        </div>
+                        <div class="simulation-summary-footer">
+                            <a href="/instructor-class-list" class="view-class-list-btn">View Class List</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/instructor-login';
+            }
+        }
+
+        const tabs = document.querySelectorAll('.assessment-tab');
+        const panels = document.querySelectorAll('.assessment-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-tab');
+
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(panel => panel.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
+

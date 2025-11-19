@@ -38,7 +38,7 @@ app.use((err, req, res, next) => {
   }
 });
 app.get('/', (req, res) => {
-  res.redirect('/student-login.html');
+  res.redirect('/caresim-login');
 });
 
 // Explicit routes for dashboard pages
@@ -46,20 +46,72 @@ app.get('/admin-dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
 });
 
+app.get('/admin-lessons', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-lessons.html'));
+});
+
+app.get('/admin-lesson-editor', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-lesson-editor.html'));
+});
+
+app.get('/admin-quizzes', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-quizzes.html'));
+});
+
+app.get('/admin-users', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-users.html'));
+});
+
 app.get('/student-dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student-dashboard.html'));
+});
+
+app.get('/instructor-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-dashboard.html'));
+});
+
+app.get('/instructor-class-list', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-class-list.html'));
+});
+
+app.get('/instructor-assessment-overview', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-assessment-overview.html'));
+});
+
+app.get('/instructor-certificates-overview', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-certificates-overview.html'));
+});
+
+app.get('/instructor-profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-profile.html'));
+});
+
+app.get('/instructor-announcements', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-announcements.html'));
+});
+
+app.get('/instructor-student-progress', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-student-progress.html'));
 });
 
 app.get('/student-profile', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student-profile.html'));
 });
 
+app.get('/student-instructor-login', (req, res) => {
+  res.redirect('/caresim-login');
+});
+
 app.get('/admin-login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
 });
 
-app.get('/student-login', (req, res) => {
+app.get('/caresim-login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student-login.html'));
+});
+
+app.get('/student-login', (req, res) => {
+  res.redirect('/caresim-login');
 });
 
 app.use('/api', (req, res) => {
