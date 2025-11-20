@@ -164,7 +164,10 @@
                     <div class="instructor-card-header">
                         <h2>Instructor Notes</h2>
                     </div>
-                    <textarea class="instructor-notes-textarea" placeholder="Use this area to write feedback or reminders about this student." rows="6"></textarea>
+                    <textarea class="instructor-notes-textarea" placeholder="Use this area to write feedback or reminders for this student. They will see these notes in their messages." rows="6"></textarea>
+                    <div class="form-actions right">
+                        <button type="button" class="btn-save instructor-notes-submit">Send Note to Student</button>
+                    </div>
                 </div>
             </div>
 
@@ -185,33 +188,19 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Lesson 1</td>
-                                    <td><span class="quiz-score">8/10 (80%)</span></td>
-                                    <td>Nov 10, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td>Lesson 2</td>
-                                    <td><span class="quiz-score">7/10 (70%)</span></td>
-                                    <td>Nov 12, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td>Lesson 1</td>
-                                    <td><span class="quiz-score">9/10 (90%)</span></td>
-                                    <td>Nov 8, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td>Lesson 3</td>
-                                    <td><span class="quiz-score">6/10 (60%)</span></td>
-                                    <td>Nov 15, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td>Lesson 2</td>
-                                    <td><span class="quiz-score">8/10 (80%)</span></td>
-                                    <td>Nov 11, 2025</td>
-                                </tr>
+                                <!-- Filled dynamically -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Quiz Performance Chart -->
+                <div class="instructor-card">
+                    <div class="instructor-card-header">
+                        <h2>Quiz Performance</h2>
+                    </div>
+                    <div class="quiz-chart-wrapper">
+                        <canvas id="quizProgressChart" height="240"></canvas>
                     </div>
                 </div>
 
@@ -257,14 +246,9 @@
         </div>
     </div>
 
-    <script>
-        function logout() {
-            if (confirm('Are you sure you want to log out?')) {
-                localStorage.removeItem('token');
-                window.location.href = '/instructor-login';
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-student-progress.js"></script>
 </body>
 </html>
 

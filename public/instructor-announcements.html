@@ -154,14 +154,8 @@
         </div>
     </div>
 
-    <script>
-        function logout() {
-            if (confirm('Are you sure you want to log out?')) {
-                localStorage.removeItem('token');
-                window.location.href = '/instructor-login';
-            }
-        }
-    </script>
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-announcements.js"></script>
 </body>
 </html>
 

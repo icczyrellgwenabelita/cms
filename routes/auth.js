@@ -173,8 +173,10 @@ router.post('/admin/login', async (req, res) => {
     const admins = snapshot.val() || {};
     let adminId = null;
     let admin = null;
+    const emailLower = email.toLowerCase();
     for (const [id, a] of Object.entries(admins)) {
-      if (a.email === email) {
+      const adminEmail = (a && a.email) ? a.email.toLowerCase() : '';
+      if (adminEmail === emailLower) {
         adminId = id;
         admin = a;
         break;
@@ -183,7 +185,12 @@ router.post('/admin/login', async (req, res) => {
     if (!admin) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const isValid = await bcrypt.compare(password, admin.password);
+    // Check both password and passwordHash fields (passwordHash is used for new records)
+    const passwordToCheck = admin.passwordHash || admin.password;
+    if (!passwordToCheck) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const isValid = await bcrypt.compare(password, passwordToCheck);
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

@@ -450,6 +450,58 @@
                 icon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
             }
         }
+
+        // Instructor login handler
+        (function() {
+            const instructorBtn = document.querySelector('.btn-instructor');
+            if (instructorBtn) {
+                instructorBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('instructorEmail')?.value;
+                    const password = document.getElementById('instructorPassword')?.value;
+
+                    if (!email || !password) {
+                        alert('Please enter both email and password');
+                        return;
+                    }
+
+                    // Show loading state
+                    const originalText = instructorBtn.innerHTML;
+                    instructorBtn.disabled = true;
+                    instructorBtn.innerHTML = '<span>Logging in...</span>';
+
+                    try {
+                        const response = await fetch('/api/auth/admin/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ email, password })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            // Store instructor token
+                            localStorage.setItem('instructorToken', data.token);
+                            // Redirect to instructor dashboard
+                            window.location.href = '/instructor-dashboard';
+                        } else {
+                            alert(data.error || 'Login failed. Please check your credentials.');
+                            instructorBtn.disabled = false;
+                            instructorBtn.innerHTML = originalText;
+                        }
+                    } catch (error) {
+                        console.error('Instructor login error:', error);
+                        alert('Login failed. Please try again. Error: ' + error.message);
+                        instructorBtn.disabled = false;
+                        instructorBtn.innerHTML = originalText;
+                    }
+                });
+            } else {
+                console.error('Instructor login button not found');
+            }
+        })();
     </script>
 </body>
 </html>

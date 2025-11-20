@@ -226,14 +226,10 @@
         </div>
     </div>
 
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-certificates.js"></script>
     <script>
-        function logout() {
-            if (confirm('Are you sure you want to log out?')) {
-                localStorage.removeItem('token');
-                window.location.href = '/instructor-login';
-            }
-        }
-
+        // Tab switching logic
         const certificateTabs = document.querySelectorAll('.certificates-tab');
 
         certificateTabs.forEach(tab => {

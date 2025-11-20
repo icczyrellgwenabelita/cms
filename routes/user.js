@@ -2,6 +2,65 @@ const express = require('express');
 const router = express.Router();
 const { verifyStudentToken } = require('../middleware/auth');
 const { db } = require('../config/firebase');
+
+const normalizeQuizScore = (score) => {
+  if (typeof score !== 'number' || isNaN(score)) {
+    return 0;
+  }
+  if (score >= 0 && score <= 1) {
+    return score * 10;
+  }
+  return score;
+};
+
+const lessonStatusString = (status) => {
+  if (!status || typeof status !== 'string') {
+    return 'not_started';
+  }
+  return status.trim().toLowerCase();
+};
+
+const hasLessonSimPassed = (lesson = {}) => {
+  if (Array.isArray(lesson.simHistory) && lesson.simHistory.some(entry => {
+    const result = String(entry?.result || entry?.status || '').toLowerCase();
+    return ['pass', 'passed', 'success', 'complete', 'completed'].includes(result);
+  })) {
+    return true;
+  }
+  if (lesson.simCompleted === true) return true;
+  if (lesson.simulation && lesson.simulation.completed) return true;
+  return false;
+};
+
+const lessonHasSimActivity = (lesson = {}) => {
+  if (Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0) {
+    return true;
+  }
+  const attempts = Number(lesson.simAttempts || lesson?.simulation?.attempts);
+  return Number.isFinite(attempts) && attempts > 0;
+};
+
+const announcementMatchesStudent = (announcement = {}, studentInfo = {}) => {
+  const audience = announcement.audience;
+  if (!audience) {
+    return true;
+  }
+
+  const studentBatch = (studentInfo.batch || '').toString().toLowerCase();
+  const normalize = (value) => String(value || '').toLowerCase();
+
+  const values = Array.isArray(audience) ? audience.map(normalize) : [normalize(audience)];
+
+  if (values.some(val => ['students', 'student', 'all', 'everyone', 'public'].includes(val))) {
+    return true;
+  }
+
+  if (studentBatch && values.some(val => val.includes(studentBatch))) {
+    return true;
+  }
+
+  return false;
+};
 router.get('/dashboard', verifyStudentToken, async (req, res) => {
   try {
     console.log('User dashboard request received for userId:', req.userId);
@@ -279,6 +338,142 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
       lessons.push(lessonData);
     }
     const studentInfo = userData.studentInfo || {};
+    const totalLessons = lessons.length || 0;
+    const completedLessonsCount = lessons.filter(lesson => lessonStatusString(lesson.status) === 'completed').length;
+    const normalizedQuizScores = lessons
+      .map(lesson => normalizeQuizScore(lesson.recentQuizScore))
+      .filter(score => score > 0);
+    const averageQuizScore = normalizedQuizScores.length > 0
+      ? normalizedQuizScores.reduce((sum, score) => sum + score, 0) / normalizedQuizScores.length
+      : 0;
+    const finalGradePercent = Math.round(averageQuizScore * 10) || 0;
+    
+    const simulationSummaries = lessons.map(lesson => {
+      const status = hasLessonSimPassed(lesson)
+        ? 'pass'
+        : lessonHasSimActivity(lesson)
+          ? 'pending'
+          : 'not_started';
+      const lastAttempt = Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0
+        ? lesson.simHistory[0].timestamp || null
+        : null;
+      const attempts = Array.isArray(lesson.simHistory)
+        ? lesson.simHistory.length
+        : Number(lesson.simAttempts || (lesson.simulation && lesson.simulation.attempts)) || 0;
+      return {
+        slot: lesson.slot,
+        lessonName: lesson.lessonName || `Lesson ${lesson.slot}`,
+        status,
+        attempts,
+        lastAttempt
+      };
+    });
+    
+    const lessonCompletionMet = totalLessons > 0 && completedLessonsCount === totalLessons;
+    const simulationCompletionMet = simulationSummaries.length > 0
+      ? simulationSummaries.every(summary => summary.status === 'pass')
+      : false;
+    const finalCourseMet = lessonCompletionMet && simulationCompletionMet && finalGradePercent >= 75;
+    
+    const certificateProgress = {
+      lessonCompletion: lessonCompletionMet,
+      simulationCompletion: simulationCompletionMet,
+      finalCourse: finalCourseMet,
+      finalGradePercent
+    };
+    
+    const lessonCertificates = lessons
+      .map(lesson => {
+        const normalizedScore = normalizeQuizScore(lesson.recentQuizScore);
+        const quizPassed = normalizedScore >= 6;
+        const statusValue = lessonStatusString(lesson.status);
+        if (statusValue === 'completed' && quizPassed) {
+          const issuedTimestamp = Array.isArray(lesson.quizHistory) && lesson.quizHistory.length > 0
+            ? lesson.quizHistory[0].timestamp
+            : null;
+          return {
+            id: `lesson-${lesson.slot}`,
+            type: 'lesson',
+            lessonSlot: lesson.slot,
+            title: lesson.lessonName || `Lesson ${lesson.slot} Certificate`,
+            date: issuedTimestamp || new Date().toISOString(),
+            status: 'issued'
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+    
+    const computedCertificates = [...lessonCertificates];
+    if (simulationCompletionMet) {
+      computedCertificates.push({
+        id: 'simulation-completion',
+        type: 'simulation',
+        title: 'Simulation Completion Certificate',
+        date: new Date().toISOString(),
+        status: 'issued'
+      });
+    }
+    if (finalCourseMet) {
+      computedCertificates.push({
+        id: 'overall-course',
+        type: 'course',
+        title: 'Overall Course Certificate',
+        date: new Date().toISOString(),
+        status: 'issued'
+      });
+    }
+    
+    const [certificatesSnapshot, announcementsSnapshot] = await Promise.all([
+      db.ref(`users/${req.userId}/certificates`).once('value'),
+      db.ref('announcements').once('value')
+    ]);
+    
+    const storedCertificatesData = certificatesSnapshot.val() || {};
+    const storedCertificates = Object.entries(storedCertificatesData).map(([id, cert]) => ({
+      id,
+      type: cert.type || (cert.lessonSlot ? 'lesson' : 'course'),
+      lessonSlot: cert.lessonSlot !== undefined ? Number(cert.lessonSlot) : null,
+      title: cert.title || cert.name || (cert.lessonSlot ? `Lesson ${cert.lessonSlot} Certificate` : 'Certificate'),
+      date: cert.date || cert.issuedAt || cert.createdAt || null,
+      status: cert.status || 'issued',
+      downloadUrl: cert.downloadUrl || null
+    }));
+    
+    const certificateMap = new Map();
+    storedCertificates.forEach(cert => {
+      const key = cert.id || `${cert.type}-${cert.lessonSlot || 'general'}`;
+      certificateMap.set(key, cert);
+    });
+    computedCertificates.forEach(cert => {
+      const key = cert.id || `${cert.type}-${cert.lessonSlot || 'general'}`;
+      if (certificateMap.has(key)) {
+        certificateMap.set(key, { ...certificateMap.get(key), ...cert });
+      } else {
+        certificateMap.set(key, cert);
+      }
+    });
+    const certificates = Array.from(certificateMap.values());
+    
+    const announcementsData = announcementsSnapshot.val() || {};
+    const announcements = Object.values(announcementsData)
+      .filter(announcement => announcementMatchesStudent(announcement, studentInfo))
+      .map(announcement => ({
+        id: announcement.id || '',
+        title: announcement.title || 'Announcement',
+        message: announcement.message || announcement.content || '',
+        audience: announcement.audience || 'students',
+        pinned: !!announcement.pinned,
+        instructorId: announcement.instructorId || null,
+        date: announcement.createdAt || announcement.updatedAt || new Date().toISOString()
+      }))
+      .sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return new Date(b.date || 0) - new Date(a.date || 0);
+      })
+      .slice(0, 10);
+    
     const isVerified = userData.verified === true || userData.verified === 'true';
     let completionScore = 0;
     
@@ -330,7 +525,10 @@ router.get('/dashboard', verifyStudentToken, async (req, res) => {
       name: userName,
       fullName: userName,
       status: 'active',
-      certificates: [],
+      certificates,
+      certificateProgress,
+      announcements,
+      simulations: simulationSummaries,
       lessons: lessons,
       profileCompletion: completionScore,
       verified: isVerified,
@@ -576,4 +774,39 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to update user profile' });
   }
 });
+// GET /api/user/lessons - Get all lessons with full content for students
+router.get('/lessons', verifyStudentToken, async (req, res) => {
+  try {
+    const lessonsRef = db.ref('lessons');
+    const snapshot = await lessonsRef.once('value');
+    const lessons = snapshot.val() || {};
+    
+    // Only return lessons that actually exist in the database
+    const lessonsArray = Object.entries(lessons)
+      .filter(([key, lesson]) => {
+        const slot = parseInt(key);
+        return !isNaN(slot) && lesson && (lesson.lessonTitle || lesson.lessonName);
+      })
+      .map(([key, lesson]) => {
+        const slot = parseInt(key);
+        return {
+          slot,
+          lessonTitle: lesson.lessonTitle || lesson.lessonName || '',
+          lessonName: lesson.lessonName || lesson.lessonTitle || '', // Keep for backward compatibility
+          description: lesson.description || lesson.lessonDescription || '',
+          lessonDescription: lesson.lessonDescription || lesson.description || '', // Keep for backward compatibility
+          body: lesson.body || '',
+          images: lesson.images || [],
+          tools: lesson.tools || {}
+        };
+      })
+      .sort((a, b) => a.slot - b.slot);
+    
+    res.json({ success: true, lessons: lessonsArray });
+  } catch (error) {
+    console.error('Get lessons error:', error);
+    res.status(500).json({ error: 'Failed to fetch lessons' });
+  }
+});
+
 module.exports = router;

@@ -256,14 +256,10 @@
         </div>
     </div>
 
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-assessments.js"></script>
     <script>
-        function logout() {
-            if (confirm('Are you sure you want to log out?')) {
-                localStorage.removeItem('token');
-                window.location.href = '/instructor-login';
-            }
-        }
-
+        // Tab switching logic
         const tabs = document.querySelectorAll('.assessment-tab');
         const panels = document.querySelectorAll('.assessment-panel');
 

@@ -5,15 +5,18 @@ const fs = require('fs');
 require('dotenv').config();
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
+const instructorRoutes = require('./routes/instructor');
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/instructor', instructorRoutes);
 app.use((req, res, next) => {
   if (req.method === 'GET' && !path.extname(req.path)) {
     const trimmedPath = req.path.endsWith('/') && req.path.length > 1 ? req.path.slice(0, -1) : req.path;

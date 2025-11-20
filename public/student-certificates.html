@@ -231,6 +231,7 @@
             studentName: 'Loading...',
             lessons: [],
             simulations: [],
+            issuedCertificates: [],
             finalGrade: 0,
             overallStatus: 'Not Yet Eligible'
         };
@@ -254,16 +255,26 @@
                     // Get lessons
                     certificatesData.lessons = payload.lessons || [];
                     
-                    // Calculate final grade (placeholder - will come from backend)
-                    const quizScores = certificatesData.lessons
-                        .map(lesson => lesson.recentQuizScore)
-                        .filter(score => typeof score === 'number');
-                    certificatesData.finalGrade = quizScores.length
-                        ? Math.round(quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length)
-                        : 0;
+                    // Certificates issued from backend
+                    certificatesData.issuedCertificates = Array.isArray(payload.certificates) ? payload.certificates : [];
+                    
+                    // Simulation summary
+                    certificatesData.simulations = mapSimulationsFromPayload(payload.simulations, certificatesData.lessons);
+                    
+                    // Calculate final grade (prefer backend data if available)
+                    if (payload.certificateProgress && typeof payload.certificateProgress.finalGradePercent === 'number') {
+                        certificatesData.finalGrade = payload.certificateProgress.finalGradePercent;
+                    } else {
+                        const quizScores = certificatesData.lessons
+                            .map(lesson => lesson.recentQuizScore)
+                            .filter(score => typeof score === 'number');
+                        certificatesData.finalGrade = quizScores.length
+                            ? Math.round(quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length)
+                            : 0;
+                    }
                     
                     // Update summary
-                    updateSummary();
+                    updateSummary(payload.certificateProgress || {});
                     
                     // Render lesson certificates
                     renderLessonCertificates();
@@ -281,6 +292,50 @@
             }
         }
 
+        function mapSimulationsFromPayload(simulations, lessons = []) {
+            if (Array.isArray(simulations) && simulations.length > 0) {
+                return simulations.map(sim => {
+                    const status = (sim.status || '').toLowerCase();
+                    return {
+                        name: sim.lessonName || sim.name || `Lesson ${sim.slot || ''}`.trim(),
+                        status: status === 'pass' ? 'pass' : (status === 'pending' ? 'pending' : 'not_started')
+                    };
+                });
+            }
+            return buildSimulationSummaryFromLessons(lessons);
+        }
+
+        function buildSimulationSummaryFromLessons(lessons = []) {
+            if (!Array.isArray(lessons) || lessons.length === 0) {
+                return [
+                    { name: 'Simulation 1', status: 'not_started' },
+                    { name: 'Simulation 2', status: 'not_started' },
+                    { name: 'Simulation 3', status: 'not_started' }
+                ];
+            }
+            return lessons.map(lesson => {
+                const name = lesson.lessonName || `Lesson ${lesson.slot}`;
+                const passed = hasLessonSimPassed(lesson);
+                const hasAttempts = passed || (Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0) || Number(lesson.simAttempts) > 0;
+                return {
+                    name,
+                    status: passed ? 'pass' : hasAttempts ? 'pending' : 'not_started'
+                };
+            });
+        }
+
+        function hasLessonSimPassed(lesson = {}) {
+            if (Array.isArray(lesson.simHistory) && lesson.simHistory.some(entry => {
+                const result = String(entry?.result || entry?.status || '').toLowerCase();
+                return ['pass', 'passed', 'complete', 'completed', 'success'].includes(result);
+            })) {
+                return true;
+            }
+            if (lesson.simCompleted === true) return true;
+            if (lesson.simulation && lesson.simulation.completed) return true;
+            return false;
+        }
+
         function loadDefaultData() {
             certificatesData.studentName = 'John Michael Cruz';
             certificatesData.lessons = [
@@ -292,6 +347,7 @@
                 { slot: 6, lessonName: 'Emergency Response', status: 'not_started', quizAttempts: 0 }
             ];
             certificatesData.finalGrade = 85;
+            certificatesData.issuedCertificates = [];
             certificatesData.simulations = [
                 { name: 'Vital Signs', status: 'pass' },
                 { name: 'Medication', status: 'pass' },
@@ -304,38 +360,76 @@
             updateCourseCertificate();
         }
 
-        function updateSummary() {
+        function updateSummary(progressData = {}) {
             const completedLessons = certificatesData.lessons.filter(l => l.status === 'completed').length;
             const totalLessons = certificatesData.lessons.length;
             const passedSims = certificatesData.simulations?.filter(s => s.status === 'pass').length || 0;
             const totalSims = certificatesData.simulations?.length || 3;
             
+            if (typeof progressData.finalGradePercent === 'number') {
+                certificatesData.finalGrade = progressData.finalGradePercent;
+            }
+            
             document.getElementById('finalGrade').textContent = `${certificatesData.finalGrade}%`;
             document.getElementById('lessonsCompleted').textContent = `${completedLessons} / ${totalLessons}`;
             document.getElementById('simulationsPassed').textContent = `${passedSims} / ${totalSims}`;
             
-            const isEligible = completedLessons === totalLessons && 
-                              passedSims === totalSims && 
-                              certificatesData.finalGrade >= 75;
+            const lessonsComplete = typeof progressData.lessonCompletion === 'boolean'
+                ? progressData.lessonCompletion
+                : (completedLessons === totalLessons && totalLessons > 0);
+            const simsComplete = typeof progressData.simulationCompletion === 'boolean'
+                ? progressData.simulationCompletion
+                : (passedSims === totalSims && totalSims > 0);
+            const finalEligible = typeof progressData.finalCourse === 'boolean'
+                ? progressData.finalCourse
+                : (lessonsComplete && simsComplete && certificatesData.finalGrade >= 75);
             
             const statusEl = document.getElementById('overallStatus');
-            statusEl.textContent = isEligible ? 'Eligible' : 'Not Yet Eligible';
-            statusEl.className = `summary-value ${isEligible ? 'status-eligible' : 'status-not-eligible'}`;
+            statusEl.textContent = finalEligible ? 'Eligible' : 'Not Yet Eligible';
+            statusEl.className = `summary-value ${finalEligible ? 'status-eligible' : 'status-not-eligible'}`;
         }
 
         function renderLessonCertificates() {
             const grid = document.getElementById('lessonCertificatesGrid');
             grid.innerHTML = '';
+            const issuedMap = {};
+            (certificatesData.issuedCertificates || []).forEach(cert => {
+                if (cert.lessonSlot !== undefined && cert.lessonSlot !== null) {
+                    const slot = Number(cert.lessonSlot);
+                    if (!isNaN(slot)) {
+                        issuedMap[slot] = cert;
+                    }
+                }
+            });
             
             certificatesData.lessons.forEach(lesson => {
                 const isCompleted = lesson.status === 'completed';
-                const hasQuiz = lesson.quizAttempts > 0;
-                const quizPassed = hasQuiz && (lesson.recentQuizScore >= 50);
-                const isIssued = isCompleted && quizPassed;
+                const hasQuiz = Number(lesson.quizAttempts) > 0;
+                const normalizedScore = typeof lesson.recentQuizScore === 'number'
+                    ? (lesson.recentQuizScore <= 1 ? lesson.recentQuizScore * 100 : lesson.recentQuizScore)
+                    : 0;
+                const quizPassed = hasQuiz && (normalizedScore >= 60);
+                const storedCert = issuedMap[lesson.slot];
+                const isIssued = Boolean(storedCert) || (isCompleted && quizPassed);
                 
                 const status = isIssued ? 'issued' : (isCompleted && hasQuiz ? 'available' : 'locked');
-                const dateIssued = isIssued ? formatDate(new Date()) : '--';
-                const certId = isIssued ? `L${lesson.slot}-2025-${String(lesson.slot).padStart(4, '0')}` : '--';
+                let dateIssued = '--';
+                let certId = '--';
+                
+                if (storedCert) {
+                    dateIssued = storedCert.date ? formatDate(new Date(storedCert.date)) : '--';
+                    certId = storedCert.id || storedCert.certificateId || `lesson-${lesson.slot}`;
+                } else if (isIssued) {
+                    const latestQuizEntry = Array.isArray(lesson.quizHistory) && lesson.quizHistory.length > 0
+                        ? lesson.quizHistory[0]
+                        : null;
+                    if (latestQuizEntry && latestQuizEntry.timestamp && !isNaN(Date.parse(latestQuizEntry.timestamp))) {
+                        dateIssued = formatDate(new Date(latestQuizEntry.timestamp));
+                    } else {
+                        dateIssued = formatDate(new Date());
+                    }
+                    certId = `lesson-${lesson.slot}`;
+                }
                 
                 const card = document.createElement('div');
                 card.className = 'certificate-card';
@@ -423,12 +517,16 @@
             const passedSims = certificatesData.simulations?.filter(s => s.status === 'pass').length || 0;
             const totalSims = certificatesData.simulations?.length || 3;
             const allPassed = passedSims === totalSims;
+            const simulationCert = (certificatesData.issuedCertificates || []).find(cert => 
+                cert.type === 'simulation' || cert.id === 'simulation-completion'
+            );
             
             const statusEl = document.getElementById('simulationStatus');
             if (allPassed) {
                 statusEl.className = 'certificate-status status-issued';
                 statusEl.innerHTML = getStatusIcon('issued') + ' Issued';
-                document.getElementById('simulationDateIssued').textContent = formatDate(new Date());
+                const issuedDate = simulationCert?.date ? new Date(simulationCert.date) : new Date();
+                document.getElementById('simulationDateIssued').textContent = formatDate(issuedDate);
                 document.getElementById('downloadSimulationCertBtn').disabled = false;
             } else if (passedSims > 0) {
                 statusEl.className = 'certificate-status status-available';
@@ -473,6 +571,9 @@
             const allSimsPassed = passedSims === totalSims;
             
             const gradeMet = certificatesData.finalGrade >= 75;
+            const courseCert = (certificatesData.issuedCertificates || []).find(cert => 
+                cert.type === 'course' || cert.id === 'overall-course'
+            );
             
             const conditionsMet = [allLessonsDone, allQuizzesPassed, allSimsPassed, gradeMet];
             const metCount = conditionsMet.filter(c => c).length;
@@ -494,7 +595,8 @@
             if (allMet) {
                 statusEl.className = 'certificate-status status-issued';
                 statusEl.innerHTML = getStatusIcon('issued') + ' Issued';
-                document.getElementById('courseDateIssued').textContent = formatDate(new Date());
+                const issuedDate = courseCert?.date ? new Date(courseCert.date) : new Date();
+                document.getElementById('courseDateIssued').textContent = formatDate(issuedDate);
                 document.getElementById('downloadCourseCertBtn').disabled = false;
             } else {
                 statusEl.className = 'certificate-status status-locked';
