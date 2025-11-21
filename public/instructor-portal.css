@@ -208,6 +208,8 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    max-height: none;
+    overflow: visible;
 }
 
 .activity-item {
@@ -421,7 +423,57 @@
     box-shadow: 0 0 0 3px rgba(193, 154, 107, 0.1);
 }
 
-/* Students Table Card */
+/* Class List Card - Single Smooth Panel */
+.classlist-card {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    padding: 0;
+    overflow: hidden;
+    overflow-x: auto;
+}
+
+.classlist-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+/* Header background goes edge-to-edge */
+.classlist-table thead th {
+    background: #f5f7fb;
+    padding: 0.9rem 1.5rem;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: #9aa2b1;
+    border-bottom: 1px solid #e3e6ef;
+    text-align: left;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+}
+
+.classlist-table tbody td {
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid #f0f2f7;
+    font-size: 14px;
+    color: #1E293B;
+    vertical-align: middle;
+}
+
+.classlist-table tbody tr {
+    transition: background 0.2s;
+}
+
+.classlist-table tbody tr:hover {
+    background: #F8FAFC;
+}
+
+.classlist-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Legacy styles for backward compatibility */
 .students-table-card {
     background: white;
     border-radius: 16px;
@@ -601,6 +653,84 @@
     transform: translateY(0);
 }
 
+/* Class List Footer with Pagination */
+.classlist-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem 1.1rem;
+    border-top: 1px solid #f0f2f7;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.classlist-results-summary {
+    font-size: 14px;
+    color: #64748B;
+    font-family: 'Poppins', sans-serif;
+}
+
+.classlist-results-summary.hidden {
+    display: none;
+}
+
+.classlist-pagination {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    min-height: 32px;
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    background: #fff;
+    font-size: 14px;
+    color: #64748B;
+    cursor: pointer;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.page-btn:hover:not(.disabled):not(.active) {
+    background: #F8FAFC;
+    border-color: #C19A6B;
+    color: #556B2F;
+}
+
+.page-btn.active {
+    background: #C19A6B;
+    color: #fff;
+    border-color: #C19A6B;
+    font-weight: 600;
+}
+
+.page-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #556B2F;
+    border-radius: 2px 2px 0 0;
+}
+
+.page-btn.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Legacy styles for backward compatibility */
 .table-footer {
     display: flex;
     justify-content: space-between;
@@ -701,6 +831,30 @@
 
     .students-table-card {
         padding: 16px;
+    }
+    
+    .classlist-card {
+        border-radius: 12px;
+    }
+    
+    .classlist-table thead th {
+        padding: 0.75rem 1rem;
+        font-size: 0.7rem;
+    }
+    
+    .classlist-table tbody td {
+        padding: 0.75rem 1rem;
+    }
+    
+    .classlist-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0.75rem 1rem 1rem;
+    }
+    
+    .classlist-pagination {
+        flex-wrap: wrap;
     }
 }
 

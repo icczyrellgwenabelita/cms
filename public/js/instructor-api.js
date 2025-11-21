@@ -31,6 +31,9 @@ const instructorAPI = {
       throw new Error(data.error || 'Request failed');
     }
 
+    // Log response for debugging
+    console.log(`Instructor API ${options.method || 'GET'} ${endpoint}:`, data);
+    
     return data;
   },
 
@@ -56,4 +59,5 @@ const instructorAPI = {
     return this.request(endpoint, { method: 'DELETE' });
   }
 };
+
 

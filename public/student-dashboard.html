@@ -38,52 +38,76 @@
         </div>
     </header>
     <div class="portal-container">
-        <section class="profile-hero-card">
-            <div class="profile-section">
+        <div class="student-dashboard-layout">
+            <section class="student-profile-card">
                 <p class="profile-greeting" id="profileGreeting">STUDENT PROFILE</p>
-                <div class="profile-name-row">
+                
+                <!-- Top Section: Avatar + Name + Badge -->
+                <div class="profile-header-section">
                     <div class="profile-photo">
                         <div class="photo-placeholder" id="profileInitial">?</div>
                     </div>
-                    <h1 class="profile-name" id="profileName">Loading...</h1>
+                    <div class="profile-name-badge-wrapper">
+                        <h1 class="profile-name" id="profileName">Loading...</h1>
+                        <div class="profile-status">
+                            <span class="verified-badge" id="verifiedBadge" style="display: none;">
+                                <svg class="icon-check" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Verified Student
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="profile-status">
-                    <span class="verified-badge" id="verifiedBadge" style="display: none;">
-                        <svg class="icon-check" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        Verified Student
-                    </span>
+                
+                <!-- Bottom Section: Compact Info Grid -->
+                <div class="profile-info-grid">
+                    <div class="profile-info-item">
+                        <div class="info-label">STUDENT NUMBER</div>
+                        <div class="info-value" id="profileStudentNumber">—</div>
                     </div>
-                <div class="profile-meta">
-                    <div class="meta-item">
-                        <span class="meta-label">Student Number</span>
-                        <span class="meta-value" id="profileStudentNumber">—</span>
+                    <div class="profile-info-item">
+                        <div class="info-label">BATCH</div>
+                        <div class="info-value" id="profileBatch">—</div>
                     </div>
-                    <div class="meta-item">
-                        <span class="meta-label">Batch</span>
-                        <span class="meta-value" id="profileBatch">—</span>
+                    <div class="profile-info-item">
+                        <div class="info-label">PROGRAM / COURSE</div>
+                        <div class="info-value" id="profileProgram">Caregiving NC II</div>
                     </div>
+                    <div class="profile-info-item">
+                        <div class="info-label">ASSIGNED INSTRUCTOR</div>
+                        <div class="info-value" id="profileInstructor">Not assigned</div>
                     </div>
-                <button class="btn-edit-profile" onclick="goToProfile()">Edit Profile</button>
+                    <div class="profile-info-item">
+                        <div class="info-label">EMAIL</div>
+                        <div class="info-value" id="profileEmail">—</div>
                     </div>
-            <div class="progress-section">
-                <h2 class="progress-section-title">STUDENT PROGRESS</h2>
-                <div class="profile-stats">
-                    <div class="stat-card">
+                    <div class="profile-info-item">
+                        <div class="info-label">LAST LOGIN</div>
+                        <div class="info-value" id="profileLastLogin">—</div>
+                    </div>
+                </div>
+                
+                <!-- Edit Button -->
+                <div class="profile-edit-wrapper">
+                    <button class="profile-edit-btn" onclick="goToProfile()">Edit</button>
+                </div>
+            </section>
+            <section class="student-progress-card-grid">
+                    <div class="progress-stat-card">
                         <div class="stat-icon">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M10 2L3 7V17C3 17.5304 3.21071 18.0391 3.58579 18.4142C3.96086 18.7893 4.46957 19 5 19H15C15.5304 19 16.0391 18.7893 16.4142 18.4142C16.7893 18.0391 17 17.5304 17 17V7L10 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M10 10V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                    </div>
+                        </div>
                         <div class="stat-content">
                             <span class="stat-label">Lessons Completed</span>
                             <span class="stat-value" id="profileLessonsCount">0</span>
-                </div>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="progress-stat-card">
                         <div class="stat-icon">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9 2L3 6V14C3 14.5304 3.21071 15.0391 3.58579 15.4142C3.96086 15.7893 4.46957 16 5 16H15C15.5304 16 16.0391 15.7893 16.4142 15.4142C16.7893 15.0391 17 14.5304 17 14V6L11 2H9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -95,7 +119,7 @@
                             <span class="stat-value" id="profileQuizzesCount">0</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="progress-stat-card">
                         <div class="stat-icon">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -107,7 +131,7 @@
                             <span class="stat-value" id="profileSimulationsCount">0</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="progress-stat-card">
                         <div class="stat-icon">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M10 2L3 7V17C3 17.5304 3.21071 18.0391 3.58579 18.4142C3.96086 18.7893 4.46957 19 5 19H15C15.5304 19 16.0391 18.7893 16.4142 18.4142C16.7893 18.0391 17 17.5304 17 17V7L10 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -119,7 +143,7 @@
                             <span class="stat-value" id="profileCertificatesCount">0</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="progress-stat-card">
                         <div class="stat-icon">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M10 10C12.7614 10 15 7.76142 15 5C15 2.23858 12.7614 0 10 0C7.23858 0 5 2.23858 5 5C5 7.76142 7.23858 10 10 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -131,7 +155,7 @@
                             <span class="stat-value" id="profileAverageScore">—</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="progress-stat-card">
                         <div class="stat-icon">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -143,9 +167,8 @@
                             <span class="stat-value" id="profileOverallProgress">0%</span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
+            </section>
+        </div>
 
         <section class="progress-access-row">
             <div class="overall-progress-card">
@@ -486,8 +509,12 @@
         
         attachQuickActions();
         
+        // Load dashboard data from backend
         async function loadDashboard() {
             try {
+                // Show loading state
+                document.body.classList.add('dashboard-loading');
+                
                 const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
                     method: 'GET',
                     headers: {
@@ -495,43 +522,89 @@
                         'Cache-Control': 'no-cache'
                     }
                 });
-                const data = await response.json();
+                
+                if (response.status === 401 || response.status === 403) {
+                    handleSessionExpiration();
+                    return;
+                }
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('Error parsing JSON response:', parseError);
+                    showAlertModal('Failed to load dashboard: Invalid response from server. Please try again.', 'Error');
+                    document.body.classList.remove('dashboard-loading');
+                    return;
+                }
                 
                 console.log('Dashboard API Response:', data);
                 console.log('Dashboard Response Status:', response.status);
-                console.log('Dashboard Lessons:', data.data?.lessons);
                 
-                if (response.ok) {
-                    const payload = data.data || {};
-                    updateProfileCard(payload);
-                    updateVerificationStatus(payload);
+                if (response.ok && data.success) {
+                    // Simple endpoint returns { success: true, profile, summaryStats }
+                    // Full endpoint returns { success: true, data: { profile, summaryStats, lessons, ... } }
+                    const profile = data.profile;
+                    const summaryStats = data.summaryStats;
                     
-                    dashboardState.lessons = normalizeLessons(payload.lessons || []);
-                    renderLessonCards(dashboardState.lessons);
-                    updateProgressSummary(dashboardState.lessons, payload);
-                    updateQuickAccess(dashboardState.lessons);
-                    updateQuizSummary(dashboardState.lessons);
-                    updateSimulationSummary(dashboardState.lessons);
+                    console.log('Extracted Profile:', profile);
+                    console.log('Extracted SummaryStats:', summaryStats);
                     
-                    dashboardState.certificates = payload.certificates || [];
-                    loadCertificates(dashboardState.certificates);
-                    updateCertificateProgress(dashboardState.certificates, payload.certificateProgress || {}, dashboardState.lessons);
-                    
-                    updateAnnouncements(payload.announcements || []);
+                    // Update profile card
+                    if (profile) {
+                        console.log('Updating profile card with:', profile);
+                        updateProfileCard(profile);
                     } else {
-                    console.error('Dashboard API Error:', data);
-                    console.error('Response status:', response.status);
-                    if (response.status === 401) {
-                        console.log('Unauthorized - logging out');
-                        handleSessionExpiration();
-                    } else {
-                        showAlertModal('Failed to load dashboard: ' + (data.error || 'Unknown error'), 'Error');
+                        console.warn('No profile data in response');
                     }
+                    
+                    // Update summary stats cards
+                    if (summaryStats) {
+                        console.log('Updating summary stats with:', summaryStats);
+                        updateSummaryStats(summaryStats);
+                    } else {
+                        console.warn('No summaryStats data in response');
+                    }
+                    
+                    // The simple endpoint only returns profile and summaryStats
+                    // Other sections (lessons, quizPerformance, etc.) are not included
+                    // They will remain empty/static for now
+                    dashboardState.lessons = [];
+                    renderLessonCards([]);
+                    updateProgressSummary([], summaryStats || {});
+                    updateQuickAccess([]);
+                    updateQuizPerformance({});
+                    updateSimulationSummaryFromAPI([]);
+                    dashboardState.certificates = [];
+                    loadCertificates([]);
+                    updateCertificateProgress([], {}, []);
+                    updateAnnouncements([]);
+                } else {
+                    // API returned an error response
+                    console.error('Dashboard API Error:', data);
+                    const errorMessage = data.error || data.message || 'Unknown error';
+                    showAlertModal('Failed to load dashboard: ' + errorMessage, 'Error');
                 }
             } catch (error) {
+                // Network error or other exception
                 console.error('Error loading dashboard:', error);
-                console.error('Error details:', error.message);
-                showAlertModal('Error loading dashboard: ' + error.message, 'Error');
+                console.error('Error details:', {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack
+                });
+                
+                let errorMessage = 'Network error. Please check your connection and try again.';
+                if (error.message && error.message.includes('fetch')) {
+                    errorMessage = 'Unable to connect to server. Please check your internet connection.';
+                } else if (error.message) {
+                    errorMessage = 'Error loading dashboard: ' + error.message;
+                }
+                
+                showAlertModal(errorMessage, 'Error');
+            } finally {
+                // Hide loading state
+                document.body.classList.remove('dashboard-loading');
             }
         }
         
@@ -567,8 +640,8 @@
             return value.charAt(0).toUpperCase() + value.slice(1);
         }
         
-        function updateProfileCard(details = {}) {
-            const fullName = details.name || details.fullName || details.email || 'Student';
+        function updateProfileCard(profile = {}) {
+            const fullName = profile.name || profile.fullName || profile.email || 'Student';
             
             // Set STUDENT PROFILE text
             const greetingEl = document.getElementById('profileGreeting');
@@ -584,54 +657,93 @@
             if (initialEl) initialEl.textContent = fullName.charAt(0)?.toUpperCase() || '?';
             
             const studentNumberEl = document.getElementById('profileStudentNumber');
-            if (studentNumberEl) studentNumberEl.textContent = details.studentNumber || 'Not set';
+            if (studentNumberEl) studentNumberEl.textContent = profile.studentNumber || '—';
             
             const batchEl = document.getElementById('profileBatch');
-            if (batchEl) batchEl.textContent = details.batch || '—';
+            if (batchEl) batchEl.textContent = profile.batch || '—';
             
-            // Update stats on the right side
-            const lessonsCount = dashboardState.lessons.filter(l => l.status === 'completed').length;
-            const totalLessons = dashboardState.lessons.length || 6;
-            const lessonsCountEl = document.getElementById('profileLessonsCount');
-            if (lessonsCountEl) lessonsCountEl.textContent = lessonsCount;
+            // Program/Course
+            const programEl = document.getElementById('profileProgram');
+            if (programEl) {
+                programEl.textContent = profile.program || 'Caregiving NC II';
+            }
             
-            const quizzesCount = dashboardState.lessons.reduce((sum, l) => {
-                const attempts = Number(l.quizAttempts) || 0;
-                return sum + (attempts > 0 ? 1 : 0);
-            }, 0);
-            const quizzesCountEl = document.getElementById('profileQuizzesCount');
-            if (quizzesCountEl) quizzesCountEl.textContent = quizzesCount;
+            // Assigned Instructor
+            const instructorEl = document.getElementById('profileInstructor');
+            if (instructorEl) {
+                instructorEl.textContent = profile.assignedInstructor || 'Not assigned';
+            }
             
-            const simulationsCount = dashboardState.lessons.reduce((sum, l) => {
-                const attempts = Number(l.simAttempts) || 0;
-                return sum + (attempts > 0 ? 1 : 0);
-            }, 0);
-            const simulationsCountEl = document.getElementById('profileSimulationsCount');
-            if (simulationsCountEl) simulationsCountEl.textContent = simulationsCount;
+            // Email
+            const emailEl = document.getElementById('profileEmail');
+            if (emailEl) {
+                emailEl.textContent = profile.email || '—';
+            }
             
-            // Calculate overall progress
-            const overallProgress = Math.round((lessonsCount / totalLessons) * 100) || 0;
-            const overallProgressEl = document.getElementById('profileOverallProgress');
-            if (overallProgressEl) overallProgressEl.textContent = `${overallProgress}%`;
-            
-            // Certificates count
-            const certificatesCount = dashboardState.certificates?.length || 0;
-            const certificatesCountEl = document.getElementById('profileCertificatesCount');
-            if (certificatesCountEl) certificatesCountEl.textContent = certificatesCount;
-            
-            // Calculate average quiz score
-            let totalScore = 0;
-            let scoreCount = 0;
-            dashboardState.lessons.forEach(lesson => {
-                if (lesson.avgQuizScore !== undefined && lesson.avgQuizScore !== null) {
-                    totalScore += Number(lesson.avgQuizScore) || 0;
-                    scoreCount++;
+            // Last Login
+            const lastLoginEl = document.getElementById('profileLastLogin');
+            if (lastLoginEl) {
+                if (profile.lastLogin) {
+                    try {
+                        const lastLoginDate = new Date(profile.lastLogin);
+                        if (!isNaN(lastLoginDate.getTime())) {
+                            lastLoginEl.textContent = lastLoginDate.toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                            });
+                        } else {
+                            lastLoginEl.textContent = '—';
+                        }
+                    } catch (e) {
+                        lastLoginEl.textContent = '—';
+                    }
+                } else {
+                    lastLoginEl.textContent = '—';
                 }
-            });
-            const averageScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : null;
+            }
+        }
+        
+        function updateSummaryStats(summaryStats = {}) {
+            // Lessons Completed
+            const lessonsCountEl = document.getElementById('profileLessonsCount');
+            if (lessonsCountEl) {
+                lessonsCountEl.textContent = summaryStats.lessonsCompleted || 0;
+            }
+            
+            // Quizzes Passed
+            const quizzesCountEl = document.getElementById('profileQuizzesCount');
+            if (quizzesCountEl) {
+                quizzesCountEl.textContent = summaryStats.quizzesTaken || 0;
+            }
+            
+            // Simulations
+            const simulationsCountEl = document.getElementById('profileSimulationsCount');
+            if (simulationsCountEl) {
+                simulationsCountEl.textContent = summaryStats.simulationsCompleted || 0;
+            }
+            
+            // Certificates
+            const certificatesCountEl = document.getElementById('profileCertificatesCount');
+            if (certificatesCountEl) {
+                certificatesCountEl.textContent = summaryStats.certificatesEarned || 0;
+            }
+            
+            // Average Score
             const averageScoreEl = document.getElementById('profileAverageScore');
             if (averageScoreEl) {
-                averageScoreEl.textContent = averageScore !== null ? `${averageScore}%` : '—';
+                const avgScore = summaryStats.avgQuizScore;
+                if (avgScore !== null && avgScore !== undefined) {
+                    averageScoreEl.textContent = `${Math.round(avgScore * 10) / 10}`;
+                } else {
+                    averageScoreEl.textContent = '—';
+                }
+            }
+            
+            // Overall Progress
+            const overallProgressEl = document.getElementById('profileOverallProgress');
+            if (overallProgressEl) {
+                overallProgressEl.textContent = `${summaryStats.overallProgressPct || 0}%`;
             }
         }
         
@@ -705,13 +817,13 @@
             
             const cardsHtml = lessons.map(lesson => {
                 const statusValue = (lesson && typeof lesson.status === 'string') ? lesson.status.trim().toLowerCase() : 'not_started';
-                const lessonName = lesson.lessonName || `Lesson ${lesson.slot}`;
-                const lessonSlot = lesson.slot || 0;
-                const progressValue = getLessonProgressValue(lesson, statusValue);
+                const lessonName = lesson.lessonTitle || lesson.lessonName || `Lesson ${lesson.slot || lesson.lessonId}`;
+                const lessonSlot = lesson.slot || lesson.lessonId || 0;
+                const progressValue = lesson.progressPct !== undefined ? lesson.progressPct : getLessonProgressValue(lesson, statusValue);
                 const hasQuizAttempts = Number(lesson.quizAttempts) > 0;
-                const simAttemptsCount = Number(lesson.simAttempts) || 0;
+                const simAttemptsCount = Number(lesson.simulationAttempts) || Number(lesson.simAttempts) || 0;
                 const hasSimHistory = Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0;
-                const normalizedAvgSimTime = getNumericValue(lesson.avgSimTime);
+                const normalizedAvgSimTime = getNumericValue(lesson.simulationAvgTime || lesson.avgSimTime);
                 const hasSimAttempts = simAttemptsCount > 0 || normalizedAvgSimTime > 0 || hasSimHistory;
                 
                 let statusHtml = '<span class="lesson-status not-started">Not Started</span>';
@@ -728,7 +840,7 @@
                     avgTime: normalizedAvgSimTime
                 }));
                 
-                const lessonLink = lesson.lessonLink || `/student-lessons?lesson=${lessonSlot}`;
+                const lessonLink = `/student-lessons?lesson=${lessonSlot}`;
                 
                 return `
                     <div class="lesson-card ${statusValue === 'completed' ? 'is-complete' : ''}">
@@ -755,20 +867,26 @@
                             </div>
                             <div class="lesson-stat-item">
                                 <span class="stat-label">Best Score</span>
-                                <span class="stat-value">${formatScore(lesson.highestQuizScore)}</span>
+                                <span class="stat-value">${formatScore(lesson.bestQuizScore || lesson.highestQuizScore)}</span>
                             </div>
                             <div class="lesson-stat-item">
                                 <span class="stat-label">Attempts</span>
-                                <span class="stat-value">${hasQuizAttempts ? lesson.quizAttempts : '0'}</span>
+                                <span class="stat-value">${hasQuizAttempts ? (lesson.quizAttempts || 0) : '0'}</span>
                             </div>
                             <div class="lesson-stat-item">
                                 <span class="stat-label">Avg Time</span>
                                 <span class="stat-value">${formatDuration(getNumericValue(lesson.avgQuizTime))}</span>
                             </div>
                         </div>
+                        <div class="lesson-simulation-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #E5E7EB;">
+                            <div class="lesson-stat-item" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="stat-label">Simulation</span>
+                                <span class="stat-value" style="font-weight: 600; color: ${lesson.simulationCompleted ? '#10B981' : '#64748B'}">${lesson.simulationCompleted ? 'Completed' : 'Pending'}</span>
+                            </div>
+                        </div>
                         <div class="lesson-card-actions">
                             <div class="lesson-history-tabs">
-                                <button class="lesson-tab btn-quiz-history" data-lesson-slot="${lessonSlot}" data-history="${quizHistoryData}" data-type="quiz" ${hasQuizAttempts ? '' : 'disabled'}>
+                                <button class="lesson-tab btn-quiz-history" data-lesson-slot="${lessonSlot}" data-history="${quizHistoryData}" data-type="quiz" ${hasQuizAttempts ? '' : 'disabled'} onclick="event.stopPropagation(); window.location.href='/student-quiz-history?lesson=${lessonSlot}'">
                                     <span class="tab-icon">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -777,7 +895,7 @@
                                     </span>
                                     <span class="tab-text">Quiz History</span>
                                 </button>
-                                <button class="lesson-tab btn-simulation-history" data-lesson-slot="${lessonSlot}" data-history="${simHistoryData}" data-summary="${simSummaryData}" data-type="simulation" ${hasSimAttempts ? '' : 'disabled'}>
+                                <button class="lesson-tab btn-simulation-history" data-lesson-slot="${lessonSlot}" data-history="${simHistoryData}" data-summary="${simSummaryData}" data-type="simulation" ${hasSimAttempts ? '' : 'disabled'} onclick="event.stopPropagation(); window.location.href='/student-simulation-history?lesson=${lessonSlot}'">
                                     <span class="tab-icon">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
@@ -788,7 +906,7 @@
                                     <span class="tab-text">Simulation History</span>
                                 </button>
                             </div>
-                            <button class="btn-view-lesson" data-lesson-slot="${lessonSlot}" data-lesson-link="${lessonLink}">
+                            <button class="btn-view-lesson" data-lesson-slot="${lessonSlot}" data-lesson-link="${lessonLink}" onclick="event.stopPropagation(); window.location.href='${lessonLink}'">
                                 <span class="btn-icon">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -877,23 +995,20 @@
         }
         
         function updateProgressSummary(lessons = [], details = {}) {
-            const totalLessons = lessons.length || 1;
-            const completedLessons = lessons.filter(lesson => String(lesson.status || '').toLowerCase() === 'completed').length;
-            const providedProgress = typeof details.overallCourseProgress === 'number'
-                ? details.overallCourseProgress
-                : (typeof details.courseProgress === 'number' ? details.courseProgress : null);
-            const fallbackProgress = Math.round((completedLessons / totalLessons) * 100);
-            const progressValue = providedProgress !== null ? providedProgress : fallbackProgress;
+            const summaryStats = details.summaryStats || {};
+            const totalLessons = summaryStats.totalLessons || lessons.length || 6;
+            const completedLessons = summaryStats.lessonsCompleted || lessons.filter(lesson => String(lesson.status || '').toLowerCase() === 'completed').length;
+            const progressValue = summaryStats.overallProgressPct || details.overallProgressPct || Math.round((completedLessons / totalLessons) * 100);
             setDonutProgress(progressValue);
             
             const lessonStatEl = document.getElementById('progressLessonsStat');
-            if (lessonStatEl) lessonStatEl.textContent = `${completedLessons}/${lessons.length || 0} complete`;
+            if (lessonStatEl) lessonStatEl.textContent = `${completedLessons}/${totalLessons} complete`;
             
-            const quizzesTaken = lessons.reduce((sum, lesson) => sum + (Number(lesson.quizAttempts) > 0 ? 1 : 0), 0);
+            const quizzesTaken = summaryStats.quizzesTaken || lessons.reduce((sum, lesson) => sum + (Number(lesson.quizAttempts) > 0 ? 1 : 0), 0);
             const quizStatEl = document.getElementById('progressQuizzesStat');
             if (quizStatEl) quizStatEl.textContent = `${quizzesTaken} taken`;
             
-            const simsPassed = lessons.reduce((sum, lesson) => sum + (hasSimPassed(lesson) ? 1 : 0), 0);
+            const simsPassed = summaryStats.simulationsCompleted || lessons.reduce((sum, lesson) => sum + (hasSimPassed(lesson) ? 1 : 0), 0);
             const simStatEl = document.getElementById('progressSimsStat');
             if (simStatEl) simStatEl.textContent = `${simsPassed} passed`;
         }
@@ -947,40 +1062,45 @@
             return lessons.some(lesson => Number(lesson.quizAttempts) > 0);
         }
         
-        function updateQuizSummary(lessons = []) {
-            const quizScores = lessons
-                .map(lesson => (typeof lesson.recentQuizScore === 'number' ? lesson.recentQuizScore : null))
-                .filter(score => score !== null);
-            const averageScore = quizScores.length
-                ? (quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length).toFixed(1)
-                : '--';
-            const bestScore = quizScores.length ? Math.max(...quizScores) : '--';
-            const completed = lessons.reduce((sum, lesson) => sum + (Number(lesson.quizAttempts) > 0 ? 1 : 0), 0);
+        function updateQuizPerformance(quizPerformance = {}) {
+            const avgScore = quizPerformance.avgScore || 0;
+            const quizzesCompleted = quizPerformance.quizzesCompleted || 0;
+            const bestScore = quizPerformance.bestScore || 0;
             
             const avgEl = document.getElementById('quizAverageScore');
-            if (avgEl) avgEl.textContent = averageScore === '--' ? '--' : `${averageScore}`;
+            if (avgEl) {
+                avgEl.textContent = avgScore > 0 ? avgScore.toFixed(1) : '--';
+            }
             
             const completedEl = document.getElementById('quizCompletedCount');
-            if (completedEl) completedEl.textContent = completed;
+            if (completedEl) {
+                completedEl.textContent = quizzesCompleted;
+            }
             
             const bestEl = document.getElementById('quizBestScore');
-            if (bestEl) bestEl.textContent = bestScore === '--' ? '--' : `${bestScore} / 10`;
+            if (bestEl) {
+                bestEl.textContent = bestScore > 0 ? `${bestScore.toFixed(1)} / 10` : '--';
+            }
 
             const progressEl = document.getElementById('quizGoalProgress');
             if (progressEl) {
-                const avgValue = parseFloat(averageScore);
-                const ratio = isNaN(avgValue) ? 0 : Math.min(avgValue / 8, 1);
+                const ratio = avgScore > 0 ? Math.min(avgScore / 8, 1) : 0;
                 const percent = Math.round(ratio * 100);
                 progressEl.style.width = `${percent}%`;
                 progressEl.setAttribute('aria-valuenow', percent);
             }
         }
         
-        function updateSimulationSummary(lessons = []) {
+        // Keep old function for backward compatibility
+        function updateQuizSummary(lessons = []) {
+            // This is now handled by updateQuizPerformance
+        }
+        
+        function updateSimulationSummaryFromAPI(simulationSummary = []) {
             const listEl = document.getElementById('simulationSummaryList');
             if (!listEl) return;
             
-            if (!lessons.length) {
+            if (!simulationSummary.length) {
                 listEl.innerHTML = `
                     <li class="simulation-item">
                         <div class="simulation-info">
@@ -995,67 +1115,93 @@
                 return;
             }
             
-            const summaries = lessons.slice(0, 3).map((lesson, index) => {
-                const passed = hasSimPassed(lesson);
-                const lessonLabel = lesson.lessonName || `Lesson ${lesson.slot || index + 1}`;
-                const statusClass = passed ? 'passed' : 'pending';
+            const summaries = simulationSummary.slice(0, 3).map((summary, index) => {
+                const status = summary.status || 'Pending';
+                const statusClass = status === 'Completed' ? 'passed' : 'pending';
+                const statusText = status === 'Completed' ? 'Completed' : 'Pending';
                 return `
                     <li class="simulation-item">
                         <div class="simulation-info">
                             <span class="simulation-number">Simulation ${index + 1}</span>
-                            <span class="simulation-lesson">${lessonLabel}</span>
+                            <span class="simulation-lesson">${summary.lessonTitle || `Lesson ${summary.lessonId}`}</span>
                         </div>
                         <div class="simulation-status-group">
                             <span class="simulation-status-icon ${statusClass}"></span>
-                            <span class="simulation-status-pill ${statusClass}">${passed ? 'Passed' : 'Pending'}</span>
+                            <span class="simulation-status-pill ${statusClass}">${statusText}</span>
                         </div>
                     </li>`;
             });
             listEl.innerHTML = summaries.join('');
         }
         
+        // Keep old function for backward compatibility
+        function updateSimulationSummary(lessons = []) {
+            // This is now handled by updateSimulationSummaryFromAPI
+        }
+        
         function updateCertificateProgress(certificates = [], progressData = {}, lessons = []) {
             const checklistEl = document.getElementById('certificateChecklist');
             if (!checklistEl) return;
             
-            const allLessonsComplete = lessons.length > 0 && lessons.every(lesson => String(lesson.status || '').toLowerCase() === 'completed');
-            const simsComplete = lessons.length > 0 && lessons.every(lesson => hasSimPassed(lesson));
-            const finalCertificateUnlocked = certificates.some(cert => /final/i.test(cert.title || cert.name || ''));
+            // Use new certificateProgress structure if available
+            const lessonCert = progressData.lessonCertificate || {};
+            const simCert = progressData.simulationCertificate || {};
+            const overallCert = progressData.overallCertificate || {};
+            
+            const lessonStatus = lessonCert.status || 'locked';
+            const simStatus = simCert.status || 'locked';
+            const overallStatus = overallCert.status || 'locked';
+            
+            const lessonReqs = lessonCert.requirements || {};
+            const simReqs = simCert.requirements || {};
+            const overallReqs = overallCert.requirements || {};
             
             const certificateCards = [
                 {
                     key: 'lessonCompletion',
                     title: 'Lesson Completion Certificate',
-                    icon: allLessonsComplete ? getMedalIcon(32) : getLockIcon(32),
-                    status: allLessonsComplete ? 'Complete' : 'Locked',
-                    statusClass: allLessonsComplete ? 'complete' : 'locked',
+                    icon: lessonStatus === 'granted' ? getMedalIcon(32) : getLockIcon(32),
+                    status: lessonStatus === 'granted' ? 'Complete' : lessonStatus === 'unlocked' ? 'Unlocked' : 'Locked',
+                    statusClass: lessonStatus === 'granted' ? 'complete' : lessonStatus === 'unlocked' ? 'available' : 'locked',
                     requirements: [
-                        { text: 'Complete all lessons', completed: allLessonsComplete }
+                        { 
+                            text: `Complete all lessons (${lessonReqs.completedLessons || 0} / ${lessonReqs.totalLessons || 0})`, 
+                            completed: lessonStatus === 'granted' 
+                        }
                     ],
-                    completed: progressData.lessonCompletion ?? allLessonsComplete
+                    completed: lessonStatus === 'granted'
                 },
                 {
                     key: 'simulationCompletion',
                     title: 'Simulation Completion Certificate',
-                    icon: simsComplete ? getMedalIcon(32) : getLockIcon(32),
-                    status: simsComplete ? 'Complete' : 'Locked',
-                    statusClass: simsComplete ? 'complete' : 'locked',
+                    icon: simStatus === 'granted' ? getMedalIcon(32) : getLockIcon(32),
+                    status: simStatus === 'granted' ? 'Complete' : simStatus === 'unlocked' ? 'Unlocked' : 'Locked',
+                    statusClass: simStatus === 'granted' ? 'complete' : simStatus === 'unlocked' ? 'available' : 'locked',
                     requirements: [
-                        { text: 'Pass all simulations', completed: simsComplete }
+                        { 
+                            text: `Pass all simulations (${simReqs.completedSimulations || 0} / ${simReqs.totalSimulations || 0})`, 
+                            completed: simStatus === 'granted' 
+                        }
                     ],
-                    completed: progressData.simulationCompletion ?? simsComplete
+                    completed: simStatus === 'granted'
                 },
                 {
                     key: 'finalCourse',
                     title: 'Overall Course Certificate',
-                    icon: finalCertificateUnlocked ? getTrophyIcon(32) : getLockIcon(32),
-                    status: finalCertificateUnlocked ? 'Complete' : (allLessonsComplete && simsComplete ? 'Available' : 'Locked'),
-                    statusClass: finalCertificateUnlocked ? 'complete' : (allLessonsComplete && simsComplete ? 'available' : 'locked'),
+                    icon: overallStatus === 'granted' ? getTrophyIcon(32) : getLockIcon(32),
+                    status: overallStatus === 'granted' ? 'Complete' : overallStatus === 'unlocked' ? 'Unlocked' : 'Locked',
+                    statusClass: overallStatus === 'granted' ? 'complete' : overallStatus === 'unlocked' ? 'available' : 'locked',
                     requirements: [
-                        { text: 'Complete all lessons', completed: allLessonsComplete },
-                        { text: 'Pass all simulations', completed: simsComplete }
+                        { 
+                            text: `Complete all lessons (${overallReqs.lessonsCompleted || 0} / ${overallReqs.totalLessons || 0})`, 
+                            completed: (overallReqs.lessonsCompleted || 0) >= (overallReqs.totalLessons || 0)
+                        },
+                        { 
+                            text: `Pass all simulations (${overallReqs.simulationsCompleted || 0} / ${overallReqs.totalSimulations || 0})`, 
+                            completed: (overallReqs.simulationsCompleted || 0) >= (overallReqs.totalSimulations || 0)
+                        }
                     ],
-                    completed: progressData.finalCourse ?? finalCertificateUnlocked
+                    completed: overallStatus === 'granted'
                 }
             ];
             
@@ -1100,17 +1246,38 @@
                 return;
             }
             
-            listEl.innerHTML = announcements.map(item => {
+            // Show up to 3 most recent announcements
+            const recentAnnouncements = announcements.slice(0, 3);
+            
+            listEl.innerHTML = recentAnnouncements.map(item => {
                 const title = item.title || 'New Announcement';
                 const message = item.message || item.content || 'Details coming soon.';
-                const date = item.date ? new Date(item.date).toLocaleDateString() : 'Just now';
+                // Truncate message if too long
+                const shortMessage = message.length > 100 ? message.substring(0, 100) + '...' : message;
+                const date = item.date || item.createdAt;
+                let formattedDate = 'Just now';
+                if (date) {
+                    try {
+                        const dateObj = new Date(date);
+                        if (!isNaN(dateObj.getTime())) {
+                            formattedDate = dateObj.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            });
+                        }
+                    } catch (e) {
+                        // Keep default
+                    }
+                }
+                const from = item.from || 'Instructor';
                 return `
                     <div class="announcement-card">
                         <div class="announcement-icon">${getMegaphoneIcon(20)}</div>
                         <div class="announcement-content">
                             <h4 class="announcement-title">${title}</h4>
-                            <p class="announcement-description">${message}</p>
-                            <span class="announcement-date">${date}</span>
+                            <p class="announcement-description">${shortMessage}</p>
+                            <span class="announcement-date">${formattedDate} • ${from}</span>
                         </div>
                     </div>
                 `;
@@ -1161,6 +1328,7 @@
         function goToProfile() {
             window.location.href = '/student-profile';
         }
+        // Make loadDashboard available globally for refresh functionality
         window.loadDashboard = loadDashboard;
         function toggleProfileMenu() {
             showAlertModal('Profile menu', 'Notice');
@@ -1297,6 +1465,7 @@
             }
         });
         
+        // Load dashboard data on page load
         loadDashboard();
         
         const urlParams = new URLSearchParams(window.location.search);

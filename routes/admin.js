@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+router.use(express.json({ limit: '100mb' }));
+router.use(express.urlencoded({ extended: true, limit: '100mb' }));
 const { verifyAdminToken } = require('../middleware/auth');
 const { db } = require('../config/firebase');
 const bcrypt = require('bcryptjs');
@@ -582,129 +584,20 @@ router.get('/statistics', verifyAdminToken, async (req, res) => {
   }
 });
 
-router.get('/lessons', verifyAdminToken, async (req, res) => {
-  try {
-    const lessonsRef = db.ref('lessons');
-    const snapshot = await lessonsRef.once('value');
-    const lessons = snapshot.val() || {};
-    
-    // Only return lessons that actually exist in the database
-    const lessonsArray = Object.entries(lessons)
-      .filter(([key, lesson]) => {
-        // Only include numeric keys (slot numbers) and ensure lesson has data
-        const slot = parseInt(key);
-        return !isNaN(slot) && lesson && (lesson.lessonTitle || lesson.lessonName);
-      })
-      .map(([key, lesson]) => {
-        const slot = parseInt(key);
-        return {
-          slot,
-          lessonTitle: lesson.lessonTitle || lesson.lessonName || '',
-          lessonName: lesson.lessonName || lesson.lessonTitle || '', // Keep for backward compatibility
-          description: lesson.description || lesson.lessonDescription || '',
-          lessonDescription: lesson.lessonDescription || lesson.description || '', // Keep for backward compatibility
-          body: lesson.body || '',
-          images: lesson.images || [],
-          tools: lesson.tools || {},
-          createdAt: lesson.createdAt,
-          updatedAt: lesson.updatedAt
-        };
-      })
-      .sort((a, b) => a.slot - b.slot); // Sort by slot number
-    
-    res.json({ success: true, lessons: lessonsArray });
-  } catch (error) {
-    console.error('Get lessons error:', error);
-    res.status(500).json({ error: 'Failed to fetch lessons' });
-  }
-});
-router.put('/lessons/:slot', verifyAdminToken, async (req, res) => {
-  try {
-    const slot = parseInt(req.params.slot);
-    if (slot < 1) {
-      return res.status(400).json({ error: 'Invalid slot number (must be >= 1)' });
-    }
-    
-    const {
-      lessonTitle,
-      lessonName, // Backward compatibility
-      description,
-      lessonDescription, // Backward compatibility
-      body,
-      images,
-      tools
-    } = req.body;
-    
-    // Use lessonTitle if provided, otherwise fall back to lessonName
-    const finalTitle = lessonTitle !== undefined ? lessonTitle : (lessonName !== undefined ? lessonName : '');
-    // Use description if provided, otherwise fall back to lessonDescription
-    const finalDescription = description !== undefined ? description : (lessonDescription !== undefined ? lessonDescription : '');
-    
-    if (!finalTitle && !finalDescription) {
-      return res.status(400).json({ error: 'Lesson title or description required' });
-    }
-    
-    const lessonRef = db.ref(`lessons/${slot}`);
-    const snapshot = await lessonRef.once('value');
-    const existing = snapshot.val() || {};
-    
-    // Preserve existing questions if they exist (for quiz compatibility)
-    const existingQuestions = existing.questions || {};
-    
-    // Build update object
-    const updateData = {
-      slot,
-      lessonTitle: finalTitle,
-      lessonName: finalTitle, // Keep for backward compatibility
-      description: finalDescription,
-      lessonDescription: finalDescription, // Keep for backward compatibility
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Add body if provided
-    if (body !== undefined) {
-      updateData.body = body;
-    } else if (existing.body !== undefined) {
-      updateData.body = existing.body;
-    }
-    
-    // Add images if provided
-    if (images !== undefined) {
-      updateData.images = Array.isArray(images) ? images : [];
-    } else if (existing.images !== undefined) {
-      updateData.images = existing.images;
-    } else {
-      updateData.images = [];
-    }
-    
-    // Add tools if provided
-    if (tools !== undefined) {
-      updateData.tools = tools || {};
-    } else if (existing.tools !== undefined) {
-      updateData.tools = existing.tools;
-    } else {
-      updateData.tools = {};
-    }
-    
-    // Preserve questions (quiz data)
-    if (Object.keys(existingQuestions).length > 0) {
-      updateData.questions = existingQuestions;
-    }
-    
-    // Set createdAt if this is a new lesson
-    if (!existing.createdAt) {
-      updateData.createdAt = new Date().toISOString();
-    } else {
-      updateData.createdAt = existing.createdAt;
-    }
-    
-    await lessonRef.set(updateData);
-    res.json({ success: true, message: 'Lesson updated successfully' });
-  } catch (error) {
-    console.error('Update lesson error:', error);
-    res.status(500).json({ error: 'Failed to update lesson' });
-  }
-});
+const adminLessonsController = require('../controllers/adminLessonsController');
+
+router.get('/lessons', verifyAdminToken, adminLessonsController.getLessons);
+router.put('/lessons/:slot', verifyAdminToken, adminLessonsController.updateLesson);
+router.post(
+  '/lessons/:slot/tools/:toolId/model',
+  verifyAdminToken,
+  adminLessonsController.uploadToolModel,
+);
+router.delete(
+  '/lessons/:slot/tools/:toolId/model',
+  verifyAdminToken,
+  adminLessonsController.deleteToolModel,
+);
 router.get('/quizzes/:lesson', verifyAdminToken, async (req, res) => {
   try {
     const lesson = parseInt(req.params.lesson);

@@ -16,19 +16,27 @@ const defaultTab = urlParams.get('tab') || 'content';
 // Current lesson data
 let currentLesson = null;
 let currentTools = {};
-let currentToolModelCleanup = null;
-let currentToolModelCleanup = null;
 let currentTab = defaultTab;
 let currentLessonSlot = slot;
 
-const modelPreviewState = {
-    renderer: null,
-    scene: null,
-    camera: null,
-    animationId: null,
-    currentObject: null,
-    currentUrl: null
+const MODEL_ALLOWED_EXTENSIONS = ['fbx', 'glb', 'gltf', 'obj', 'stl'];
+const MODEL_CONVERTIBLE_EXTENSIONS = ['fbx', 'obj', 'stl'];
+const MAX_MODEL_FILE_SIZE = 50 * 1024 * 1024;
+const MODEL_CONTENT_TYPES = {
+    glb: 'model/gltf-binary',
+    gltf: 'model/gltf+json',
+    obj: 'text/plain',
+    fbx: 'application/octet-stream',
+    stl: 'model/stl'
 };
+
+let pendingModelUploadBlob = null;
+let pendingModelUploadExtension = '';
+let pendingModelUploadFileName = '';
+let pendingOriginalModelType = '';
+let pendingModelFileSize = 0;
+let pendingModelPreviewUrl = null;
+let modelSelectionToken = 0;
 
 // Error message container
 let errorMessageContainer = null;
@@ -62,236 +70,275 @@ function showSuccess(message) {
 }
 
 function disposeModelPreview() {
-    if (modelPreviewState.animationId) {
-        cancelAnimationFrame(modelPreviewState.animationId);
-        modelPreviewState.animationId = null;
-    }
-    if (modelPreviewState.renderer) {
-        modelPreviewState.renderer.dispose();
-        if (modelPreviewState.renderer.domElement && modelPreviewState.renderer.domElement.parentNode) {
-            modelPreviewState.renderer.domElement.parentNode.removeChild(modelPreviewState.renderer.domElement);
-        }
-        modelPreviewState.renderer = null;
-    }
-    modelPreviewState.scene = null;
-    modelPreviewState.camera = null;
-    modelPreviewState.currentObject = null;
-    if (modelPreviewState.currentUrl && modelPreviewState.currentUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(modelPreviewState.currentUrl);
-    }
-    modelPreviewState.currentUrl = null;
+    cleanupPendingModelPreview();
     const container = document.getElementById('tool3DModelPreview');
     if (container) {
         container.innerHTML = '<div class="model-preview-empty">No 3D model selected</div>';
     }
 }
 
-function initializeModelPreviewScene() {
+function cleanupPendingModelPreview() {
+    if (pendingModelPreviewUrl && pendingModelPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(pendingModelPreviewUrl);
+    }
+    pendingModelPreviewUrl = null;
+}
+
+function resetModelSelectionState() {
+    cleanupPendingModelPreview();
+    pendingModelUploadBlob = null;
+    pendingModelUploadExtension = '';
+    pendingModelUploadFileName = '';
+    pendingOriginalModelType = '';
+    pendingModelFileSize = 0;
+}
+
+function setModelUploadSpinner(isVisible, text = 'Uploading 3D model...') {
+    const spinner = document.getElementById('toolUploadSpinner');
+    const spinnerText = document.getElementById('toolUploadSpinnerText');
+    if (spinner && spinnerText) {
+        spinnerText.textContent = text;
+        spinner.classList.toggle('hidden', !isVisible);
+    }
+    
+    const modelUploadSpinner = document.getElementById('modelUploadSpinner');
+    const modelUploadSpinnerText = document.getElementById('modelUploadSpinnerText');
+    if (modelUploadSpinner && modelUploadSpinnerText) {
+        modelUploadSpinnerText.textContent = text;
+        modelUploadSpinner.classList.toggle('hidden', !isVisible);
+    }
+}
+
+function showModelPreviewMessage(message) {
     const container = document.getElementById('tool3DModelPreview');
-    if (!container || typeof THREE === 'undefined') {
-        return false;
+    if (container) {
+        container.innerHTML = `<div class="model-preview-empty">${message || 'No 3D model selected'}</div>`;
     }
-
-    if (modelPreviewState.animationId) {
-        cancelAnimationFrame(modelPreviewState.animationId);
-        modelPreviewState.animationId = null;
-    }
-    if (modelPreviewState.renderer) {
-        modelPreviewState.renderer.dispose();
-        if (modelPreviewState.renderer.domElement && modelPreviewState.renderer.domElement.parentNode) {
-            modelPreviewState.renderer.domElement.parentNode.removeChild(modelPreviewState.renderer.domElement);
-        }
-    }
-    modelPreviewState.renderer = null;
-    modelPreviewState.scene = null;
-    modelPreviewState.camera = null;
-    modelPreviewState.currentObject = null;
-
-    container.innerHTML = '';
-    const width = container.clientWidth || 320;
-    const height = container.clientHeight || 220;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    container.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf8fafc);
-
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(2.5, 2, 4);
-
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
-    scene.add(hemiLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-    dirLight.position.set(5, 10, 7.5);
-    scene.add(dirLight);
-
-    modelPreviewState.renderer = renderer;
-    modelPreviewState.scene = scene;
-    modelPreviewState.camera = camera;
-
-    const animate = () => {
-        modelPreviewState.animationId = requestAnimationFrame(animate);
-        if (modelPreviewState.currentObject) {
-            modelPreviewState.currentObject.rotation.y += 0.01;
-        }
-        renderer.render(scene, camera);
-    };
-    animate();
-    return true;
 }
 
-function loadModelPreview(url, type) {
-    if (!url || !type) {
-        disposeModelPreview();
-        return;
-    }
+function renderModelViewerPreview(src) {
+    const container = document.getElementById('tool3DModelPreview');
+    if (!container) return;
+    container.innerHTML = `
+        <model-viewer
+            src="${src}"
+            auto-rotate
+            camera-controls
+            shadow-intensity="1"
+            style="width: 100%; height: 260px; background: #F8FAFC; border-radius: 12px;"
+        >
+        </model-viewer>
+    `;
+}
 
-    const lowerType = type.toLowerCase();
-    if (!initializeModelPreviewScene()) {
-        disposeModelPreview();
-        return;
-    }
-
-    const scene = modelPreviewState.scene;
-    if (!scene || typeof THREE === 'undefined') {
-        return;
-    }
-
-    const cleanupPreviousObject = () => {
-        if (modelPreviewState.currentObject) {
-            scene.remove(modelPreviewState.currentObject);
-            modelPreviewState.currentObject.traverse?.((child) => {
-                if (child.isMesh && child.geometry) {
-                    child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose && mat.dispose());
-                        } else {
-                            child.material.dispose && child.material.dispose();
-                        }
-                    }
-                }
-            });
-        }
-        modelPreviewState.currentObject = null;
-    };
-
-    const onLoad = (object) => {
-        cleanupPreviousObject();
-        const container = document.getElementById('tool3DModelPreview');
-        if (!container) return;
-
-        let model = object;
-        if (object.scene) {
-            model = object.scene;
-        }
-
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-        const scale = 2 / maxDim;
-        model.scale.setScalar(scale);
-
-        const boxCenter = new THREE.Vector3();
-        box.getCenter(boxCenter);
-        model.position.sub(boxCenter);
-
-        scene.add(model);
-        modelPreviewState.currentObject = model;
-    };
-
-    const onError = () => {
-        disposeModelPreview();
-        const container = document.getElementById('tool3DModelPreview');
-        if (container) {
-            container.innerHTML = '<div class="model-preview-error">Unable to preview this 3D model.</div>';
-        }
-    };
-
-    try {
-        if (lowerType === 'glb' || lowerType === 'gltf') {
-            const loader = new THREE.GLTFLoader();
-            loader.load(url, onLoad, undefined, onError);
-        } else if (lowerType === 'fbx') {
-            const loader = new THREE.FBXLoader();
-            loader.load(url, onLoad, undefined, onError);
-        } else if (lowerType === 'obj') {
-            const loader = new THREE.OBJLoader();
-            loader.load(url, onLoad, undefined, onError);
+function setModelFileLabels({ fileName = '', downloadUrl = '' } = {}) {
+    if (toolModelFileLabel) {
+        if (fileName) {
+            toolModelFileLabel.textContent = fileName;
+            toolModelFileLabel.classList.remove('hidden');
         } else {
-            disposeModelPreview();
-            const container = document.getElementById('tool3DModelPreview');
-            if (container) {
-                container.innerHTML = '<div class="model-preview-error">Unsupported 3D model format.</div>';
-            }
+            toolModelFileLabel.textContent = '';
+            toolModelFileLabel.classList.add('hidden');
         }
-    } catch (error) {
-        console.error('Model preview error:', error);
-        onError();
+    }
+    if (toolModelUrlDisplay) {
+        if (downloadUrl) {
+            toolModelUrlDisplay.innerHTML = `<a href="${downloadUrl}" target="_blank" rel="noopener">View stored model</a>`;
+            toolModelUrlDisplay.classList.remove('hidden');
+        } else {
+            toolModelUrlDisplay.textContent = '';
+            toolModelUrlDisplay.classList.add('hidden');
+        }
     }
 }
 
-function loadModelPreviewFromFile(file) {
+function validateModelFile(file) {
     if (!file) {
-        disposeModelPreview();
-        return;
+        return { valid: false, message: 'No file selected' };
     }
     const extension = getModelExtension(file.name);
-    if (!extension) {
-        disposeModelPreview();
-        const container = document.getElementById('tool3DModelPreview');
-        if (container) {
-            container.innerHTML = '<div class="model-preview-error">Only FBX, GLB, or OBJ files are supported.</div>';
-        }
-        return;
+    if (!extension || !MODEL_ALLOWED_EXTENSIONS.includes(extension)) {
+        return { valid: false, extension, message: 'Unsupported 3D model format. Allowed: FBX, OBJ, GLB, GLTF, STL.' };
     }
-
-    if (modelPreviewState.currentUrl && modelPreviewState.currentUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(modelPreviewState.currentUrl);
+    if (file.size > MAX_MODEL_FILE_SIZE) {
+        return { valid: false, extension, message: '3D model exceeds the 50MB limit.' };
     }
-    const objectUrl = URL.createObjectURL(file);
-    modelPreviewState.currentUrl = objectUrl;
-    loadModelPreview(objectUrl, extension);
+    return { valid: true, extension };
 }
 
-function loadModelPreviewFromStoredData(data, type) {
-    if (!data || !type) {
-        disposeModelPreview();
-        return;
+function getContentTypeByExtension(ext = '') {
+    return MODEL_CONTENT_TYPES[ext] || 'application/octet-stream';
+}
+
+function replaceFileExtension(fileName = '', newExt = '.glb') {
+    if (!fileName) return `model${newExt}`;
+    if (fileName.includes('.')) {
+        return fileName.replace(/\.[^/.]+$/, newExt);
+    }
+    return `${fileName}${newExt}`;
+}
+
+async function convertModelIfNeeded(file, extension) {
+    if (!MODEL_CONVERTIBLE_EXTENSIONS.includes(extension)) {
+        return {
+            blob: file,
+            extension,
+            fileName: file.name
+        };
     }
 
-    if (data.startsWith('data:')) {
-        try {
-            const blob = dataURIToBlob(data);
-            if (modelPreviewState.currentUrl && modelPreviewState.currentUrl.startsWith('blob:')) {
-                URL.revokeObjectURL(modelPreviewState.currentUrl);
+    if (typeof THREE === 'undefined' || typeof THREE.GLTFExporter === 'undefined') {
+        throw new Error('3D conversion libraries not loaded');
+    }
+
+    const exporter = new THREE.GLTFExporter();
+
+    const exportToGlb = (object) => {
+        return new Promise((resolve, reject) => {
+            try {
+                exporter.parse(
+                    object,
+                    (result) => {
+                        if (result instanceof ArrayBuffer) {
+                            resolve(new Blob([result], { type: 'model/gltf-binary' }));
+                        } else if (result && typeof result === 'object') {
+                            resolve(new Blob([JSON.stringify(result)], { type: 'application/json' }));
+                        } else {
+                            reject(new Error('Unexpected GLTF export result'));
+                        }
+                    },
+                    { binary: true }
+                );
+            } catch (error) {
+                reject(error);
             }
-            const objectUrl = URL.createObjectURL(blob);
-            modelPreviewState.currentUrl = objectUrl;
-            loadModelPreview(objectUrl, type);
-            return;
-        } catch (error) {
-            console.error('Failed to convert data URI to blob for model preview', error);
-        }
+        });
+    };
+
+    let objectForExport = null;
+
+    if (extension === 'fbx') {
+        const buffer = await file.arrayBuffer();
+        const loader = new THREE.FBXLoader();
+        objectForExport = loader.parse(buffer, file.name);
+    } else if (extension === 'obj') {
+        const textContent = await file.text();
+        const loader = new THREE.OBJLoader();
+        objectForExport = loader.parse(textContent);
+    } else if (extension === 'stl') {
+        const buffer = await file.arrayBuffer();
+        const loader = new THREE.STLLoader();
+        const geometry = loader.parse(buffer);
+        const material = new THREE.MeshStandardMaterial({ color: 0xd1d5db });
+        objectForExport = new THREE.Mesh(geometry, material);
     }
 
-    modelPreviewState.currentUrl = data;
-    loadModelPreview(data, type);
+    if (!objectForExport) {
+        throw new Error('Unable to prepare 3D object for conversion');
+    }
+
+    const glbBlob = await exportToGlb(objectForExport);
+    return {
+        blob: glbBlob,
+        extension: 'glb',
+        fileName: replaceFileExtension(file.name, '.glb')
+    };
 }
 
-function dataURIToBlob(dataURI) {
-    const byteString = atob(dataURI.split(',')[1]);
-    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
+async function handleModelFileSelection(file) {
+    const validation = validateModelFile(file);
+    if (!validation.valid) {
+        showAlertModal(validation.message, 'Invalid File');
+        return;
     }
-    return new Blob([ab], { type: mimeString });
+
+    modelSelectionToken += 1;
+    const selectionId = modelSelectionToken;
+
+    pendingOriginalModelType = validation.extension;
+    setModelFileLabels({ fileName: file.name });
+    if (toolModelUrlDisplay) {
+        toolModelUrlDisplay.classList.add('hidden');
+    }
+
+    showModelPreviewMessage('Preparing 3D preview...');
+    setModelUploadSpinner(true, MODEL_CONVERTIBLE_EXTENSIONS.includes(validation.extension) ? 'Converting 3D model...' : 'Preparing preview...');
+
+    try {
+        const { blob, extension, fileName } = await convertModelIfNeeded(file, validation.extension);
+        if (selectionId !== modelSelectionToken) {
+            return;
+        }
+
+        pendingModelUploadBlob = blob;
+        pendingModelUploadExtension = extension;
+        pendingModelUploadFileName = fileName;
+        pendingModelFileSize = blob.size;
+
+        cleanupPendingModelPreview();
+        pendingModelPreviewUrl = URL.createObjectURL(blob);
+        renderModelViewerPreview(pendingModelPreviewUrl);
+    } catch (error) {
+        if (selectionId !== modelSelectionToken) {
+            return;
+        }
+        console.error('3D model processing error:', error);
+        resetModelSelectionState();
+        setModelFileLabels();
+        showModelPreviewMessage('Unable to preview this 3D model.');
+        showError('Failed to process the selected 3D model. Please try a different file.');
+    } finally {
+        if (selectionId === modelSelectionToken) {
+            setModelUploadSpinner(false);
+        }
+    }
+}
+
+async function uploadToolModelBlob(lessonSlotValue, toolId, blob, fileName, extension) {
+    if (!blob) {
+        throw new Error('3D model data missing');
+    }
+
+    const payload = {
+        fileName: fileName || replaceFileExtension(toolId, '.glb'),
+        contentType: getContentTypeByExtension(extension),
+        data: await blobToBase64(blob)
+    };
+
+    const response = await fetch(`${API_BASE}/lessons/${lessonSlotValue}/tools/${toolId}/model`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin-login';
+        return Promise.reject(new Error('Unauthorized'));
+    }
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to upload 3D model');
+    }
+
+    return response.json();
+}
+
+async function loadModelPreviewFromStoredData(url, type) {
+    resetModelSelectionState();
+    if (!url || !type) {
+        showModelPreviewMessage('No 3D model selected');
+        return;
+    }
+    if (MODEL_CONVERTIBLE_EXTENSIONS.includes(type.toLowerCase())) {
+        showModelPreviewMessage('Preview available after re-upload as GLB/GLTF.');
+        return;
+    }
+    renderModelViewerPreview(url);
 }
 
 function getModelExtension(fileName = '') {
@@ -312,6 +359,23 @@ function readFileAsDataURL(file) {
     });
 }
 
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const result = reader.result || '';
+            if (typeof result === 'string') {
+                const base64 = result.includes(',') ? result.split(',')[1] : result;
+                resolve(base64);
+            } else {
+                reject(new Error('Unable to encode file'));
+            }
+        };
+        reader.onerror = () => reject(new Error('Failed to encode file'));
+        reader.readAsDataURL(blob);
+    });
+}
+
 let toolModelFileLabel = null;
 let toolModelUrlDisplay = null;
 
@@ -324,17 +388,7 @@ function setupModelInputHandler() {
     modelInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
-            if (toolModelFileLabel) {
-                toolModelFileLabel.textContent = file.name;
-                toolModelFileLabel.classList.remove('hidden');
-            }
-            if (toolModelUrlDisplay) {
-                toolModelUrlDisplay.textContent = '';
-                toolModelUrlDisplay.classList.add('hidden');
-            }
-            loadModelPreviewFromFile(file);
-        } else {
-            disposeModelPreview();
+            handleModelFileSelection(file);
         }
     });
 }
@@ -362,6 +416,55 @@ async function initializeEditor() {
 
     switchTab(currentTab);
     loadTools();
+}
+
+async function fetchNextLessonSlot() {
+    try {
+        const response = await fetch(`${API_BASE}/lessons`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch lessons');
+        }
+        const data = await response.json();
+        const slots = Array.isArray(data.lessons)
+            ? data.lessons.map(l => l.slot).filter((value) => Number.isFinite(value))
+            : [];
+        return slots.length > 0 ? Math.max(...slots) + 1 : 1;
+    } catch (error) {
+        console.error('Next lesson slot error:', error);
+        return currentLessonSlot || slot || 1;
+    }
+}
+
+async function ensureLessonSlotValue(forceFetch = false) {
+    if (!forceFetch) {
+        if (currentLessonSlot) return currentLessonSlot;
+        if (slot) {
+            currentLessonSlot = slot;
+            return slot;
+        }
+        const slotInput = document.getElementById('lessonSlot');
+        if (slotInput && slotInput.value) {
+            const parsed = parseInt(slotInput.value, 10);
+            if (!Number.isNaN(parsed) && parsed > 0) {
+                currentLessonSlot = parsed;
+                slot = parsed;
+                return parsed;
+            }
+        }
+    }
+
+    const nextSlot = await fetchNextLessonSlot();
+    currentLessonSlot = nextSlot;
+    slot = nextSlot;
+    const slotInput = document.getElementById('lessonSlot');
+    if (slotInput) slotInput.value = nextSlot;
+    return nextSlot;
 }
 
 // Load lesson from API
@@ -562,6 +665,7 @@ function loadTools() {
     container.innerHTML = Object.entries(currentTools).map(([toolId, tool]) => {
         const modelType = tool.modelType || tool.modelUrl ? (tool.modelType || (tool.modelUrl ? 'unknown' : null)) : null;
         const modelBadge = modelType ? `<span class="tool-model-badge" style="display: inline-block; padding: 4px 8px; background: #C19A6B; color: white; border-radius: 4px; font-size: 12px; margin-left: 8px;">3D Model: ${modelType.toUpperCase()}</span>` : '';
+        const hasModel = !!(tool.modelUrl && tool.modelType);
         
         return `
         <div class="tool-card" data-tool-id="${toolId}">
@@ -580,6 +684,23 @@ function loadTools() {
                         <img src="${tool.imageUrl || tool.imageURL}" alt="${tool.name}">
                     </div>
                 ` : ''}
+                <div class="tool-3d-model-actions" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${hasModel ? `
+                        <button class="btn-tool-3d-preview" onclick="previewToolModel('${toolId}')" style="padding: 6px 12px; background: #C19A6B; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-eye"></i> Preview 3D Model
+                        </button>
+                        <button class="btn-tool-3d-replace" onclick="replaceToolModel('${toolId}')" style="padding: 6px 12px; background: #556B2F; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-exchange-alt"></i> Replace 3D Model
+                        </button>
+                        <button class="btn-tool-3d-delete" onclick="deleteToolModel('${toolId}')" style="padding: 6px 12px; background: #EF4444; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-trash"></i> Delete 3D Model
+                        </button>
+                    ` : `
+                        <button class="btn-tool-3d-upload" onclick="uploadToolModel('${toolId}')" style="padding: 6px 12px; background: #C19A6B; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-upload"></i> Upload 3D Model
+                        </button>
+                    `}
+                </div>
             </div>
         </div>
     `;
@@ -595,7 +716,10 @@ function addNewTool() {
     document.getElementById('toolImagePreview').innerHTML = '';
     const modelInput = document.getElementById('tool3DModel');
     if (modelInput) modelInput.value = '';
+    setModelFileLabels();
+    resetModelSelectionState();
     disposeModelPreview();
+    setModelUploadSpinner(false);
     document.getElementById('toolModal').style.display = 'flex';
 }
 
@@ -610,7 +734,6 @@ function editTool(toolId) {
     document.getElementById('toolCategory').value = tool.category || '';
     document.getElementById('toolInstructions').value = tool.instructions || '';
     
-    // Show existing image
     const imagePreview = document.getElementById('toolImagePreview');
     if (tool.imageUrl || tool.imageURL) {
         imagePreview.innerHTML = `<img src="${tool.imageUrl || tool.imageURL}" alt="${tool.name}" style="max-width: 100%; max-height: 200px; border-radius: 4px;">`;
@@ -621,18 +744,26 @@ function editTool(toolId) {
     const modelInput = document.getElementById('tool3DModel');
     if (modelInput) modelInput.value = '';
 
-    const derivedType = tool.modelType || getModelExtension(tool.modelFileName || '');
-    if (tool.modelUrl && derivedType) {
-        loadModelPreviewFromStoredData(tool.modelUrl, derivedType);
+    setModelFileLabels({
+        fileName: tool.modelFileName || '',
+        downloadUrl: tool.modelUrl || ''
+    });
+    resetModelSelectionState();
+
+    if (tool.modelUrl && tool.modelType) {
+        loadModelPreviewFromStoredData(tool.modelUrl, tool.modelType);
     } else {
         disposeModelPreview();
     }
     
+    setModelUploadSpinner(false);
     document.getElementById('toolModal').style.display = 'flex';
 }
 
 function closeToolModal() {
     document.getElementById('toolModal').style.display = 'none';
+    setModelUploadSpinner(false);
+    resetModelSelectionState();
     disposeModelPreview();
 }
 
@@ -641,50 +772,79 @@ async function saveTool(event) {
     
     try {
         const toolId = document.getElementById('toolId').value || Date.now().toString();
+        const existingTool = currentTools[toolId] || {};
         const tool = {
+            ...existingTool,
             name: document.getElementById('toolName').value.trim(),
             description: document.getElementById('toolDescription').value.trim(),
             category: document.getElementById('toolCategory').value,
             instructions: document.getElementById('toolInstructions').value.trim()
         };
-        
+
         const imageFile = document.getElementById('toolImage').files[0];
-        const modelFile = document.getElementById('tool3DModel').files[0];
-        
         if (imageFile) {
             tool.imageUrl = await readFileAsDataURL(imageFile);
-        } else if (currentTools[toolId]) {
-            tool.imageUrl = currentTools[toolId].imageUrl || currentTools[toolId].imageURL || '';
+        } else if (existingTool.imageUrl || existingTool.imageURL) {
+            tool.imageUrl = existingTool.imageUrl || existingTool.imageURL;
+        } else {
+            delete tool.imageUrl;
         }
-        
-        if (modelFile) {
-            const extension = getModelExtension(modelFile.name);
-            if (!extension || !['fbx', 'glb', 'obj'].includes(extension)) {
-                showAlertModal('3D model must be an FBX, GLB, or OBJ file.', 'Error');
-                return;
-            }
-            tool.modelType = extension;
-            tool.modelFileName = modelFile.name;
-            tool.modelUrl = await readFileAsDataURL(modelFile);
-        } else if (currentTools[toolId]) {
-            if (currentTools[toolId].modelUrl) tool.modelUrl = currentTools[toolId].modelUrl;
-            if (currentTools[toolId].modelType) tool.modelType = currentTools[toolId].modelType;
-            if (currentTools[toolId].modelFileName) tool.modelFileName = currentTools[toolId].modelFileName;
-            if (!tool.modelType && tool.modelFileName) {
-                tool.modelType = getModelExtension(tool.modelFileName);
-            }
+
+        if (pendingModelUploadBlob) {
+            const lessonSlotValue = await ensureLessonSlotValue(!currentLessonSlot);
+            setModelUploadSpinner(true, 'Uploading 3D model...');
+            const uploadResult = await uploadToolModelBlob(
+                lessonSlotValue,
+                toolId,
+                pendingModelUploadBlob,
+                pendingModelUploadFileName || existingTool.modelFileName || replaceFileExtension(toolId, '.glb'),
+                pendingModelUploadExtension || existingTool.modelType || 'glb'
+            );
+
+            tool.modelUrl = uploadResult.modelUrl;
+            tool.modelType = (pendingModelUploadExtension || existingTool.modelType || 'glb').toLowerCase();
+            tool.modelFileName = uploadResult.fileName || pendingModelUploadFileName || existingTool.modelFileName;
+            tool.modelStoragePath = uploadResult.storagePath;
+            tool.modelContentType = uploadResult.contentType || getContentTypeByExtension(tool.modelType);
+            tool.modelSize = uploadResult.fileSize || pendingModelFileSize || existingTool.modelSize || 0;
+            tool.originalModelType = pendingOriginalModelType || tool.originalModelType || tool.modelType;
+
+            setModelFileLabels({
+                fileName: tool.modelFileName || '',
+                downloadUrl: tool.modelUrl
+            });
+            resetModelSelectionState();
+            const modelInput = document.getElementById('tool3DModel');
+            if (modelInput) modelInput.value = '';
+        } else if (!tool.modelUrl && existingTool.modelUrl) {
+            tool.modelUrl = existingTool.modelUrl;
+            tool.modelType = existingTool.modelType;
+            tool.modelFileName = existingTool.modelFileName;
+            tool.modelStoragePath = existingTool.modelStoragePath;
+            tool.modelContentType = existingTool.modelContentType;
+            tool.modelSize = existingTool.modelSize;
+            tool.originalModelType = existingTool.originalModelType || existingTool.modelType;
+        } else if (!tool.modelUrl) {
+            delete tool.modelType;
+            delete tool.modelFileName;
+            delete tool.modelStoragePath;
+            delete tool.modelContentType;
+            delete tool.modelSize;
+            delete tool.originalModelType;
         }
-        
+
         currentTools[toolId] = tool;
         currentLesson = currentLesson || {};
         currentLesson.tools = { ...currentTools };
-        
+
         closeToolModal();
         loadTools();
-        showSuccess('Tool added to lesson. Remember to save the lesson to persist changes.');
+        showSuccess('Tool saved. Remember to save the lesson to persist changes.');
     } catch (error) {
         console.error('Save tool error:', error);
-        showError('Failed to save tool');
+        showError(error.message || 'Failed to save tool');
+    } finally {
+        setModelUploadSpinner(false);
     }
 }
 
@@ -733,33 +893,7 @@ async function saveLesson() {
         toolsPayload[toolId] = { ...tool };
     });
     
-    let lessonSlot = slot;
-    if (isNew) {
-        // For new lessons, find next available slot
-        try {
-            const response = await fetch(`${API_BASE}/lessons`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.lessons) {
-                    const slots = data.lessons.map(l => l.slot).filter(s => s);
-                    lessonSlot = slots.length > 0 ? Math.max(...slots) + 1 : 1;
-                } else {
-                    lessonSlot = 1;
-                }
-            } else {
-                lessonSlot = 1;
-            }
-        } catch (error) {
-            lessonSlot = 1;
-        }
-    }
+    const lessonSlot = await ensureLessonSlotValue(isNew);
     
     if (!lessonSlot) {
         showError('Invalid lesson slot');
@@ -827,144 +961,6 @@ async function saveLesson() {
     }
 }
 
-// Shared 3D Model Preview Helper
-function setupToolModelPreview(containerElement, modelUrl, modelType) {
-    if (!containerElement || !modelUrl || !modelType || typeof THREE === 'undefined') {
-        if (containerElement) {
-            containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">No 3D model attached.</div>';
-        }
-        return null;
-    }
-
-    const lowerType = modelType.toLowerCase();
-    if (!['fbx', 'glb', 'obj'].includes(lowerType)) {
-        containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">Unsupported 3D model type.</div>';
-        return null;
-    }
-
-    // Clear container
-    containerElement.innerHTML = '<canvas style="width: 100%; height: 100%; border-radius: 8px;"></canvas>';
-    const canvas = containerElement.querySelector('canvas');
-    if (!canvas) return null;
-
-    // Setup scene
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f5f5);
-    
-    const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 5);
-    
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-    
-    let currentModel = null;
-    let animationId = null;
-    
-    const cleanup = () => {
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-            animationId = null;
-        }
-        if (currentModel) {
-            scene.remove(currentModel);
-            currentModel.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose && mat.dispose());
-                        } else {
-                            child.material.dispose && child.material.dispose();
-                        }
-                    }
-                }
-            });
-            currentModel = null;
-        }
-        renderer.dispose();
-    };
-    
-    const onLoad = (object) => {
-        if (currentModel) {
-            scene.remove(currentModel);
-            currentModel.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose && mat.dispose());
-                        } else {
-                            child.material.dispose && child.material.dispose();
-                        }
-                    }
-                }
-            });
-        }
-        
-        let model = object;
-        if (object.scene) {
-            model = object.scene;
-        }
-        
-        // Fit model to view
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-        const scale = 2 / maxDim;
-        model.scale.setScalar(scale);
-        
-        const boxCenter = new THREE.Vector3();
-        box.getCenter(boxCenter);
-        model.position.sub(boxCenter);
-        
-        scene.add(model);
-        currentModel = model;
-        
-        // Auto-rotate animation
-        const animate = () => {
-            if (currentModel) {
-                currentModel.rotation.y += 0.01;
-            }
-            renderer.render(scene, camera);
-            animationId = requestAnimationFrame(animate);
-        };
-        animate();
-    };
-    
-    const onError = (error) => {
-        console.error('3D model load error:', error);
-        containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #DC2626;">Unable to load 3D model.</div>';
-        cleanup();
-    };
-    
-    // Load model based on type
-    try {
-        if (lowerType === 'glb' || lowerType === 'gltf') {
-            const loader = new THREE.GLTFLoader();
-            loader.load(modelUrl, onLoad, undefined, onError);
-        } else if (lowerType === 'fbx') {
-            const loader = new THREE.FBXLoader();
-            loader.load(modelUrl, onLoad, undefined, onError);
-        } else if (lowerType === 'obj') {
-            const loader = new THREE.OBJLoader();
-            loader.load(modelUrl, onLoad, undefined, onError);
-        }
-    } catch (error) {
-        onError(error);
-    }
-    
-    // Return cleanup function
-    return cleanup;
-}
 
 function renderPreview() {
     const previewContent = document.getElementById('previewContent');
@@ -1012,10 +1008,13 @@ function renderPreview() {
                                         ${toolModelType ? `<span style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #C19A6B; color: white; border-radius: 4px; font-size: 11px; font-weight: 500;">3D Model: ${toolModelType.toUpperCase()}</span>` : ''}
                                     </div>
                                 </div>
-                                ${toolModelUrl && toolModelType ? `
-                                    <div class="preview-tool-3d-container" data-tool-id="${toolId}" style="width: 100%; height: 200px; background: #F9FAFB; border-radius: 8px; margin-top: 12px; position: relative; overflow: hidden;">
-                                        <!-- 3D preview will be rendered here -->
-                                    </div>
+                                ${toolModelUrl ? `
+                                    <model-viewer
+                                        src="${toolModelUrl}"
+                                        auto-rotate
+                                        camera-controls
+                                        style="width: 100%; height: 220px; background: #F9FAFB; border-radius: 8px; margin-top: 12px;"
+                                    ></model-viewer>
                                 ` : `
                                     <div style="padding: 20px; text-align: center; color: #9CA3AF; font-size: 14px; background: #F9FAFB; border-radius: 8px; margin-top: 12px;">No 3D model attached.</div>
                                 `}
@@ -1036,20 +1035,6 @@ function renderPreview() {
         </div>
     `;
     
-    // Setup 3D previews for tools with models
-    if (toolKeys.length > 0) {
-        toolKeys.forEach(toolId => {
-            const tool = tools[toolId];
-            if (tool.modelUrl && tool.modelType) {
-                const container = previewContent.querySelector(`.preview-tool-3d-container[data-tool-id="${toolId}"]`);
-                if (container) {
-                    setTimeout(() => {
-                        setupToolModelPreview(container, tool.modelUrl, tool.modelType);
-                    }, 100);
-                }
-            }
-        });
-    }
 }
 
 function goBack() {
@@ -1104,7 +1089,7 @@ function closeAlertModal() {
 
 // Modal close on outside click
 window.onclick = function(event) {
-    const modals = ['toolModal', 'logoutModal', 'deleteModal', 'alertModal'];
+    const modals = ['toolModal', 'logoutModal', 'deleteModal', 'alertModal', 'modelPreviewModal', 'modelUploadModal'];
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
         if (event.target === modal) {
@@ -1112,15 +1097,279 @@ window.onclick = function(event) {
             else if (modalId === 'logoutModal') closeLogoutModal();
             else if (modalId === 'deleteModal') closeDeleteModal();
             else if (modalId === 'alertModal') closeAlertModal();
+            else if (modalId === 'modelPreviewModal') closeModelPreviewModal();
+            else if (modalId === 'modelUploadModal') closeModelUploadModal();
         }
     });
 };
+
+// 3D Model Management Functions
+let currentModelPreviewCleanup = null;
+let currentModelUploadToolId = null;
+
+function previewToolModel(toolId) {
+    const tool = currentTools[toolId];
+    if (!tool || !tool.modelUrl || !tool.modelType) {
+        showAlertModal('No 3D model available for this tool.', 'Error');
+        return;
+    }
+    
+    document.getElementById('modelPreviewModal').style.display = 'flex';
+    const previewContainer = document.getElementById('modelPreviewContainer');
+    previewContainer.innerHTML = '';
+    
+    // Use the unified viewer (should already be loaded via script tag in HTML)
+    if (typeof renderToolModel === 'undefined') {
+        console.error('renderToolModel not available. Ensure /js/common/3d-viewer.js is loaded after Three.js loaders.');
+        previewContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #DC2626;">3D viewer not loaded. Please refresh the page.</div>';
+        return;
+    }
+    
+    // Verify loaders are available before rendering
+    if (typeof THREE === 'undefined' || typeof THREE.FBXLoader === 'undefined' && tool.modelType && tool.modelType.toLowerCase() === 'fbx') {
+        console.error('FBXLoader not available. Check script loading order.');
+        previewContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #DC2626;">FBXLoader not available. Please refresh the page.</div>';
+        return;
+    }
+    
+    currentModelPreviewCleanup = renderToolModel(previewContainer, tool.modelUrl, tool.modelType);
+}
+
+function closeModelPreviewModal() {
+    if (currentModelPreviewCleanup) {
+        currentModelPreviewCleanup();
+        currentModelPreviewCleanup = null;
+    }
+    document.getElementById('modelPreviewModal').style.display = 'none';
+}
+
+function uploadToolModel(toolId) {
+    currentModelUploadToolId = toolId;
+    document.getElementById('modelUploadModalTitle').textContent = 'Upload 3D Model';
+    document.getElementById('modelUploadForm').reset();
+    document.getElementById('modelUploadPreview').innerHTML = '<div class="model-preview-empty">No 3D model selected</div>';
+    resetModelSelectionState();
+    setModelUploadSpinner(false);
+    document.getElementById('modelUploadModal').style.display = 'flex';
+}
+
+function replaceToolModel(toolId) {
+    currentModelUploadToolId = toolId;
+    document.getElementById('modelUploadModalTitle').textContent = 'Replace 3D Model';
+    document.getElementById('modelUploadForm').reset();
+    document.getElementById('modelUploadPreview').innerHTML = '<div class="model-preview-empty">No 3D model selected</div>';
+    resetModelSelectionState();
+    setModelUploadSpinner(false);
+    document.getElementById('modelUploadModal').style.display = 'flex';
+}
+
+function closeModelUploadModal() {
+    currentModelUploadToolId = null;
+    document.getElementById('modelUploadModal').style.display = 'none';
+    resetModelSelectionState();
+    setModelUploadSpinner(false);
+}
+
+async function saveModelUpload(event) {
+    event.preventDefault();
+    
+    if (!currentModelUploadToolId) {
+        showError('No tool selected');
+        return;
+    }
+    
+    if (!pendingModelUploadBlob) {
+        showError('Please select a 3D model file');
+        return;
+    }
+    
+    try {
+        const lessonSlotValue = await ensureLessonSlotValue(!currentLessonSlot);
+        setModelUploadSpinner(true, 'Uploading 3D model...');
+        
+        const uploadResult = await uploadToolModelBlob(
+            lessonSlotValue,
+            currentModelUploadToolId,
+            pendingModelUploadBlob,
+            pendingModelUploadFileName || replaceFileExtension(currentModelUploadToolId, '.glb'),
+            pendingModelUploadExtension || 'glb'
+        );
+        
+        // Update tool in currentTools
+        const tool = currentTools[currentModelUploadToolId] || {};
+        tool.modelUrl = uploadResult.modelUrl;
+        tool.modelType = (pendingModelUploadExtension || 'glb').toLowerCase();
+        tool.modelFileName = uploadResult.fileName || pendingModelUploadFileName;
+        tool.modelStoragePath = uploadResult.storagePath;
+        tool.storagePath = uploadResult.storagePath;
+        tool.modelContentType = uploadResult.contentType || getContentTypeByExtension(tool.modelType);
+        tool.contentType = uploadResult.contentType || getContentTypeByExtension(tool.modelType);
+        tool.modelSize = uploadResult.fileSize || pendingModelFileSize || 0;
+        
+        currentTools[currentModelUploadToolId] = tool;
+        currentLesson = currentLesson || {};
+        currentLesson.tools = { ...currentTools };
+        
+        closeModelUploadModal();
+        loadTools();
+        showSuccess('3D model uploaded successfully. Remember to save the lesson to persist changes.');
+    } catch (error) {
+        console.error('Upload model error:', error);
+        showError(error.message || 'Failed to upload 3D model');
+    } finally {
+        setModelUploadSpinner(false);
+    }
+}
+
+async function deleteToolModel(toolId) {
+    if (!confirm('Are you sure you want to delete the 3D model for this tool? This action cannot be undone.')) {
+        return;
+    }
+    
+    const tool = currentTools[toolId];
+    if (!tool) {
+        showError('Tool not found');
+        return;
+    }
+    
+    if (!tool.modelUrl) {
+        showAlertModal('No 3D model to delete.', 'Info');
+        return;
+    }
+    
+    try {
+        const lessonSlotValue = await ensureLessonSlotValue(!currentLessonSlot);
+        
+        const response = await fetch(`${API_BASE}/lessons/${lessonSlotValue}/tools/${toolId}/model`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to delete 3D model');
+        }
+        
+        // Update tool locally
+        delete tool.modelUrl;
+        delete tool.modelType;
+        delete tool.storagePath;
+        delete tool.modelStoragePath;
+        delete tool.fileName;
+        delete tool.modelFileName;
+        delete tool.contentType;
+        delete tool.modelContentType;
+        
+        currentTools[toolId] = tool;
+        currentLesson = currentLesson || {};
+        currentLesson.tools = { ...currentTools };
+        
+        loadTools();
+        showSuccess('3D model deleted successfully. Remember to save the lesson to persist changes.');
+    } catch (error) {
+        console.error('Delete model error:', error);
+        showError(error.message || 'Failed to delete 3D model');
+    }
+}
+
+// Setup model upload input handler for modal
+function setupModelUploadInputHandler() {
+    const modelInput = document.getElementById('modelUploadFileInput');
+    if (!modelInput) return;
+    
+    modelInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            handleModelFileSelectionForUpload(file);
+        }
+    });
+}
+
+function handleModelFileSelectionForUpload(file) {
+    const validation = validateModelFile(file);
+    if (!validation.valid) {
+        showAlertModal(validation.message, 'Invalid File');
+        return;
+    }
+    
+    modelSelectionToken += 1;
+    const selectionId = modelSelectionToken;
+    
+    pendingOriginalModelType = validation.extension;
+    
+    const previewContainer = document.getElementById('modelUploadPreview');
+    if (previewContainer) {
+        previewContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">Preparing 3D preview...</div>';
+    }
+    
+    setModelUploadSpinner(true, MODEL_CONVERTIBLE_EXTENSIONS.includes(validation.extension) ? 'Converting 3D model...' : 'Preparing preview...');
+    
+    convertModelIfNeeded(file, validation.extension)
+        .then(({ blob, extension, fileName }) => {
+            if (selectionId !== modelSelectionToken) {
+                return;
+            }
+            
+            pendingModelUploadBlob = blob;
+            pendingModelUploadExtension = extension;
+            pendingModelUploadFileName = fileName;
+            pendingModelFileSize = blob.size;
+            
+            cleanupPendingModelPreview();
+            pendingModelPreviewUrl = URL.createObjectURL(blob);
+            
+            if (previewContainer) {
+                renderModelViewerPreviewForUpload(pendingModelPreviewUrl);
+            }
+        })
+        .catch((error) => {
+            if (selectionId !== modelSelectionToken) {
+                return;
+            }
+            console.error('3D model processing error:', error);
+            resetModelSelectionState();
+            if (previewContainer) {
+                previewContainer.innerHTML = '<div class="model-preview-empty">Unable to preview this 3D model.</div>';
+            }
+            showError('Failed to process the selected 3D model. Please try a different file.');
+        })
+        .finally(() => {
+            if (selectionId === modelSelectionToken) {
+                setModelUploadSpinner(false);
+            }
+        });
+}
+
+function renderModelViewerPreviewForUpload(src) {
+    const container = document.getElementById('modelUploadPreview');
+    if (!container) return;
+    container.innerHTML = `
+        <model-viewer
+            src="${src}"
+            auto-rotate
+            camera-controls
+            shadow-intensity="1"
+            style="width: 100%; height: 260px; background: #F8FAFC; border-radius: 12px;"
+        >
+        </model-viewer>
+    `;
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     initErrorMessageContainer();
     setupImageHandlers();
     setupModelInputHandler();
+    setupModelUploadInputHandler();
     initializeEditor();
 });
 

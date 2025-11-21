@@ -1047,4 +1047,42 @@ router.delete('/announcements/:id', verifyInstructorToken, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/instructor/lessons
+ * Returns all lessons with full content for instructors (view-only)
+ */
+router.get('/lessons', verifyInstructorToken, async (req, res) => {
+  try {
+    const lessonsRef = db.ref('lessons');
+    const snapshot = await lessonsRef.once('value');
+    const lessons = snapshot.val() || {};
+    
+    // Only return lessons that actually exist in the database
+    const lessonsArray = Object.entries(lessons)
+      .filter(([key, lesson]) => {
+        const slot = parseInt(key);
+        return !isNaN(slot) && lesson && (lesson.lessonTitle || lesson.lessonName);
+      })
+      .map(([key, lesson]) => {
+        const slot = parseInt(key);
+        return {
+          slot,
+          lessonTitle: lesson.lessonTitle || lesson.lessonName || '',
+          lessonName: lesson.lessonName || lesson.lessonTitle || '',
+          description: lesson.description || lesson.lessonDescription || '',
+          lessonDescription: lesson.lessonDescription || lesson.description || '',
+          body: lesson.body || '',
+          images: lesson.images || [],
+          tools: lesson.tools || {}
+        };
+      })
+      .sort((a, b) => a.slot - b.slot);
+    
+    res.json({ success: true, lessons: lessonsArray });
+  } catch (error) {
+    console.error('Get instructor lessons error:', error);
+    res.status(500).json({ error: 'Failed to fetch lessons' });
+  }
+});
+
 module.exports = router;

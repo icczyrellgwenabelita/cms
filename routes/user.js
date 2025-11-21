@@ -64,515 +64,134 @@ const announcementMatchesStudent = (announcement = {}, studentInfo = {}) => {
 router.get('/dashboard', verifyStudentToken, async (req, res) => {
   try {
     console.log('User dashboard request received for userId:', req.userId);
-    const userRef = db.ref(`users/${req.userId}`);
-    const snapshot = await userRef.once('value');
-    let userData = snapshot.val();
-    console.log('Raw userData from Firebase:', JSON.stringify(userData ? Object.keys(userData) : 'null'));
-    if (!userData) {
+    
+    // Safely fetch user data
+    let userData = {};
+    try {
+      const userRef = db.ref(`users/${req.userId}`);
+      const snapshot = await userRef.once('value');
+      userData = snapshot.val() || {};
+    } catch (err) {
+      console.error('Error fetching user data:', err);
       userData = {};
     }
-    const lessonsRef = db.ref('lessons');
-    const lessonsSnapshot = await lessonsRef.once('value');
-    const allLessons = lessonsSnapshot.val() || {};
     
-    const historyRef = db.ref(`users/${req.userId}/history/quizzes`);
-    const historySnapshot = await historyRef.once('value');
-    const allHistory = historySnapshot.val() || {};
-    
-    const simHistoryRef = db.ref(`users/${req.userId}/history/simulations`);
-    const simHistorySnapshot = await simHistoryRef.once('value');
-    const allSimHistory = simHistorySnapshot.val() || {};
-    
-    console.log('User Dashboard: Fetched all quiz history, entries:', Object.keys(allHistory || {}).length);
-    console.log('User Dashboard: Fetched all simulation history, entries:', Object.keys(allSimHistory || {}).length);
-    
-    const lessons = [];
-    for (let i = 1; i <= 6; i++) {
-      const lesson = allLessons[i];
-      
-      const lessonData = {
-        slot: i
-      };
-      
-      if (lesson && lesson.lessonName) {
-        lessonData.lessonName = lesson.lessonName;
-        if (lesson.lessonDescription) {
-          lessonData.lessonDescription = lesson.lessonDescription;
-        }
-      }
-      
-      const lessonHistory = [];
-      if (allHistory && typeof allHistory === 'object') {
-        Object.entries(allHistory).forEach(([timestamp, entry]) => {
-          if (entry && entry.lesson === i) {
-            const dateObj = new Date(timestamp);
-            const dateStr = dateObj.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric' 
-            });
-            const timeStr = dateObj.toLocaleTimeString('en-US', { 
-              hour: 'numeric', 
-              minute: '2-digit',
-              hour12: true 
-            });
-            
-            const durationSeconds = entry.time || 0;
-            const mins = Math.floor(durationSeconds / 60);
-            const secs = Math.floor(durationSeconds % 60);
-            const durationStr = `${mins}m ${secs}s`;
-            
-            const score = entry.score || 0;
-            const scoreStr = `${score} out of 10`;
-            
-            lessonHistory.push({
-              timestamp: timestamp,
-              date: dateStr,
-              time: timeStr,
-              duration: durationStr,
-              durationSeconds: durationSeconds,
-              score: score,
-              scoreText: scoreStr
-            });
-          }
-        });
-        
-        lessonHistory.sort((a, b) => {
-          return new Date(b.timestamp) - new Date(a.timestamp);
-        });
-        
-        console.log(`Lesson ${i} - Found ${lessonHistory.length} quiz history entries`);
-      }
-      
-      const lessonSimHistory = [];
-      const parseLessonNumber = (value) => {
-        if (value === null || value === undefined) {
-          return null;
-        }
-        if (typeof value === 'number' && !isNaN(value)) {
-          return value;
-        }
-        if (typeof value === 'string') {
-          const trimmed = value.trim();
-          if (/^\d+$/.test(trimmed)) {
-            return Number(trimmed);
-          }
-          const match = trimmed.match(/\d+/);
-          if (match && match[0]) {
-            return Number(match[0]);
-          }
-        }
-        if (typeof value === 'object') {
-          if ('slot' in value) {
-            return parseLessonNumber(value.slot);
-          }
-          if ('number' in value) {
-            return parseLessonNumber(value.number);
-          }
-          if ('lesson' in value) {
-            return parseLessonNumber(value.lesson);
-          }
-        }
-        return null;
-      };
-
-      if (allSimHistory && typeof allSimHistory === 'object') {
-        Object.entries(allSimHistory).forEach(([timestamp, entry]) => {
-          if (!entry || typeof entry !== 'object') {
-            return;
-          }
-          const lessonRef = entry.lesson ?? entry.lessonId ?? entry.lessonNumber ?? entry.lessonSlot ?? entry.lessonIndex;
-          const resolvedLesson = parseLessonNumber(lessonRef);
-          const lessonMatch = resolvedLesson === i;
-          if (lessonMatch) {
-            const dateObj = new Date(timestamp);
-            const dateStr = dateObj.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric' 
-            });
-            const timeStr = dateObj.toLocaleTimeString('en-US', { 
-              hour: 'numeric', 
-              minute: '2-digit',
-              hour12: true 
-            });
-            
-            const durationSeconds = Number(entry.time || entry.duration || 0) || 0;
-            const mins = Math.floor(durationSeconds / 60);
-            const secs = Math.floor(durationSeconds % 60);
-            const durationStr = `${mins}m ${secs}s`;
-            
-            lessonSimHistory.push({
-              timestamp: timestamp,
-              date: dateStr,
-              time: timeStr,
-              duration: durationStr,
-              durationSeconds: durationSeconds,
-              result: entry.result || entry.status || ''
-            });
-          }
-        });
-        
-        lessonSimHistory.sort((a, b) => {
-          return new Date(b.timestamp) - new Date(a.timestamp);
-        });
-        
-        console.log(`Lesson ${i} - Found ${lessonSimHistory.length} simulation history entries`);
-      }
-      
-      const lessonProgressRef = db.ref(`users/${req.userId}/progress/lesson${i}`);
-      const progressSnapshot = await lessonProgressRef.once('value');
-      const progress = progressSnapshot.val();
-      
-      console.log(`Lesson ${i} progress from users DB:`, JSON.stringify(progress));
-      
-      if (progress && typeof progress === 'object' && progress !== null) {
-        const quizCompleted = progress.quiz?.completed || false;
-        const simCompleted = progress.simulation?.completed || false;
-        const quizAttempts = progress.quiz?.attempts || 0;
-        const rawSimAttempts = progress.simulation?.attempts;
-        const simAttemptsNumber = Number(rawSimAttempts);
-        const simAttempts = !isNaN(simAttemptsNumber) && simAttemptsNumber > 0 ? simAttemptsNumber : 0;
-        
-        console.log(`Lesson ${i} - Quiz completed: ${quizCompleted}, Sim completed: ${simCompleted}, Quiz attempts: ${quizAttempts}, Sim attempts: ${simAttempts}`);
-        
-        let status = 'not_started';
-        if (quizCompleted && simCompleted) {
-          status = 'completed';
-          console.log(`Lesson ${i} - Status: completed (both quiz and sim completed)`);
-        } else if (quizCompleted || simCompleted || quizAttempts > 0 || simAttempts > 0) {
-          status = 'in_progress';
-          console.log(`Lesson ${i} - Status: in_progress (one or both incomplete)`);
-        } else {
-          console.log(`Lesson ${i} - Status: not_started (no attempts)`);
-        }
-        
-        lessonData.status = status;
-        lessonData.simAttempts = simAttempts;
-        lessonData.simCompleted = simCompleted;
-        
-        if (progress.quiz) {
-          const latestScore = progress.quiz.latestScore;
-          if (latestScore !== null && latestScore !== undefined && typeof latestScore === 'number' && !isNaN(latestScore)) {
-            lessonData.recentQuizScore = latestScore;
-            console.log(`Lesson ${i} - Recent Quiz Score: ${latestScore}`);
-          } else {
-            console.log(`Lesson ${i} - Recent Quiz Score: MISSING or invalid (value: ${latestScore}, type: ${typeof latestScore})`);
-          }
-          
-          const highestScore = progress.quiz.highestScore;
-          if (highestScore !== null && highestScore !== undefined && typeof highestScore === 'number' && !isNaN(highestScore)) {
-            lessonData.highestQuizScore = highestScore;
-            console.log(`Lesson ${i} - Highest Quiz Score: ${highestScore}`);
-          } else {
-            console.log(`Lesson ${i} - Highest Quiz Score: MISSING or invalid (value: ${highestScore}, type: ${typeof highestScore})`);
-          }
-          
-          const attempts = progress.quiz.attempts;
-          if (attempts !== null && attempts !== undefined && typeof attempts === 'number' && !isNaN(attempts)) {
-            lessonData.quizAttempts = attempts;
-            console.log(`Lesson ${i} - Quiz Attempts: ${attempts}`);
-          } else {
-            console.log(`Lesson ${i} - Quiz Attempts: MISSING or invalid (value: ${attempts}, type: ${typeof attempts})`);
-          }
-          
-          const avgTime = progress.quiz.avgTime;
-          if (avgTime !== null && avgTime !== undefined && typeof avgTime === 'number' && !isNaN(avgTime) && avgTime > 0) {
-            lessonData.avgQuizTime = avgTime;
-            console.log(`Lesson ${i} - Avg Quiz Time: ${avgTime}`);
-          } else {
-            console.log(`Lesson ${i} - Avg Quiz Time: MISSING or invalid (value: ${avgTime}, type: ${typeof avgTime})`);
-          }
-        }
-        
-        if (progress.simulation) {
-          const simAvgTime = typeof progress.simulation.avgTime === 'number' && !isNaN(progress.simulation.avgTime)
-            ? progress.simulation.avgTime
-            : 0;
-          lessonData.avgSimTime = simAvgTime;
-          if (simAvgTime > 0) {
-            console.log(`Lesson ${i} - Avg Sim Time: ${simAvgTime}`);
-          } else {
-            console.log(`Lesson ${i} - Avg Sim Time: MISSING or invalid (value: ${progress.simulation.avgTime}, type: ${typeof progress.simulation.avgTime})`);
-          }
-        }
-        
-        console.log(`Lesson ${i} - Final lessonData:`, JSON.stringify(lessonData, null, 2));
-      } else {
-        lessonData.status = 'not_started';
-        console.log(`Lesson ${i} - No progress data found, defaulting to not_started`);
-      }
-      
-      if (lessonHistory.length > 0) {
-        lessonData.quizHistory = lessonHistory;
-        console.log(`Lesson ${i} - Quiz History: ${lessonHistory.length} entries from history/quizzes`);
-        
-        const totalScore = lessonHistory.reduce((sum, entry) => {
-          const score = entry.score || 0;
-          return sum + score;
-        }, 0);
-        const avgScore = lessonHistory.length > 0 ? totalScore / lessonHistory.length : 0;
-        lessonData.avgQuizScore = Math.round(avgScore * 100) / 100;
-        console.log(`Lesson ${i} - Average Quiz Score: ${lessonData.avgQuizScore} (calculated from ${lessonHistory.length} attempts, totalScore: ${totalScore})`);
-      } else {
-        const attempts = progress?.quiz?.attempts || 0;
-        if (attempts > 0) {
-          lessonData.quizHistory = [];
-          console.log(`Lesson ${i} - Quiz History: No history found, but ${attempts} attempts exist`);
-        }
-        lessonData.avgQuizScore = null;
-        console.log(`Lesson ${i} - Average Quiz Score: null (no history available)`);
-      }
-      
-      if (lessonSimHistory.length > 0) {
-        lessonData.simHistory = lessonSimHistory;
-        console.log(`Lesson ${i} - Simulation History: ${lessonSimHistory.length} entries from history/simulations`);
-      } else {
-        lessonData.simHistory = [];
-        const attemptsForLog = Number(lessonData.simAttempts) || Number(progress?.simulation?.attempts) || 0;
-        if (attemptsForLog > 0) {
-          console.log(`Lesson ${i} - Simulation History: No history found, but ${attemptsForLog} attempts exist`);
-        }
-      }
-      
-      lessons.push(lessonData);
+    // Safely fetch progress data
+    let progressData = {};
+    try {
+      const progressRef = db.ref(`users/${req.userId}/progress`);
+      const progressSnapshot = await progressRef.once('value');
+      progressData = progressSnapshot.val() || {};
+    } catch (err) {
+      console.error('Error fetching progress:', err);
+      progressData = {};
     }
-    const studentInfo = userData.studentInfo || {};
-    const totalLessons = lessons.length || 0;
-    const completedLessonsCount = lessons.filter(lesson => lessonStatusString(lesson.status) === 'completed').length;
-    const normalizedQuizScores = lessons
-      .map(lesson => normalizeQuizScore(lesson.recentQuizScore))
-      .filter(score => score > 0);
-    const averageQuizScore = normalizedQuizScores.length > 0
-      ? normalizedQuizScores.reduce((sum, score) => sum + score, 0) / normalizedQuizScores.length
+    
+    // Extract student info safely
+    const studentInfo = (userData && typeof userData === 'object' && userData.studentInfo) 
+      ? userData.studentInfo 
+      : {};
+    
+    // Calculate totalLessons from progress keys (lesson1, lesson2, etc.)
+    const progressKeys = progressData && typeof progressData === 'object' 
+      ? Object.keys(progressData).filter(key => /^lesson\d+$/.test(key))
+      : [];
+    const totalLessons = progressKeys.length || 6; // Default to 6 if no progress
+    
+    // Calculate lessonsCompleted: count where quiz.completed === true AND simulation.completed === true
+    let lessonsCompleted = 0;
+    let quizzesTaken = 0;
+    let totalQuizScore = 0;
+    let quizCount = 0;
+    let simulationsCompleted = 0;
+    
+    for (const lessonKey of progressKeys) {
+      const lessonProgress = progressData[lessonKey] || {};
+      const quiz = lessonProgress.quiz || {};
+      const simulation = lessonProgress.simulation || {};
+      
+      // Check if lesson is completed (both quiz and simulation completed)
+      if (quiz.completed === true && simulation.completed === true) {
+        lessonsCompleted += 1;
+      }
+      
+      // Count quiz attempts
+      const attempts = Number(quiz.attempts) || 0;
+      if (attempts > 0) {
+        quizzesTaken += attempts;
+      }
+      
+      // Get highest score for average calculation
+      if (quiz.highestScore !== undefined && typeof quiz.highestScore === 'number' && !isNaN(quiz.highestScore)) {
+        totalQuizScore += quiz.highestScore;
+        quizCount += 1;
+      }
+      
+      // Count completed simulations
+      if (simulation.completed === true) {
+        simulationsCompleted += 1;
+      }
+    }
+    
+    // Calculate avgQuizScore
+    const avgQuizScore = quizCount > 0 ? totalQuizScore / quizCount : 0;
+    
+    // Calculate overallProgressPct
+    const overallProgressPct = totalLessons > 0 
+      ? Math.round((lessonsCompleted / totalLessons) * 100) 
       : 0;
-    const finalGradePercent = Math.round(averageQuizScore * 10) || 0;
     
-    const simulationSummaries = lessons.map(lesson => {
-      const status = hasLessonSimPassed(lesson)
-        ? 'pass'
-        : lessonHasSimActivity(lesson)
-          ? 'pending'
-          : 'not_started';
-      const lastAttempt = Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0
-        ? lesson.simHistory[0].timestamp || null
-        : null;
-      const attempts = Array.isArray(lesson.simHistory)
-        ? lesson.simHistory.length
-        : Number(lesson.simAttempts || (lesson.simulation && lesson.simulation.attempts)) || 0;
-      return {
-        slot: lesson.slot,
-        lessonName: lesson.lessonName || `Lesson ${lesson.slot}`,
-        status,
-        attempts,
-        lastAttempt
-      };
-    });
-    
-    const lessonCompletionMet = totalLessons > 0 && completedLessonsCount === totalLessons;
-    const simulationCompletionMet = simulationSummaries.length > 0
-      ? simulationSummaries.every(summary => summary.status === 'pass')
-      : false;
-    const finalCourseMet = lessonCompletionMet && simulationCompletionMet && finalGradePercent >= 75;
-    
-    const certificateProgress = {
-      lessonCompletion: lessonCompletionMet,
-      simulationCompletion: simulationCompletionMet,
-      finalCourse: finalCourseMet,
-      finalGradePercent
-    };
-    
-    const lessonCertificates = lessons
-      .map(lesson => {
-        const normalizedScore = normalizeQuizScore(lesson.recentQuizScore);
-        const quizPassed = normalizedScore >= 6;
-        const statusValue = lessonStatusString(lesson.status);
-        if (statusValue === 'completed' && quizPassed) {
-          const issuedTimestamp = Array.isArray(lesson.quizHistory) && lesson.quizHistory.length > 0
-            ? lesson.quizHistory[0].timestamp
-            : null;
-          return {
-            id: `lesson-${lesson.slot}`,
-            type: 'lesson',
-            lessonSlot: lesson.slot,
-            title: lesson.lessonName || `Lesson ${lesson.slot} Certificate`,
-            date: issuedTimestamp || new Date().toISOString(),
-            status: 'issued'
-          };
+    // Get assigned instructor name
+    let assignedInstructorName = 'Not assigned';
+    if (userData.assignedInstructor) {
+      try {
+        const instructorRef = db.ref(`admins/${userData.assignedInstructor}`);
+        const instructorSnapshot = await instructorRef.once('value');
+        const instructorData = instructorSnapshot.val();
+        if (instructorData && typeof instructorData === 'object') {
+          assignedInstructorName = instructorData.name || instructorData.fullName || instructorData.email || 'Instructor';
         }
-        return null;
-      })
-      .filter(Boolean);
-    
-    const computedCertificates = [...lessonCertificates];
-    if (simulationCompletionMet) {
-      computedCertificates.push({
-        id: 'simulation-completion',
-        type: 'simulation',
-        title: 'Simulation Completion Certificate',
-        date: new Date().toISOString(),
-        status: 'issued'
-      });
-    }
-    if (finalCourseMet) {
-      computedCertificates.push({
-        id: 'overall-course',
-        type: 'course',
-        title: 'Overall Course Certificate',
-        date: new Date().toISOString(),
-        status: 'issued'
-      });
-    }
-    
-    const [certificatesSnapshot, announcementsSnapshot] = await Promise.all([
-      db.ref(`users/${req.userId}/certificates`).once('value'),
-      db.ref('announcements').once('value')
-    ]);
-    
-    const storedCertificatesData = certificatesSnapshot.val() || {};
-    const storedCertificates = Object.entries(storedCertificatesData).map(([id, cert]) => ({
-      id,
-      type: cert.type || (cert.lessonSlot ? 'lesson' : 'course'),
-      lessonSlot: cert.lessonSlot !== undefined ? Number(cert.lessonSlot) : null,
-      title: cert.title || cert.name || (cert.lessonSlot ? `Lesson ${cert.lessonSlot} Certificate` : 'Certificate'),
-      date: cert.date || cert.issuedAt || cert.createdAt || null,
-      status: cert.status || 'issued',
-      downloadUrl: cert.downloadUrl || null
-    }));
-    
-    const certificateMap = new Map();
-    storedCertificates.forEach(cert => {
-      const key = cert.id || `${cert.type}-${cert.lessonSlot || 'general'}`;
-      certificateMap.set(key, cert);
-    });
-    computedCertificates.forEach(cert => {
-      const key = cert.id || `${cert.type}-${cert.lessonSlot || 'general'}`;
-      if (certificateMap.has(key)) {
-        certificateMap.set(key, { ...certificateMap.get(key), ...cert });
-      } else {
-        certificateMap.set(key, cert);
-      }
-    });
-    const certificates = Array.from(certificateMap.values());
-    
-    const announcementsData = announcementsSnapshot.val() || {};
-    const announcements = Object.values(announcementsData)
-      .filter(announcement => announcementMatchesStudent(announcement, studentInfo))
-      .map(announcement => ({
-        id: announcement.id || '',
-        title: announcement.title || 'Announcement',
-        message: announcement.message || announcement.content || '',
-        audience: announcement.audience || 'students',
-        pinned: !!announcement.pinned,
-        instructorId: announcement.instructorId || null,
-        date: announcement.createdAt || announcement.updatedAt || new Date().toISOString()
-      }))
-      .sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        return new Date(b.date || 0) - new Date(a.date || 0);
-      })
-      .slice(0, 10);
-    
-    const isVerified = userData.verified === true || userData.verified === 'true';
-    let completionScore = 0;
-    
-    console.log('User Dashboard: Raw verified value from DB:', userData.verified, 'Type:', typeof userData.verified);
-    console.log('User Dashboard: isVerified after check:', isVerified);
-    
-    if (userData.email) completionScore += 15;
-    if (userData.name) completionScore += 15;
-    if (studentInfo.gender) completionScore += 10;
-    if (studentInfo.studentNumber) completionScore += 15;
-    if (studentInfo.batch) completionScore += 10;
-    if (studentInfo.address) completionScore += 10;
-    if (studentInfo.contactNumber) completionScore += 10;
-    if (studentInfo.birthday) completionScore += 15;
-    
-    console.log('User Dashboard: Calculated completion score before verified check:', completionScore);
-    
-    if (!isVerified) {
-      console.log('User Dashboard: Verified is false, checking if completion < 50');
-      if (completionScore < 50) {
-        console.log('User Dashboard: Setting completion to 50% (was:', completionScore + ')');
-        completionScore = 50;
-      } else {
-        console.log('User Dashboard: Completion already >= 50%, keeping:', completionScore);
-      }
-    } else {
-      console.log('User Dashboard: Verified is true, using calculated score:', completionScore);
-    }
-    let profilePictureValue = null;
-    console.log('User Dashboard: Checking for profilePicture...');
-    console.log('User Dashboard: userData type:', typeof userData);
-    console.log('User Dashboard: userData keys:', userData ? Object.keys(userData) : 'null');
-    
-    if (userData && typeof userData === 'object' && userData !== null) {
-      if ('profilePicture' in userData) {
-        const picValue = userData.profilePicture;
-        console.log('User Dashboard: profilePicture field found, type:', typeof picValue);
-        
-        if (picValue && typeof picValue === 'string' && picValue.trim() !== '' && picValue !== 'null' && picValue !== 'undefined') {
-          profilePictureValue = picValue;
-          console.log('User Dashboard: Profile picture VALID, length:', picValue.length);
-        }
+      } catch (err) {
+        console.error('Error fetching instructor name:', err);
       }
     }
-    console.log('User Dashboard: Final profilePictureValue:', profilePictureValue ? 'Yes (' + (profilePictureValue.length || 0) + ' chars)' : 'No/null');
-    const userName = userData.name || '';
-    const responseData = {
-      email: userData.email || req.user.email || '',
-      name: userName,
-      fullName: userName,
-      status: 'active',
-      certificates,
-      certificateProgress,
-      announcements,
-      simulations: simulationSummaries,
-      lessons: lessons,
-      profileCompletion: completionScore,
-      verified: isVerified,
-      isVerified: isVerified,
-      gender: studentInfo.gender || '',
+    
+    // Build profile
+    const profile = {
+      uid: req.userId || '',
+      name: userData.name || 'Student',
+      email: userData.email || req.user?.email || '',
+      verified: !!(userData.verified === true || userData.verified === 'true'),
       studentNumber: studentInfo.studentNumber || '',
       batch: studentInfo.batch || '',
-      address: studentInfo.address || '',
-      contactNumber: studentInfo.contactNumber || '',
-      birthday: studentInfo.birthday || '',
-      school: studentInfo.school || '',
-      profilePicture: profilePictureValue !== undefined ? profilePictureValue : null
+      program: studentInfo.program || studentInfo.course || 'Caregiving NC II',
+      assignedInstructor: assignedInstructorName,
+      lastLogin: userData.lastLogin || userData.lastLoginDate || null
     };
     
-    console.log('User Dashboard: Response being sent');
-    console.log('User Dashboard: Lessons count:', lessons.length);
-    lessons.forEach((lesson, idx) => {
-      if (lesson.quizHistory && Array.isArray(lesson.quizHistory)) {
-        console.log(`Lesson ${lesson.slot || idx + 1} - quizHistory array length: ${lesson.quizHistory.length}`);
-        if (lesson.quizHistory.length > 0) {
-          console.log(`Lesson ${lesson.slot || idx + 1} - First history entry:`, JSON.stringify(lesson.quizHistory[0]));
-        }
-      } else {
-        console.log(`Lesson ${lesson.slot || idx + 1} - No quizHistory found`);
-      }
-    });
-    console.log('User Dashboard: Lessons data (full):', JSON.stringify(lessons, null, 2));
-    if (lessons.length > 0) {
-      console.log('User Dashboard: First lesson keys:', Object.keys(lessons[0]));
-      console.log('User Dashboard: First lesson data:', JSON.stringify(lessons[0], null, 2));
-    }
-    console.log('User Dashboard: Profile completion:', completionScore);
-    console.log('User Dashboard: Is verified:', isVerified);
-    console.log('User Dashboard: User name:', userName);
-    console.log('User Dashboard: User email:', userData.email || req.user.email);
+    // Build summaryStats
+    const summaryStats = {
+      lessonsCompleted,
+      totalLessons,
+      simulationsCompleted,
+      totalSimulations: totalLessons, // Same as totalLessons
+      quizzesTaken,
+      avgQuizScore: Math.round(avgQuizScore * 10) / 10, // Round to 1 decimal
+      certificatesEarned: 0, // Not calculated in minimal version
+      overallProgressPct
+    };
+    
     res.json({
       success: true,
-      data: responseData
+      profile,
+      summaryStats
     });
   } catch (error) {
-    console.error('Get user dashboard error:', error);
-    res.status(500).json({ error: 'Failed to fetch user dashboard data' });
+    console.error('User dashboard error:', error);
+    res.status(500).json({ error: 'Failed to load user dashboard data' });
   }
 });
+
 router.get('/profile', verifyStudentToken, async (req, res) => {
   try {
     const userRef = db.ref(`users/${req.userId}`);
