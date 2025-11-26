@@ -86,7 +86,7 @@ async function fetchDatabaseData() {
     console.log('👥 DETAILED USERS DATA');
     console.log('='.repeat(60));
     
-    const usersRef = db.ref('users');
+    const usersRef = db.ref('system/users');
     const usersSnapshot = await usersRef.once('value');
     const users = usersSnapshot.val() || {};
     if (Object.keys(users).length === 0) {

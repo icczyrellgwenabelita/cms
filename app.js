@@ -117,6 +117,10 @@ app.get('/student-login', (req, res) => {
   res.redirect('/caresim-login');
 });
 
+app.get('/create-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'create-password.html'));
+});
+
 app.use('/api', (req, res) => {
   console.log('404 API route:', req.method, req.originalUrl);
   res

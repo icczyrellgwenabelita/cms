@@ -40,9 +40,6 @@
         <section class="content-section">
             <div class="section-header">
                 <h1 class="section-title">User Management</h1>
-                <button class="btn-primary" onclick="openAddUserModal()">
-                    <i class="fas fa-plus"></i> Add New User
-                </button>
             </div>
 
             <!-- Role-Based Tabs -->
@@ -56,8 +53,19 @@
                 <button class="user-role-tab" onclick="switchRoleTab('admins')" id="tabAdmins">
                     <i class="fas fa-user-shield"></i> Admins
                 </button>
-                <button class="user-role-tab" onclick="switchRoleTab('public')" id="tabPublic">
-                    <i class="fas fa-users"></i> Public Users
+                <button class="user-role-tab" onclick="switchRoleTab('archived')" id="tabArchived">
+                    <i class="fas fa-archive"></i> Archived Users
+                </button>
+            </div>
+            <div class="tab-action-bar">
+                <button class="btn-primary tab-action-btn active" data-tab="students" onclick="openAddUserModal('student')">
+                    <i class="fas fa-plus"></i> Invite Student
+                </button>
+                <button class="btn-primary tab-action-btn" data-tab="instructors" onclick="openAddUserModal('instructor')">
+                    <i class="fas fa-plus"></i> Add Instructor
+                </button>
+                <button class="btn-primary tab-action-btn" data-tab="admins" onclick="openAddUserModal('admin')">
+                    <i class="fas fa-plus"></i> Add Admin
                 </button>
             </div>
 
@@ -70,9 +78,9 @@
                 <div class="filter-group">
                     <select id="filterStatus" class="filter-select">
                         <option value="">All Status</option>
-                        <option value="active"><i class="fas fa-circle" style="color: #10B981;"></i> Active</option>
-                        <option value="deactivated"><i class="fas fa-circle" style="color: #EF4444;"></i> Deactivated</option>
-                        <option value="pending"><i class="fas fa-circle" style="color: #F59E0B;"></i> Pending</option>
+                        <option value="pending">Pending</option>
+                        <option value="verified">Verified</option>
+                        <option value="expired">Expired</option>
                     </select>
                     <select id="sortBy" class="filter-select">
                         <option value="newest">Newest First</option>
@@ -149,22 +157,21 @@
                 </div>
             </div>
 
-            <!-- Public Users Tab Content -->
-            <div id="publicTab" class="role-tab-content">
+            <!-- Archived Users Tab Content -->
+            <div id="archivedTab" class="role-tab-content">
                 <div class="table-wrapper">
                     <table class="users-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Account Created</th>
-                                <th>Converted To Student?</th>
-                                <th>Status</th>
+                                <th>Student Number</th>
+                                <th>Batch</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="publicTableBody">
-                            <!-- Public users will be inserted here -->
+                        <tbody id="archivedTableBody">
+                            <!-- Archived users will be inserted here -->
                         </tbody>
                     </table>
                 </div>
@@ -176,7 +183,7 @@
     <div id="addUserModal" class="modal" style="display: none;">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h2>Add New User</h2>
+                <h2 id="addUserModalTitle">Add New User</h2>
                 <button class="modal-close" onclick="closeAddUserModal()">&times;</button>
             </div>
             <form id="addUserForm" onsubmit="saveNewUser(event); return false;">
@@ -190,7 +197,7 @@
                         <label for="addUserEmail">Email Address</label>
                         <input type="email" id="addUserEmail" required placeholder="Enter email address">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="addUserPasswordGroup">
                         <label for="addUserPassword">Password</label>
                         <div class="password-input-group">
                             <div class="password-input-wrapper">
@@ -202,16 +209,7 @@
                             <button type="button" class="btn-generate-password" onclick="generatePassword()">Auto-Generate</button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="addUserRole">Role</label>
-                        <select id="addUserRole" required onchange="toggleRoleFields()">
-                            <option value="">Select role</option>
-                            <option value="student">Student</option>
-                            <option value="instructor">Instructor</option>
-                            <option value="admin">Admin</option>
-                            <option value="public">Public</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="addUserRoleValue" value="student">
                 </div>
 
                 <!-- Student-Specific Fields -->
@@ -239,26 +237,9 @@
                     </div>
                 </div>
 
-                <!-- Instructor-Specific Fields -->
-                <div id="instructorFields" class="role-specific-fields" style="display: none;">
-                    <h3 class="form-section-title">Instructor Information</h3>
-                    <div class="form-group">
-                        <label for="addInstructorDepartment">Department/Position</label>
-                        <input type="text" id="addInstructorDepartment" placeholder="Enter department or position">
-                    </div>
-                    <div class="form-group">
-                        <label for="addInstructorIdNumber">ID Number</label>
-                        <input type="text" id="addInstructorIdNumber" placeholder="Enter ID number">
-                    </div>
-                    <div class="form-group">
-                        <label for="addInstructorPhone">Contact Number</label>
-                        <input type="tel" id="addInstructorPhone" placeholder="Enter contact number">
-                    </div>
-                </div>
-
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="closeAddUserModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Add User</button>
+                    <button type="submit" class="btn-primary" id="addUserSubmitButton">Add User</button>
                 </div>
             </form>
         </div>
@@ -411,6 +392,46 @@
             <div class="user-details-actions">
                 <button class="btn-primary" onclick="editUserFromPopup()">Edit User</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Convert Public User Modal -->
+    <div id="convertUserModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Convert to Student</h2>
+                <button class="modal-close" onclick="closeConvertModal()">&times;</button>
+            </div>
+            <form id="convertUserForm" onsubmit="submitConvertToStudent(event); return false;">
+                <input type="hidden" id="convertUserId">
+                <div class="form-section">
+                    <h3 class="form-section-title">Student Information</h3>
+                    <div class="form-group">
+                        <label for="convertStudentNumber">Student Number</label>
+                        <input type="text" id="convertStudentNumber" required placeholder="Enter student number">
+                    </div>
+                    <div class="form-group">
+                        <label for="convertBatch">Batch</label>
+                        <input type="text" id="convertBatch" required placeholder="Enter batch">
+                    </div>
+                    <div class="form-group">
+                        <label for="convertContact">Contact Number</label>
+                        <input type="tel" id="convertContact" placeholder="Enter contact number">
+                    </div>
+                    <div class="form-group">
+                        <label for="convertBirthday">Birthday</label>
+                        <input type="date" id="convertBirthday">
+                    </div>
+                    <div class="form-group">
+                        <label for="convertAddress">Address</label>
+                        <textarea id="convertAddress" rows="3" placeholder="Enter address"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeConvertModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Convert to Student</button>
+                </div>
+            </form>
         </div>
     </div>
 

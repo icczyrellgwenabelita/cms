@@ -42,7 +42,7 @@ function showSuccess(message) {
     showAlertModal(message, 'Success');
 }
 
-// Load lessons for tabs
+// Load lessons for tabs - Only Unity game lessons (1-6)
 async function loadLessonsForTabs() {
     try {
         const response = await fetch(`${API_BASE}/lessons`, {
@@ -65,12 +65,16 @@ async function loadLessonsForTabs() {
 
         const data = await response.json();
         if (data.success && data.lessons) {
-            allLessons = data.lessons || [];
+            // Filter to only Unity game lessons (slots 1-6)
+            allLessons = (data.lessons || []).filter(lesson => {
+                const slot = lesson.slot || 0;
+                return slot >= 1 && slot <= 6;
+            }).sort((a, b) => (a.slot || 0) - (b.slot || 0));
+            
             renderLessonTabs();
-            if (allLessons.length > 0) {
-                currentLesson = allLessons[0].slot || 1;
-                await loadQuizzes(currentLesson);
-            }
+            // Start with Lesson 1
+            currentLesson = 1;
+            await loadQuizzes(currentLesson);
         }
     } catch (error) {
         console.error('Load lessons error:', error);
@@ -78,14 +82,26 @@ async function loadLessonsForTabs() {
     }
 }
 
-// Render lesson tabs
+// Render lesson tabs - Only show Unity game lessons (1-6)
 function renderLessonTabs() {
     const tabsContainer = document.getElementById('lessonTabs');
     if (!tabsContainer) return;
 
-    tabsContainer.innerHTML = allLessons.map(lesson => {
+    // Only show lessons 1-6 (Unity game lessons)
+    const gameLessons = [];
+    for (let i = 1; i <= 6; i++) {
+        const lesson = allLessons.find(l => l.slot === i);
+        if (lesson) {
+            gameLessons.push(lesson);
+        } else {
+            // Create placeholder for missing lesson
+            gameLessons.push({ slot: i, lessonName: `Lesson ${i}`, lessonTitle: `Lesson ${i}` });
+        }
+    }
+
+    tabsContainer.innerHTML = gameLessons.map(lesson => {
         const slot = lesson.slot || 0;
-        const lessonName = lesson.lessonName || `Lesson ${slot}`;
+        const lessonName = lesson.lessonName || lesson.lessonTitle || `Lesson ${slot}`;
         const isActive = slot === currentLesson ? 'active' : '';
         return `
             <button class="lesson-tab ${isActive}" onclick="selectLesson(${slot})">
@@ -236,6 +252,13 @@ async function saveNewQuestion(event) {
     event.preventDefault();
     
     const lesson = parseInt(document.getElementById('newQuestionLesson').value);
+    
+    // Ensure lesson is valid (1-6 for Unity game)
+    if (lesson < 1 || lesson > 6) {
+        showError('Invalid lesson number. Unity game quizzes are only available for lessons 1-6.');
+        return;
+    }
+    
     const question = document.getElementById('newQuestion').value.trim();
     const answerA = document.getElementById('newAnswerA').value.trim();
     const answerB = document.getElementById('newAnswerB').value.trim();
@@ -249,9 +272,14 @@ async function saveNewQuestion(event) {
         return;
     }
 
-    // Find next available slot
+    // Find next available slot (max 10 questions per lesson)
     const quizzes = allQuizzes[lesson] || [];
     const nextSlot = quizzes.length > 0 ? Math.max(...quizzes.map(q => q.slot || 0)) + 1 : 1;
+    
+    if (nextSlot > 10) {
+        showError('Maximum 10 questions allowed per Unity game lesson.');
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE}/quizzes/${lesson}/${nextSlot}`, {

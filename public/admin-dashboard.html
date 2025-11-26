@@ -51,23 +51,23 @@
                     <div class="stat-content">
                         <h3 class="stat-value" id="totalUsers">0</h3>
                         <p class="stat-label">Total Users</p>
-                        <p class="stat-change positive" id="usersChange">+2 this week</p>
+                        <p class="stat-change positive" id="usersChange">0 this week</p>
                     </div>
                 </div>
                 <div class="stat-card stat-success">
                     <div class="stat-icon"><i class="fas fa-book"></i></div>
                     <div class="stat-content">
-                        <h3 class="stat-value" id="totalLessons">6</h3>
-                        <p class="stat-label">Total Lessons</p>
+                        <h3 class="stat-value" id="totalLessons">0</h3>
+                        <p class="stat-label">Total Lessons (LMS)</p>
                         <p class="stat-change">All active</p>
                     </div>
                 </div>
                 <div class="stat-card stat-info">
-                    <div class="stat-icon"><i class="fas fa-question-circle"></i></div>
+                    <div class="stat-icon"><i class="fas fa-tasks"></i></div>
                     <div class="stat-content">
-                        <h3 class="stat-value" id="totalQuizzes">60</h3>
-                        <p class="stat-label">Total Quizzes</p>
-                        <p class="stat-change">10 per lesson</p>
+                        <h3 class="stat-value" id="totalAssessments">0</h3>
+                        <p class="stat-label">Total Assessments (LMS)</p>
+                        <p class="stat-change">Across all lesson pages</p>
                     </div>
                 </div>
                 <div class="stat-card stat-warning">
@@ -75,23 +75,23 @@
                     <div class="stat-content">
                         <h3 class="stat-value" id="activeUsers">0</h3>
                         <p class="stat-label">Active Users</p>
-                        <p class="stat-change positive" id="activeChange">100% active</p>
+                        <p class="stat-change positive" id="activeSubtitle">0% active</p>
                     </div>
                 </div>
                 <div class="stat-card stat-secondary">
                     <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
                     <div class="stat-content">
                         <h3 class="stat-value" id="completionRate">0%</h3>
-                        <p class="stat-label">Avg. Completion</p>
-                        <p class="stat-change" id="completionChange">Across all lessons</p>
+                        <p class="stat-label">Avg. Completion (LMS)</p>
+                        <p class="stat-change" id="completionChange">Across all LMS lessons</p>
                     </div>
                 </div>
                 <div class="stat-card stat-danger">
                     <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
                     <div class="stat-content">
                         <h3 class="stat-value" id="avgScore">0</h3>
-                        <p class="stat-label">Avg. Quiz Score</p>
-                        <p class="stat-change" id="scoreChange">Out of 10</p>
+                        <p class="stat-label">Avg. Quiz Score (Game)</p>
+                        <p class="stat-change" id="scoreChange">Unity game quizzes (out of 10)</p>
                     </div>
                 </div>
             </div>
@@ -100,7 +100,7 @@
         <!-- Dashboard Grid: Recent Activity & Quick Actions -->
         <div class="dashboard-grid">
             <!-- Recent Activity Section -->
-            <section class="dashboard-card">
+            <section class="dashboard-card activity-card">
                 <div class="card-header">
                     <h2 class="card-title">Recent Activity</h2>
                     <button class="btn-link" onclick="refreshActivity()">Refresh</button>
@@ -111,31 +111,31 @@
             </section>
 
             <!-- Quick Actions Section -->
-            <section class="dashboard-card">
+            <section class="dashboard-card quick-actions-card">
                 <div class="card-header">
                     <h2 class="card-title">Quick Actions</h2>
                 </div>
                 <div class="quick-actions-grid">
-                    <a href="/admin-lessons" class="quick-action-card">
-                        <div class="quick-action-icon"><i class="fas fa-plus-circle"></i></div>
+                    <a href="/admin-lesson-editor?action=create" class="quick-action-card">
+                        <div class="quick-action-icon"><i class="fas fa-layer-group"></i></div>
                         <h3>Create Lesson</h3>
-                        <p>Add a new lesson</p>
+                        <p>Add a new LMS lesson</p>
                     </a>
-                    <a href="/admin-quizzes" class="quick-action-card">
-                        <div class="quick-action-icon"><i class="fas fa-question-circle"></i></div>
-                        <h3>Add Question</h3>
-                        <p>Create new quiz</p>
-                    </a>
+                    <button type="button" class="quick-action-card" onclick="goToAssessments()">
+                        <div class="quick-action-icon"><i class="fas fa-file-signature"></i></div>
+                        <h3>Manage Assessments</h3>
+                        <p>LMS pages & assessments</p>
+                    </button>
                     <a href="/admin-users" class="quick-action-card">
                         <div class="quick-action-icon"><i class="fas fa-user-plus"></i></div>
                         <h3>Add User</h3>
                         <p>Register new user</p>
                     </a>
-                    <a href="/admin-users" class="quick-action-card">
-                        <div class="quick-action-icon"><i class="fas fa-clipboard-list"></i></div>
-                        <h3>View Reports</h3>
-                        <p>Analytics & insights</p>
-                    </a>
+                    <button type="button" class="quick-action-card" data-admin-only="true" onclick="scrollToBackups()">
+                        <div class="quick-action-icon"><i class="fas fa-database"></i></div>
+                        <h3>Backup & Restore</h3>
+                        <p>Manage system snapshots</p>
+                    </button>
                 </div>
             </section>
         </div>
@@ -148,7 +148,7 @@
                     <h2 class="card-title">Recent Users</h2>
                     <a href="/admin-users" class="btn-link">View All</a>
                 </div>
-                <div class="recent-users-table">
+                <div class="recent-users-table scrollable">
                     <table class="compact-table">
                         <thead>
                             <tr>
@@ -167,9 +167,12 @@
 
             <!-- System Status Section -->
             <section class="dashboard-card">
-                <div class="card-header">
+                <div class="card-header system-status-header">
                     <h2 class="card-title">System Status</h2>
-                    <span class="status-indicator online" id="systemStatus">Online</span>
+                    <div class="system-status-actions">
+                        <span class="status-indicator online" id="systemStatus">Online</span>
+                        <button class="btn-secondary" id="backupNowBtn" onclick="triggerBackup()">Backup Now</button>
+                    </div>
                 </div>
                 <div class="system-status-list">
                     <div class="status-item">
@@ -177,41 +180,64 @@
                             <span class="status-label">Database</span>
                             <span class="status-value" id="dbStatus">Connected</span>
                         </div>
-                        <div class="status-badge status-online"></div>
+                        <div class="status-badge status-online" id="dbStatusBadge"></div>
                     </div>
                     <div class="status-item">
                         <div class="status-info">
                             <span class="status-label">API Server</span>
                             <span class="status-value" id="apiStatus">Running</span>
                         </div>
-                        <div class="status-badge status-online"></div>
+                        <div class="status-badge status-online" id="apiStatusBadge"></div>
                     </div>
                     <div class="status-item">
                         <div class="status-info">
                             <span class="status-label">Storage</span>
                             <span class="status-value" id="storageStatus">Available</span>
                         </div>
-                        <div class="status-badge status-online"></div>
+                        <div class="status-badge status-online" id="storageStatusBadge"></div>
                     </div>
                     <div class="status-item">
                         <div class="status-info">
                             <span class="status-label">Last Backup</span>
-                            <span class="status-value" id="backupStatus">Today 12:00 AM</span>
+                            <span class="status-value" id="backupStatus">--</span>
                         </div>
-                        <div class="status-badge status-online"></div>
+                        <div class="status-badge status-online" id="backupStatusBadge"></div>
                     </div>
                 </div>
             </section>
         </div>
 
+        <!-- Backups Section -->
+        <section class="dashboard-card" id="backupsCard">
+            <div class="card-header">
+                <h2 class="card-title">Backups</h2>
+                <button class="btn-link" onclick="refreshBackups()">Refresh</button>
+            </div>
+            <div class="backup-table-wrapper">
+                <table class="compact-table backup-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Created</th>
+                            <th>Size</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="backupTableBody">
+                        <tr><td colspan="4" style="text-align:center; padding:20px; color:#64748B;">No backups yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- Performance Metrics Section -->
-        <section class="dashboard-card full-width">
+        <section class="dashboard-card full-width" id="metricsCard">
             <div class="card-header">
                 <h2 class="card-title">Performance Metrics</h2>
                 <div class="time-filter">
-                    <button class="filter-btn active" onclick="setTimeFilter('today')">Today</button>
-                    <button class="filter-btn" onclick="setTimeFilter('week')">This Week</button>
-                    <button class="filter-btn" onclick="setTimeFilter('month')">This Month</button>
+                    <button class="filter-btn active" onclick="setTimeFilter('today', event)">Today</button>
+                    <button class="filter-btn" onclick="setTimeFilter('week', event)">This Week</button>
+                    <button class="filter-btn" onclick="setTimeFilter('month', event)">This Month</button>
                 </div>
             </div>
             <div class="metrics-grid">
@@ -261,6 +287,44 @@
                 <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
                 <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Modal -->
+    <div id="restoreModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Restore Backup</h2>
+                <button class="history-close" onclick="closeRestoreModal()">&times;</button>
+            </div>
+            <form id="restoreForm" onsubmit="confirmRestore(event)">
+                <p>Restoring will overwrite current data with the selected backup. Type <strong>RESTORE</strong> to confirm.</p>
+                <input type="text" id="restoreConfirmInput" placeholder="Type RESTORE" required>
+                <input type="hidden" id="restoreTargetFile">
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeRestoreModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Confirm Restore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Modal -->
+    <div id="restoreModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Restore Backup</h2>
+                <button class="history-close" onclick="closeRestoreModal()">&times;</button>
+            </div>
+            <form id="restoreForm" onsubmit="confirmRestore(event)">
+                <p>Restoring will overwrite current data with the selected backup. Type <strong>RESTORE</strong> to confirm.</p>
+                <input type="text" id="restoreConfirmInput" placeholder="Type RESTORE" required>
+                <input type="hidden" id="restoreTargetFile">
+                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px;">
+                    <button type="button" class="btn-secondary" onclick="closeRestoreModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Confirm Restore</button>
+                </div>
+            </form>
         </div>
     </div>
 

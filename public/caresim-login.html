@@ -13,12 +13,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body class="admin-portal">
-    <div class="login-container">
+    <div class="login-page login-student" id="loginPage">
+        <div class="login-container">
         <div class="login-card">
             <div class="logo-container">
                 <img src="caresimm.png" alt="CareSim" class="login-logo">
             </div>
-            <h2><span class="admin-text">CareSim</span> <span class="portal-text">LMS</span></h2>
+            <h2><span class="portal-text">Learning Management System</span></h2>
 
             <div class="login-toggle" role="tablist" aria-label="Select login type">
                 <button class="toggle-button student active" data-target="studentForm" role="tab" aria-selected="true">Student Login</button>
@@ -48,7 +49,7 @@
                 </form>
 
                 <form id="instructorForm" class="auth-form" aria-label="Instructor Login Form">
-                    <p class="form-subheading">Instructor Portal</p>
+                    <p class="form-subheading instructor-heading">Instructor Portal</p>
                     <div class="form-group">
                         <label for="instructorEmail">Email</label>
                         <input type="email" id="instructorEmail" required>
@@ -67,6 +68,7 @@
                     <div class="error" id="instructorError"></div>
                     <button type="submit" class="btn btn-primary btn-instructor full-width"><span>Login as Instructor</span></button>
                 </form>
+            </div>
             </div>
         </div>
     </div>
@@ -124,17 +126,24 @@
         }
 
         body.admin-portal {
-            background: linear-gradient(-45deg, #FFF8F0, #FAF0E6, #F5E6D3, #E8D5B7, #FFF8F0);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            background-attachment: fixed;
-            position: relative;
-            overflow: hidden;
+            min-height: 100vh;
         }
 
-        body.admin-portal::before {
+        .login-page {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.8s ease;
+        }
+
+        .login-page::before {
             content: '';
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
@@ -146,6 +155,14 @@
             animation: float 20s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
+        }
+
+        .login-page.login-instructor {
+            background: radial-gradient(circle at center, #f7ebdc 0%, #f2ddc0 40%, #f0d3aa 100%);
+        }
+
+        .login-page.login-student {
+            background: radial-gradient(circle at center, #edf2e3 0%, #dfe7d0 40%, #ccd9b9 100%);
         }
 
         .login-container {
@@ -328,11 +345,11 @@
         }
 
         .btn-student:hover {
-            background: linear-gradient(135deg, #4A5A28 0%, #314017 100%);
+            background: linear-gradient(135deg, #C19A6B 0%, #A67A4A 100%);
             transform: translateY(-3px);
             box-shadow:
-                0 8px 25px rgba(85, 107, 47, 0.4),
-                0 0 0 4px rgba(85, 107, 47, 0.1);
+                0 8px 25px rgba(193, 154, 107, 0.45),
+                0 0 0 4px rgba(193, 154, 107, 0.15);
         }
 
         .btn-instructor {
@@ -343,11 +360,11 @@
         }
 
         .btn-instructor:hover {
-            background: linear-gradient(135deg, #B07A49 0%, #8F6236 100%);
+            background: linear-gradient(135deg, #556B2F 0%, #3F4F22 100%);
             transform: translateY(-3px);
             box-shadow:
-                0 8px 25px rgba(160, 120, 80, 0.4),
-                0 0 0 4px rgba(160, 120, 80, 0.1);
+                0 8px 25px rgba(85, 107, 47, 0.4),
+                0 0 0 4px rgba(85, 107, 47, 0.1);
         }
 
         .login-helper-text {
@@ -396,6 +413,10 @@
             border-color: rgba(193, 154, 107, 0.6);
         }
 
+        .toggle-button.instructor {
+            color: #A67A4A;
+        }
+
         .toggle-button:not(.active) {
             border-color: rgba(193, 154, 107, 0.3);
         }
@@ -421,11 +442,18 @@
             text-align: center;
             color: #556B2F;
         }
+
+        .instructor-heading {
+            color: #A67A4A;
+        }
     </style>
 
     <script>
         const toggleButtons = document.querySelectorAll('.toggle-button');
         const forms = document.querySelectorAll('.auth-form');
+
+        const loginPage = document.getElementById('loginPage');
+        let activeRole = 'student';
 
         toggleButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -439,6 +467,9 @@
                 forms.forEach(form => {
                     form.classList.toggle('active', form.id === targetId);
                 });
+
+                activeRole = targetId === 'studentForm' ? 'student' : 'instructor';
+                loginPage.className = `login-page ${activeRole === 'student' ? 'login-student' : 'login-instructor'}`;
             });
         });
 

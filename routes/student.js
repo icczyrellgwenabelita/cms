@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyStudentToken } = require('../middleware/auth');
 const { db } = require('../config/firebase');
+const { logActivity } = require('../utils/activityLogger');
 async function getUserData(userId) {
   const studentRef = db.ref(`students/${userId}`);
   const studentSnapshot = await studentRef.once('value');
@@ -498,4 +499,170 @@ router.put('/profile', verifyStudentToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });
+// ============================================
+// LMS Lesson Pages API (for students)
+// ============================================
+
+// Get all pages for a lesson
+router.get('/lessons/:slot/pages', verifyStudentToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    if (slot < 1) {
+      return res.status(400).json({ error: 'Invalid slot number (must be >= 1)' });
+    }
+    
+    const pagesRef = db.ref(`lmsLessons/${slot}/pages`);
+    const snapshot = await pagesRef.once('value');
+    const pages = snapshot.val() || {};
+    
+    // Get student progress for this lesson
+    const { studentData, isUser } = await getUserData(req.userId);
+    const progressRef = isUser 
+      ? db.ref(`users/${req.userId}/lmsProgress/lesson${slot}`)
+      : db.ref(`students/${req.userId}/lmsProgress/lesson${slot}`);
+    const progressSnapshot = await progressRef.once('value');
+    const progress = progressSnapshot.val() || {};
+    const completedPages = progress.completedPages || {};
+    
+    const pagesArray = Object.entries(pages)
+      .map(([pageId, page]) => ({
+        id: pageId,
+        title: page.title || '',
+        content: page.content || '',
+        order: page.order || 0,
+        isCompleted: completedPages[pageId] === true,
+        isUnlocked: page.order === 0 || (page.order > 0 && completedPages[Object.keys(pages).find(id => pages[id].order === page.order - 1)] === true)
+      }))
+      .sort((a, b) => a.order - b.order);
+    
+    res.json({ success: true, pages: pagesArray });
+  } catch (error) {
+    console.error('Get lesson pages error:', error);
+    res.status(500).json({ error: 'Failed to fetch lesson pages' });
+  }
+});
+
+// Get assessments for a page
+router.get('/lessons/:slot/pages/:pageId/assessments', verifyStudentToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    const { pageId } = req.params;
+    
+    if (slot < 1) {
+      return res.status(400).json({ error: 'Invalid slot number (must be >= 1)' });
+    }
+    
+    const assessmentsRef = db.ref(`lmsLessons/${slot}/pages/${pageId}/assessments`);
+    const snapshot = await assessmentsRef.once('value');
+    const assessments = snapshot.val() || {};
+    
+    // Return assessments without correct answers (for student view)
+    const assessmentsArray = Object.entries(assessments)
+      .map(([assessmentId, assessment]) => ({
+        id: assessmentId,
+        question: assessment.question || '',
+        answerA: assessment.answerA || '',
+        answerB: assessment.answerB || '',
+        answerC: assessment.answerC || '',
+        answerD: assessment.answerD || ''
+        // Note: correctAnswer and explanation are not sent to students
+      }));
+    
+    res.json({ success: true, assessments: assessmentsArray });
+  } catch (error) {
+    console.error('Get page assessments error:', error);
+    res.status(500).json({ error: 'Failed to fetch page assessments' });
+  }
+});
+
+// Submit assessment answers
+router.post('/lessons/:slot/pages/:pageId/assessments/submit', verifyStudentToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    const { pageId } = req.params;
+    const { answers } = req.body; // Object mapping assessmentId to selected answer (A, B, C, or D)
+    
+    if (slot < 1) {
+      return res.status(400).json({ error: 'Invalid slot number (must be >= 1)' });
+    }
+    
+    if (!answers || typeof answers !== 'object') {
+      return res.status(400).json({ error: 'Answers object is required' });
+    }
+    
+    // Get correct answers from database
+    const assessmentsRef = db.ref(`lmsLessons/${slot}/pages/${pageId}/assessments`);
+    const snapshot = await assessmentsRef.once('value');
+    const assessments = snapshot.val() || {};
+    
+    let correctCount = 0;
+    let totalQuestions = 0;
+    const results = {};
+    
+    Object.entries(assessments).forEach(([assessmentId, assessment]) => {
+      totalQuestions++;
+      const studentAnswer = answers[assessmentId];
+      const correctAnswer = assessment.correctAnswer || '';
+      const isCorrect = studentAnswer === correctAnswer;
+      
+      if (isCorrect) {
+        correctCount++;
+      }
+      
+      results[assessmentId] = {
+        studentAnswer,
+        correctAnswer,
+        isCorrect,
+        explanation: assessment.explanation || ''
+      };
+    });
+    
+    const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    const passed = score >= 70; // 70% passing threshold
+    
+    // Update student progress if passed
+    if (passed) {
+      const { studentData, isUser } = await getUserData(req.userId);
+      const progressRef = isUser 
+        ? db.ref(`users/${req.userId}/lmsProgress/lesson${slot}/completedPages/${pageId}`)
+        : db.ref(`students/${req.userId}/lmsProgress/lesson${slot}/completedPages/${pageId}`);
+      
+      await progressRef.set(true);
+      
+      // Update last assessment timestamp
+      const timestampRef = isUser
+        ? db.ref(`users/${req.userId}/lmsProgress/lesson${slot}/lastAssessment`)
+        : db.ref(`students/${req.userId}/lmsProgress/lesson${slot}/lastAssessment`);
+      await timestampRef.set(new Date().toISOString());
+      
+      const actorName = studentData?.fullName || studentData?.name || studentData?.email || req.user.email || 'Student';
+      await logActivity({
+        type: 'lesson',
+        action: 'assessment_completed',
+        description: `Completed assessment for page ${pageId}`,
+        actorType: 'student',
+        actorId: req.userId,
+        actorName,
+        relatedLesson: slot,
+        metadata: {
+          pageId,
+          score: Math.round(score)
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      score: Math.round(score),
+      correctCount,
+      totalQuestions,
+      passed,
+      results
+    });
+  } catch (error) {
+    console.error('Submit assessment error:', error);
+    res.status(500).json({ error: 'Failed to submit assessment' });
+  }
+});
+
 module.exports = router;

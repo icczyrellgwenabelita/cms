@@ -3,6 +3,85 @@ const router = express.Router();
 const { auth, db } = require('../config/firebase');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { logActivity } = require('../utils/activityLogger');
+
+const USERS_COLLECTION = 'system/users';
+
+async function recordUserPresence(uid, baseData = {}, options = {}) {
+  try {
+    const primaryRef = db.ref(`${USERS_COLLECTION}/${uid}`);
+    const legacyRef = db.ref(`users/${uid}`);
+    let existing = options.existingData;
+    if (!existing) {
+      const snapshot = await primaryRef.once('value').catch(() => null);
+      existing = (snapshot && snapshot.val()) || {};
+    }
+    const now = options.timestamp || new Date().toISOString();
+    const loginCount = (existing.loginCount || baseData.loginCount || 0) + 1;
+    if (!existing || Object.keys(existing).length === 0) {
+      const newRecord = {
+        email: baseData.email || '',
+        name: baseData.fullName || baseData.name || '',
+        role: baseData.role || 'student',
+        createdAt: baseData.createdAt || now,
+        lastActiveAt: now,
+        loginCount
+      };
+      await primaryRef.set(newRecord);
+      await legacyRef.set({ ...(existing || {}), ...newRecord });
+      existing = newRecord;
+    } else {
+      await primaryRef.update({
+        lastActiveAt: now,
+        loginCount
+      });
+      await legacyRef.update({
+        lastActiveAt: now,
+        loginCount
+      }).catch(() => {});
+    }
+    await logActivity({
+      type: 'auth',
+      action: options.isNew ? 'user_registered' : 'user_login',
+      description: options.isNew ? 'New user registered' : 'User logged in',
+      actorType: existing.role || baseData.role || 'student',
+      actorId: uid,
+      actorName: existing.name || baseData.fullName || baseData.name || baseData.email || options.email || 'User',
+      timestamp: now
+    });
+    return { lastActiveAt: now, loginCount };
+  } catch (error) {
+    console.error('Failed to record user presence:', error.message);
+    return { lastActiveAt: null, loginCount: null };
+  }
+}
+
+async function recordAdminPresence(adminId, baseData = {}, options = {}) {
+  try {
+    const adminRef = db.ref(`admins/${adminId}`);
+    const snapshot = await adminRef.once('value');
+    const existing = snapshot.val() || {};
+    const now = options.timestamp || new Date().toISOString();
+    const loginCount = (existing.loginCount || 0) + 1;
+    await adminRef.update({
+      lastActiveAt: now,
+      loginCount
+    });
+    await logActivity({
+      type: 'auth',
+      action: options.isNew ? 'admin_registered' : 'admin_login',
+      description: options.description || (options.isNew ? 'New admin registered' : 'Admin logged in'),
+      actorType: existing.role || baseData.role || 'admin',
+      actorId: adminId,
+      actorName: existing.name || baseData.name || baseData.email || 'Admin',
+      timestamp: now
+    });
+    return { lastActiveAt: now, loginCount };
+  } catch (error) {
+    console.error('Failed to record admin presence:', error.message);
+    return { lastActiveAt: null, loginCount: null };
+  }
+}
 router.post('/student/login', async (req, res) => {
   try {
     console.log('Student login request received');
@@ -19,9 +98,10 @@ router.post('/student/login', async (req, res) => {
     const studentRef = db.ref(`students/${decodedToken.uid}`);
     const studentSnapshot = await studentRef.once('value');
     let studentData = studentSnapshot.val();
+    let createdStudentRecord = false;
     if (!studentData) {
       console.log('Student login: Not found in students DB, checking users DB...');
-      const userRef = db.ref(`users/${decodedToken.uid}`);
+      const userRef = db.ref(`${USERS_COLLECTION}/${decodedToken.uid}`);
       const userSnapshot = await userRef.once('value');
       const userData = userSnapshot.val();
       
@@ -53,20 +133,43 @@ router.post('/student/login', async (req, res) => {
       console.log('Student login: Creating new student entry...');
       studentData = {
         email: decodedToken.email,
+        fullName: '',
         status: 'active',
         certificates: [],
         createdAt: new Date().toISOString()
       };
       await studentRef.set(studentData);
+      createdStudentRecord = true;
       console.log('Student login: Created new student entry');
     }
+
+    const presence = await recordUserPresence(
+      decodedToken.uid,
+      {
+        fullName: studentData.fullName || '',
+        name: studentData.fullName || '',
+        email: decodedToken.email,
+        role: 'student',
+      },
+      {
+        isNew: createdStudentRecord,
+        email: decodedToken.email,
+        existingData: studentData._userData
+      }
+    );
+    if (presence.lastActiveAt) {
+      studentData.lastActiveAt = presence.lastActiveAt;
+    }
+
+    const { _userData, _isUser, ...safeStudentData } = studentData;
+
     console.log('Student login: Sending success response');
     res.json({
       success: true,
       user: {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        ...studentData
+        ...safeStudentData
       },
       token: idToken
     });
@@ -89,10 +192,12 @@ router.post('/user/login', async (req, res) => {
     }
     const decodedToken = await auth.verifyIdToken(idToken);
     
-    const userRef = db.ref(`users/${decodedToken.uid}`);
+    const userRef = db.ref(`${USERS_COLLECTION}/${decodedToken.uid}`);
     const snapshot = await userRef.once('value');
     let userData = snapshot.val();
+    let isNewUser = false;
     if (!userData) {
+      isNewUser = true;
       userData = {
         email: decodedToken.email,
         name: '',
@@ -118,6 +223,25 @@ router.post('/user/login', async (req, res) => {
         userData.email = decodedToken.email;
         await userRef.update({ email: decodedToken.email });
       }
+    }
+    const presence = await recordUserPresence(
+      decodedToken.uid,
+      {
+        name: userData.name || '',
+        email: decodedToken.email,
+        role: userData.role || 'student'
+      },
+      {
+        isNew: isNewUser,
+        email: decodedToken.email,
+        existingData: userData
+      }
+    );
+    if (presence.lastActiveAt) {
+      userData.lastActiveAt = presence.lastActiveAt;
+    }
+    if (presence.loginCount !== null) {
+      userData.loginCount = presence.loginCount;
     }
     res.json({
       success: true,
@@ -199,11 +323,13 @@ router.post('/admin/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+    await recordAdminPresence(adminId, admin, { description: 'Admin logged in' });
     res.json({
       success: true,
       admin: {
         adminId,
-        email: admin.email
+        email: admin.email,
+        role: admin.role || 'admin'
       },
       token
     });

@@ -9,6 +9,14 @@ let allUsers = [];
 let allInstructors = [];
 let currentRoleTab = 'students';
 let currentEditUserId = null;
+let currentModalRole = 'student';
+
+const ROLE_TAB_MAP = {
+    students: 'student',
+    instructors: 'instructor',
+    admins: 'admin',
+    archived: 'student'
+};
 
 // API Base URL
 const API_BASE = '/api/admin';
@@ -82,7 +90,7 @@ async function loadInstructors() {
 async function loadUsers() {
     try {
         // Show loading state
-        const tbodyElements = ['studentsTableBody', 'instructorsTableBody', 'adminsTableBody', 'publicTableBody'];
+        const tbodyElements = ['studentsTableBody', 'instructorsTableBody', 'adminsTableBody', 'archivedTableBody'];
         tbodyElements.forEach(id => {
             const tbody = document.getElementById(id);
             if (tbody) {
@@ -121,7 +129,7 @@ async function loadUsers() {
         showError(error.message || 'Failed to load users');
         
         // Show empty state
-        const tbodyElements = ['studentsTableBody', 'instructorsTableBody', 'adminsTableBody', 'publicTableBody'];
+        const tbodyElements = ['studentsTableBody', 'instructorsTableBody', 'adminsTableBody', 'archivedTableBody'];
         tbodyElements.forEach(id => {
             const tbody = document.getElementById(id);
             if (tbody) {
@@ -139,17 +147,17 @@ function renderUsers() {
     
     let filtered = allUsers.filter(user => {
         const matchesRole = 
-            (currentRoleTab === 'students' && user.role === 'student') ||
+            (currentRoleTab === 'students' && user.role === 'student' && user.archived !== true) ||
             (currentRoleTab === 'instructors' && user.role === 'instructor') ||
             (currentRoleTab === 'admins' && user.role === 'admin') ||
-            (currentRoleTab === 'public' && (!user.role || user.role === 'public'));
+            (currentRoleTab === 'archived' && user.role === 'student' && user.archived === true);
         
         const matchesName = !searchName || (user.name || '').toLowerCase().includes(searchName);
         const matchesEmail = !searchEmail || (user.email || '').toLowerCase().includes(searchEmail);
         const matchesStatus = !filterStatus || 
-            (filterStatus === 'active' && user.active !== false) ||
-            (filterStatus === 'deactivated' && user.active === false) ||
-            (filterStatus === 'pending' && !user.verified);
+            (filterStatus === 'pending' && user.inviteStatus === 'pending' && !user.verified) ||
+            (filterStatus === 'expired' && user.inviteStatus === 'expired') ||
+            (filterStatus === 'verified' && user.inviteStatus === 'completed' && user.verified);
         
         return matchesRole && matchesName && matchesEmail && matchesStatus;
     });
@@ -171,8 +179,8 @@ function renderUsers() {
         renderInstructorsTable(filtered);
     } else if (currentRoleTab === 'admins') {
         renderAdminsTable(filtered);
-    } else if (currentRoleTab === 'public') {
-        renderPublicTable(filtered);
+    } else if (currentRoleTab === 'archived') {
+        renderArchivedTable(filtered);
     }
 }
 
@@ -196,6 +204,19 @@ function renderStudentsTable(students) {
         const assignedInstructor = allInstructors.find(inst => inst.id === assignedInstructorId);
         const instructorName = assignedInstructor ? assignedInstructor.name : (assignedInstructorId ? 'Unknown' : 'Not Assigned');
         
+        let statusLabel = 'Verified';
+        let statusClass = 'active';
+        if (user.inviteStatus === 'pending' && !user.verified) {
+            statusLabel = 'Pending';
+            statusClass = 'pending';
+        } else if (user.inviteStatus === 'expired') {
+            statusLabel = 'Expired';
+            statusClass = 'deactivated';
+        } else if (user.inviteStatus === 'completed' && user.verified) {
+            statusLabel = 'Verified';
+            statusClass = 'active';
+        }
+
         return `
             <tr data-uid="${user.uid}">
                 <td><a href="#" onclick="showUserDetails('${user.uid}'); return false;" class="user-name-link">${user.name || 'N/A'}</a></td>
@@ -211,13 +232,9 @@ function renderStudentsTable(students) {
                     </button>`}
                 </td>
                 <td>
-                    <label class="status-toggle">
-                        <input type="checkbox" ${user.active !== false ? 'checked' : ''} 
-                               onchange="toggleUserActive('${user.uid}', this.checked)">
-                        <span class="status-badge status-${user.active !== false ? 'active' : 'deactivated'}">
-                            ${user.active !== false ? 'Active' : 'Deactivated'}
-                        </span>
-                    </label>
+                    <span class="status-badge status-${statusClass}">
+                        ${statusLabel}
+                    </span>
                 </td>
                 <td>${user.lastLogin || 'Never'}</td>
                 <td>
@@ -233,9 +250,13 @@ function renderStudentsTable(students) {
                         <button class="btn-action btn-edit-small" onclick="editUser('${user.uid}')" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-action btn-disable-small" onclick="toggleUserActive('${user.uid}', ${user.active !== false ? 'false' : 'true'})" 
-                                title="${user.active !== false ? 'Disable' : 'Enable'}">
-                            <i class="fas fa-${user.active !== false ? 'ban' : 'check-circle'}"></i>
+                        ${(user.inviteStatus === 'pending' || user.inviteStatus === 'expired') && !user.verified ? `
+                        <button class="btn-action btn-edit-small" onclick="resendInvite('${user.uid}')" title="Resend Invite">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>` : ''}
+                        <button class="btn-action btn-disable-small" onclick="archiveStudent('${user.uid}')" 
+                                title="Archive Student">
+                            <i class="fas fa-archive"></i>
                         </button>
                     </div>
                 </td>
@@ -327,43 +348,33 @@ function renderAdminsTable(admins) {
     `).join('');
 }
 
-function renderPublicTable(publicUsers) {
-    const tbody = document.getElementById('publicTableBody');
+function renderArchivedTable(users) {
+    const tbody = document.getElementById('archivedTableBody');
     if (!tbody) return;
 
-    if (publicUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #64748B;">No public users found</td></tr>';
+    const archivedStudents = users.filter(user => user.role === 'student' && user.archived === true);
+
+    if (archivedStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748B;">No archived users found</td></tr>';
         return;
     }
 
-    tbody.innerHTML = publicUsers.map(user => `
-        <tr data-uid="${user.uid}">
-            <td><a href="#" onclick="showUserDetails('${user.uid}'); return false;" class="user-name-link">${user.name || 'N/A'}</a></td>
-            <td>${user.email || 'N/A'}</td>
-            <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
-            <td>${user.role === 'student' ? '<i class="fas fa-check-circle" style="color: #10B981;"></i> Yes' : '<i class="fas fa-times-circle" style="color: #EF4444;"></i> No'}</td>
-            <td>
-                <label class="status-toggle">
-                    <input type="checkbox" ${user.active !== false ? 'checked' : ''} 
-                           onchange="toggleUserActive('${user.uid}', this.checked)">
-                    <span class="status-badge status-${user.active !== false ? 'active' : 'deactivated'}">
-                        ${user.active !== false ? 'Active' : 'Deactivated'}
-                    </span>
-                </label>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn-action btn-edit-small" onclick="editUser('${user.uid}')" title="Edit">
-                        <i class="fas fa-edit"></i>
+    tbody.innerHTML = archivedStudents.map(user => {
+        const studentInfo = user.studentInfo || {};
+        return `
+            <tr data-uid="${user.uid}">
+                <td>${user.name || 'N/A'}</td>
+                <td>${user.email || 'N/A'}</td>
+                <td>${studentInfo.studentNumber || 'N/A'}</td>
+                <td>${studentInfo.batch || 'N/A'}</td>
+                <td>
+                    <button class="btn-action btn-edit-small" onclick="restoreStudent('${user.uid}')" title="Restore Student">
+                        <i class="fas fa-undo"></i>
                     </button>
-                    <button class="btn-action btn-disable-small" onclick="toggleUserActive('${user.uid}', ${user.active !== false ? 'false' : 'true'})" 
-                            title="${user.active !== false ? 'Disable' : 'Enable'}">
-                        <i class="fas fa-${user.active !== false ? 'ban' : 'check-circle'}"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // Role Tab Management
@@ -387,89 +398,20 @@ function switchRoleTab(role) {
         contentElement.classList.add('active');
     }
     
+    updateTabActionButtons();
     renderUsers();
 }
 
-// Toggle user active status
-async function toggleUserActive(uid, newStatus) {
-    try {
-        const response = await fetch(`${API_BASE}/users/${uid}/status`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${adminToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ active: newStatus })
-        });
-
-        if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem('adminToken');
-            window.location.href = '/admin-login';
-            return;
+function updateTabActionButtons() {
+    document.querySelectorAll('.tab-action-btn').forEach(button => {
+        if (button.dataset.tab === currentRoleTab) {
+            button.classList.add('active');
+            button.style.display = 'inline-flex';
+        } else {
+            button.classList.remove('active');
+            button.style.display = 'none';
         }
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to update user status');
-        }
-
-        const data = await response.json();
-        if (data.success) {
-            showSuccess(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
-            await loadUsers();
-        }
-    } catch (error) {
-        console.error('Toggle user active error:', error);
-        showError(error.message || 'Failed to update user status');
-    }
-}
-
-// Create instructor
-async function createInstructor(event) {
-    event.preventDefault();
-    
-    const name = document.getElementById('addUserName').value.trim();
-    const email = document.getElementById('addUserEmail').value.trim();
-    const password = document.getElementById('addUserPassword').value;
-    const department = document.getElementById('addInstructorDepartment')?.value.trim() || '';
-    const idNumber = document.getElementById('addInstructorIdNumber')?.value.trim() || '';
-
-    if (!name || !email || !password) {
-        showError('Name, email, and password are required');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/users/create-instructor`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${adminToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, email, password, department, idNumber })
-        });
-
-        if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem('adminToken');
-            window.location.href = '/admin-login';
-            return;
-        }
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to create instructor');
-        }
-
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Instructor created successfully');
-            closeAddUserModal();
-            await loadUsers();
-        }
-    } catch (error) {
-        console.error('Create instructor error:', error);
-        showError(error.message || 'Failed to create instructor');
-    }
+    });
 }
 
 // Edit user
@@ -488,7 +430,6 @@ async function editUser(uid) {
     document.getElementById('editUserName').value = user.name || '';
     document.getElementById('editUserEmail').value = user.email || '';
     document.getElementById('editUserRole').value = user.role || 'public';
-    document.getElementById('editUserStatus').value = user.active !== false ? 'active' : 'deactivated';
     document.getElementById('editUserPhone').value = user.studentInfo?.contactNumber || user.contactNumber || '';
     document.getElementById('editUserBirthday').value = user.studentInfo?.birthday || user.birthday || '';
     document.getElementById('editUserAddress').value = user.studentInfo?.address || user.address || '';
@@ -544,7 +485,6 @@ async function saveUserEdit(event) {
     const name = document.getElementById('editUserName').value.trim();
     const email = document.getElementById('editUserEmail').value.trim();
     const role = document.getElementById('editUserRole')?.value;
-    const status = document.getElementById('editUserStatus')?.value;
     const phoneInput = document.getElementById('editUserPhone');
     const phone = phoneInput ? phoneInput.value.trim() : undefined;
     const birthdayInput = document.getElementById('editUserBirthday');
@@ -557,7 +497,6 @@ async function saveUserEdit(event) {
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (role) updateData.role = role;
-    if (status !== undefined) updateData.active = status === 'active';
 
     if (phone !== undefined) {
         updateData.contactNumber = phone;
@@ -672,28 +611,45 @@ async function assignInstructorToStudent(uid, instructorId) {
 }
 
 // Add User Modal functions
-function openAddUserModal() {
-    document.getElementById('addUserModal').style.display = 'flex';
-    document.getElementById('addUserForm').reset();
-    document.getElementById('studentFields').style.display = 'none';
-    document.getElementById('instructorFields').style.display = 'none';
+function openAddUserModal(roleOverride) {
+    const resolvedRole = roleOverride || ROLE_TAB_MAP[currentRoleTab] || 'student';
+    currentModalRole = resolvedRole;
+    const modal = document.getElementById('addUserModal');
+    const form = document.getElementById('addUserForm');
+    if (form) form.reset();
+    document.getElementById('addUserRoleValue').value = resolvedRole;
+    const title = resolvedRole === 'student'
+        ? 'Invite Student'
+        : resolvedRole === 'instructor'
+            ? 'Add Instructor'
+            : 'Add Admin';
+    const titleEl = document.getElementById('addUserModalTitle');
+    if (titleEl) titleEl.textContent = title;
+    const studentFields = document.getElementById('studentFields');
+    const passwordGroup = document.getElementById('addUserPasswordGroup');
+    const passwordInput = document.getElementById('addUserPassword');
+    const submitButton = document.getElementById('addUserSubmitButton');
+
+    if (studentFields) {
+        studentFields.style.display = resolvedRole === 'student' ? 'block' : 'none';
+    }
+    if (passwordGroup && passwordInput) {
+        if (resolvedRole === 'student') {
+            passwordGroup.style.display = 'none';
+            passwordInput.required = false;
+        } else {
+            passwordGroup.style.display = 'block';
+            passwordInput.required = true;
+        }
+    }
+    if (submitButton) {
+        submitButton.textContent = resolvedRole === 'student' ? 'Invite Student' : 'Add User';
+    }
+    modal.style.display = 'flex';
 }
 
 function closeAddUserModal() {
     document.getElementById('addUserModal').style.display = 'none';
-}
-
-function toggleRoleFields() {
-    const role = document.getElementById('addUserRole')?.value;
-    const studentFields = document.getElementById('studentFields');
-    const instructorFields = document.getElementById('instructorFields');
-    
-    if (studentFields) {
-        studentFields.style.display = role === 'student' ? 'block' : 'none';
-    }
-    if (instructorFields) {
-        instructorFields.style.display = role === 'instructor' ? 'block' : 'none';
-    }
 }
 
 function togglePasswordVisibility(inputId, button) {
@@ -720,61 +676,243 @@ function generatePassword() {
     document.getElementById('addUserPassword').value = password;
 }
 
-async function createAdmin(event) {
+async function saveNewUser(event) {
     event.preventDefault();
-    
+    const role = currentModalRole;
     const name = document.getElementById('addUserName').value.trim();
     const email = document.getElementById('addUserEmail').value.trim();
-    const password = document.getElementById('addUserPassword').value;
 
-    if (!name || !email || !password) {
-        showError('Name, email, and password are required');
+    if (!name || !email) {
+        showError('Name and email are required');
         return;
     }
 
+    if (role === 'student') {
+        const studentInfo = {
+            studentNumber: document.getElementById('addStudentNumber').value.trim(),
+            batch: document.getElementById('addBatch').value.trim(),
+            contactNumber: document.getElementById('addStudentPhone').value.trim(),
+            birthday: document.getElementById('addStudentBirthday').value,
+            address: document.getElementById('addStudentAddress').value.trim()
+        };
+        if (!studentInfo.studentNumber || !studentInfo.batch) {
+            showError('Student number and batch are required');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/users/invite-student`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, studentInfo })
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('adminToken');
+                window.location.href = '/admin-login';
+                return;
+            }
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Failed to invite student');
+            }
+
+            showSuccess('Student invited successfully. An email has been sent so they can set their password.');
+            closeAddUserModal();
+            await loadUsers();
+        } catch (error) {
+            console.error('Invite student error:', error);
+            showError(error.message || 'Failed to invite student');
+        }
+        return;
+    }
+
+    // Instructors and admins still use direct creation with password
+    const passwordInput = document.getElementById('addUserPassword');
+    const password = passwordInput ? passwordInput.value : '';
+    if (!password) {
+        showError('Password is required');
+        return;
+    }
+
+    const payload = { name, email, password, role };
+
     try {
-        const response = await fetch(`${API_BASE}/users/create-admin`, {
+        const endpoint = role === 'instructor'
+            ? `${API_BASE}/users/create-instructor`
+            : `${API_BASE}/users/create-admin`;
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${adminToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, email, password })
+            body: JSON.stringify(payload)
         });
-
         if (response.status === 401 || response.status === 403) {
             localStorage.removeItem('adminToken');
             window.location.href = '/admin-login';
             return;
         }
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to create admin');
-        }
-
         const data = await response.json();
-        if (data.success) {
-            showSuccess('Admin created successfully');
-            closeAddUserModal();
-            await loadUsers();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to create user');
         }
+        showSuccess(role === 'instructor' ? 'Instructor created successfully' : 'Admin created successfully');
+        closeAddUserModal();
+        await loadUsers();
     } catch (error) {
-        console.error('Create admin error:', error);
-        showError(error.message || 'Failed to create admin');
+        console.error('Create user error:', error);
+        showError(error.message || 'Failed to create user');
     }
 }
 
-function saveNewUser(event) {
+function openConvertModal(uid) {
+    const modal = document.getElementById('convertUserModal');
+    const form = document.getElementById('convertUserForm');
+    if (form) form.reset();
+    document.getElementById('convertUserId').value = uid;
+    modal.style.display = 'flex';
+}
+
+function closeConvertModal() {
+    document.getElementById('convertUserModal').style.display = 'none';
+}
+
+async function submitConvertToStudent(event) {
     event.preventDefault();
-    const role = document.getElementById('addUserRole')?.value;
-    
-    if (role === 'instructor') {
-        createInstructor(event);
-    } else if (role === 'admin') {
-        createAdmin(event);
-    } else {
-        showError('Only instructor and admin creation are currently supported via API');
+    const uid = document.getElementById('convertUserId').value;
+    if (!uid) {
+        showError('User ID missing');
+        return;
+    }
+    const payload = {
+        studentNumber: document.getElementById('convertStudentNumber').value.trim(),
+        batch: document.getElementById('convertBatch').value.trim(),
+        address: document.getElementById('convertAddress').value.trim(),
+        birthday: document.getElementById('convertBirthday').value,
+        contactNumber: document.getElementById('convertContact').value.trim()
+    };
+    if (!payload.studentNumber || !payload.batch) {
+        showError('Student number and batch are required');
+        return;
+    }
+    try {
+        const response = await fetch(`${API_BASE}/users/${uid}/convert-to-student`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                studentNumber: payload.studentNumber,
+                batch: payload.batch,
+                address: payload.address,
+                birthday: payload.birthday || '',
+                school: '',
+                contactNumber: payload.contactNumber || ''
+            })
+        });
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to convert user');
+        }
+        showSuccess('User converted to student');
+        closeConvertModal();
+        await loadUsers();
+    } catch (error) {
+        console.error('Convert user error:', error);
+        showError(error.message || 'Failed to convert user');
+    }
+}
+
+async function resendInvite(uid) {
+    try {
+        const response = await fetch(`${API_BASE}/users/${uid}/resend-invite`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to resend invite');
+        }
+        showSuccess('Invite resent successfully.');
+        await loadUsers();
+    } catch (error) {
+        console.error('Resend invite error:', error);
+        showError(error.message || 'Failed to resend invite');
+    }
+}
+
+async function archiveStudent(uid) {
+    try {
+        const response = await fetch(`${API_BASE}/users/${uid}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ archived: true })
+        });
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to archive student');
+        }
+        showSuccess('Student archived successfully.');
+        await loadUsers();
+    } catch (error) {
+        console.error('Archive student error:', error);
+        showError(error.message || 'Failed to archive student');
+    }
+}
+
+async function restoreStudent(uid) {
+    try {
+        const response = await fetch(`${API_BASE}/users/${uid}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ archived: false })
+        });
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to restore student');
+        }
+        showSuccess('Student restored successfully.');
+        await loadUsers();
+    } catch (error) {
+        console.error('Restore student error:', error);
+        showError(error.message || 'Failed to restore student');
     }
 }
 
@@ -977,7 +1115,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load instructors and users on page load
     await loadInstructors();
     await loadUsers();
+    updateTabActionButtons();
 });
+
 
 
 

@@ -39,10 +39,33 @@
         <!-- Lessons Management Section -->
         <section class="content-section">
             <div class="section-header">
-                <h1 class="section-title">Lessons Management</h1>
+                <div>
+                    <h1 class="section-title">Lessons Management</h1>
+                    <p class="section-subtitle">Organize LMS lessons, pages, and assessments from a single view.</p>
+                </div>
                 <button class="btn-primary" onclick="createNewLesson()">
                     <i class="fas fa-plus"></i> Create Lesson
                 </button>
+            </div>
+
+            <div class="lessons-controls">
+                <div class="lesson-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="lessonSearchInput" placeholder="Search lessons by title">
+                </div>
+                <div class="status-filters">
+                    <button class="status-filter-btn active" data-status="all">All</button>
+                    <button class="status-filter-btn" data-status="draft">Draft</button>
+                    <button class="status-filter-btn" data-status="published">Published</button>
+                </div>
+                <div class="lesson-sort">
+                    <label for="lessonSortSelect">Sort by</label>
+                    <select id="lessonSortSelect">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="title">Title A–Z</option>
+                    </select>
+                </div>
             </div>
             <div class="lessons-grid" id="lessonsContainer">
                 <!-- Lesson cards will be inserted here -->

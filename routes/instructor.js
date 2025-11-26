@@ -3,6 +3,8 @@ const router = express.Router();
 const { verifyInstructorToken } = require('../middleware/auth');
 const { db } = require('../config/firebase');
 
+const USERS_COLLECTION = 'system/users';
+
 /**
  * GET /api/instructor/dashboard
  * Returns dashboard statistics and recent activity
@@ -12,7 +14,7 @@ router.get('/dashboard', verifyInstructorToken, async (req, res) => {
     const instructorId = req.instructorId;
     
     // Get all students assigned to this instructor
-    const usersRef = db.ref('users');
+    const usersRef = db.ref(USERS_COLLECTION);
     const usersSnapshot = await usersRef.once('value');
     const usersData = usersSnapshot.val() || {};
     
@@ -253,7 +255,7 @@ router.get('/class-list', verifyInstructorToken, async (req, res) => {
   try {
     const instructorId = req.instructorId;
     
-    const usersRef = db.ref('users');
+    const usersRef = db.ref(USERS_COLLECTION);
     const usersSnapshot = await usersRef.once('value');
     const usersData = usersSnapshot.val() || {};
     
@@ -532,7 +534,7 @@ router.get('/assessments', verifyInstructorToken, async (req, res) => {
   try {
     const instructorId = req.instructorId;
     
-    const usersRef = db.ref('users');
+    const usersRef = db.ref(USERS_COLLECTION);
     const usersSnapshot = await usersRef.once('value');
     const usersData = usersSnapshot.val() || {};
     
@@ -797,7 +799,7 @@ router.get('/certificates', verifyInstructorToken, async (req, res) => {
   try {
     const instructorId = req.instructorId;
     
-    const usersRef = db.ref('users');
+    const usersRef = db.ref(USERS_COLLECTION);
     const usersSnapshot = await usersRef.once('value');
     const usersData = usersSnapshot.val() || {};
     

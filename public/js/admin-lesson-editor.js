@@ -1,4 +1,6 @@
-// Admin Lesson Editor - API Integration
+// Admin Lesson Editor - Complete Rebuild
+// This file handles lesson creation/editing with pages and assessments
+
 const adminToken = localStorage.getItem('adminToken');
 
 if (!adminToken) {
@@ -13,24 +15,15 @@ const action = urlParams.get('action') || 'create';
 let slot = urlParams.get('slot') ? parseInt(urlParams.get('slot')) : null;
 const defaultTab = urlParams.get('tab') || 'content';
 
-// Current lesson data
+// State management
 let currentLesson = null;
 let currentTools = {};
-let currentToolModelCleanup = null;
-let currentToolModelCleanup = null;
 let currentTab = defaultTab;
 let currentLessonSlot = slot;
+let allPages = [];
+let currentPageAssessments = {};
 
-const modelPreviewState = {
-    renderer: null,
-    scene: null,
-    camera: null,
-    animationId: null,
-    currentObject: null,
-    currentUrl: null
-};
-
-// Error message container
+// Error handling
 let errorMessageContainer = null;
 
 function initErrorMessageContainer() {
@@ -61,286 +54,30 @@ function showSuccess(message) {
     showAlertModal(message, 'Success');
 }
 
-function disposeModelPreview() {
-    if (modelPreviewState.animationId) {
-        cancelAnimationFrame(modelPreviewState.animationId);
-        modelPreviewState.animationId = null;
-    }
-    if (modelPreviewState.renderer) {
-        modelPreviewState.renderer.dispose();
-        if (modelPreviewState.renderer.domElement && modelPreviewState.renderer.domElement.parentNode) {
-            modelPreviewState.renderer.domElement.parentNode.removeChild(modelPreviewState.renderer.domElement);
-        }
-        modelPreviewState.renderer = null;
-    }
-    modelPreviewState.scene = null;
-    modelPreviewState.camera = null;
-    modelPreviewState.currentObject = null;
-    if (modelPreviewState.currentUrl && modelPreviewState.currentUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(modelPreviewState.currentUrl);
-    }
-    modelPreviewState.currentUrl = null;
-    const container = document.getElementById('tool3DModelPreview');
-    if (container) {
-        container.innerHTML = '<div class="model-preview-empty">No 3D model selected</div>';
-    }
-}
-
-function initializeModelPreviewScene() {
-    const container = document.getElementById('tool3DModelPreview');
-    if (!container || typeof THREE === 'undefined') {
-        return false;
-    }
-
-    if (modelPreviewState.animationId) {
-        cancelAnimationFrame(modelPreviewState.animationId);
-        modelPreviewState.animationId = null;
-    }
-    if (modelPreviewState.renderer) {
-        modelPreviewState.renderer.dispose();
-        if (modelPreviewState.renderer.domElement && modelPreviewState.renderer.domElement.parentNode) {
-            modelPreviewState.renderer.domElement.parentNode.removeChild(modelPreviewState.renderer.domElement);
-        }
-    }
-    modelPreviewState.renderer = null;
-    modelPreviewState.scene = null;
-    modelPreviewState.camera = null;
-    modelPreviewState.currentObject = null;
-
-    container.innerHTML = '';
-    const width = container.clientWidth || 320;
-    const height = container.clientHeight || 220;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    container.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf8fafc);
-
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(2.5, 2, 4);
-
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
-    scene.add(hemiLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-    dirLight.position.set(5, 10, 7.5);
-    scene.add(dirLight);
-
-    modelPreviewState.renderer = renderer;
-    modelPreviewState.scene = scene;
-    modelPreviewState.camera = camera;
-
-    const animate = () => {
-        modelPreviewState.animationId = requestAnimationFrame(animate);
-        if (modelPreviewState.currentObject) {
-            modelPreviewState.currentObject.rotation.y += 0.01;
-        }
-        renderer.render(scene, camera);
-    };
-    animate();
-    return true;
-}
-
-function loadModelPreview(url, type) {
-    if (!url || !type) {
-        disposeModelPreview();
+function showAlertModal(message, title = 'Notice') {
+    const modal = document.getElementById('alertModal');
+    const msg = document.getElementById('alertMessage');
+    const ttl = document.getElementById('alertTitle');
+    if (!modal || !msg || !ttl) {
+        alert(message);
         return;
     }
-
-    const lowerType = type.toLowerCase();
-    if (!initializeModelPreviewScene()) {
-        disposeModelPreview();
-        return;
-    }
-
-    const scene = modelPreviewState.scene;
-    if (!scene || typeof THREE === 'undefined') {
-        return;
-    }
-
-    const cleanupPreviousObject = () => {
-        if (modelPreviewState.currentObject) {
-            scene.remove(modelPreviewState.currentObject);
-            modelPreviewState.currentObject.traverse?.((child) => {
-                if (child.isMesh && child.geometry) {
-                    child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose && mat.dispose());
-                        } else {
-                            child.material.dispose && child.material.dispose();
-                        }
-                    }
-                }
-            });
-        }
-        modelPreviewState.currentObject = null;
-    };
-
-    const onLoad = (object) => {
-        cleanupPreviousObject();
-        const container = document.getElementById('tool3DModelPreview');
-        if (!container) return;
-
-        let model = object;
-        if (object.scene) {
-            model = object.scene;
-        }
-
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-        const scale = 2 / maxDim;
-        model.scale.setScalar(scale);
-
-        const boxCenter = new THREE.Vector3();
-        box.getCenter(boxCenter);
-        model.position.sub(boxCenter);
-
-        scene.add(model);
-        modelPreviewState.currentObject = model;
-    };
-
-    const onError = () => {
-        disposeModelPreview();
-        const container = document.getElementById('tool3DModelPreview');
-        if (container) {
-            container.innerHTML = '<div class="model-preview-error">Unable to preview this 3D model.</div>';
-        }
-    };
-
-    try {
-        if (lowerType === 'glb' || lowerType === 'gltf') {
-            const loader = new THREE.GLTFLoader();
-            loader.load(url, onLoad, undefined, onError);
-        } else if (lowerType === 'fbx') {
-            const loader = new THREE.FBXLoader();
-            loader.load(url, onLoad, undefined, onError);
-        } else if (lowerType === 'obj') {
-            const loader = new THREE.OBJLoader();
-            loader.load(url, onLoad, undefined, onError);
-        } else {
-            disposeModelPreview();
-            const container = document.getElementById('tool3DModelPreview');
-            if (container) {
-                container.innerHTML = '<div class="model-preview-error">Unsupported 3D model format.</div>';
-            }
-        }
-    } catch (error) {
-        console.error('Model preview error:', error);
-        onError();
-    }
+    ttl.textContent = title;
+    msg.textContent = message;
+    modal.style.display = 'flex';
 }
 
-function loadModelPreviewFromFile(file) {
-    if (!file) {
-        disposeModelPreview();
-        return;
-    }
-    const extension = getModelExtension(file.name);
-    if (!extension) {
-        disposeModelPreview();
-        const container = document.getElementById('tool3DModelPreview');
-        if (container) {
-            container.innerHTML = '<div class="model-preview-error">Only FBX, GLB, or OBJ files are supported.</div>';
-        }
-        return;
-    }
-
-    if (modelPreviewState.currentUrl && modelPreviewState.currentUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(modelPreviewState.currentUrl);
-    }
-    const objectUrl = URL.createObjectURL(file);
-    modelPreviewState.currentUrl = objectUrl;
-    loadModelPreview(objectUrl, extension);
+function closeAlertModal() {
+    const modal = document.getElementById('alertModal');
+    if (modal) modal.style.display = 'none';
 }
 
-function loadModelPreviewFromStoredData(data, type) {
-    if (!data || !type) {
-        disposeModelPreview();
-        return;
-    }
+// ============================================
+// Initialization
+// ============================================
 
-    if (data.startsWith('data:')) {
-        try {
-            const blob = dataURIToBlob(data);
-            if (modelPreviewState.currentUrl && modelPreviewState.currentUrl.startsWith('blob:')) {
-                URL.revokeObjectURL(modelPreviewState.currentUrl);
-            }
-            const objectUrl = URL.createObjectURL(blob);
-            modelPreviewState.currentUrl = objectUrl;
-            loadModelPreview(objectUrl, type);
-            return;
-        } catch (error) {
-            console.error('Failed to convert data URI to blob for model preview', error);
-        }
-    }
-
-    modelPreviewState.currentUrl = data;
-    loadModelPreview(data, type);
-}
-
-function dataURIToBlob(dataURI) {
-    const byteString = atob(dataURI.split(',')[1]);
-    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: mimeString });
-}
-
-function getModelExtension(fileName = '') {
-    const parts = fileName.toLowerCase().split('.');
-    return parts.length > 1 ? parts.pop() : null;
-}
-
-function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-        if (!file) {
-            resolve(null);
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target.result);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-    });
-}
-
-let toolModelFileLabel = null;
-let toolModelUrlDisplay = null;
-
-function setupModelInputHandler() {
-    const modelInput = document.getElementById('tool3DModel');
-    toolModelFileLabel = document.getElementById('tool3DModelFileName');
-    toolModelUrlDisplay = document.getElementById('tool3DModelUrl');
-    if (!modelInput) return;
-
-    modelInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            if (toolModelFileLabel) {
-                toolModelFileLabel.textContent = file.name;
-                toolModelFileLabel.classList.remove('hidden');
-            }
-            if (toolModelUrlDisplay) {
-                toolModelUrlDisplay.textContent = '';
-                toolModelUrlDisplay.classList.add('hidden');
-            }
-            loadModelPreviewFromFile(file);
-        } else {
-            disposeModelPreview();
-        }
-    });
-}
-
-// Initialize editor
 async function initializeEditor() {
+    try {
     if (action === 'edit' && slot) {
         await loadLessonFromAPI(slot);
     } else {
@@ -351,20 +88,29 @@ async function initializeEditor() {
             lessonDescription: '',
             content: '',
             images: [],
-            tools: {}
+                tools: {},
+                status: 'draft'
         };
         currentLessonSlot = null;
         const titleEl = document.getElementById('editorPageTitle');
         if (titleEl) titleEl.textContent = 'Create New Lesson';
         const isNewEl = document.getElementById('isNewLesson');
         if (isNewEl) isNewEl.value = 'true';
+            loadLessonData();
     }
 
     switchTab(currentTab);
     loadTools();
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showError('Failed to initialize editor: ' + error.message);
+    }
 }
 
-// Load lesson from API
+// ============================================
+// Lesson Loading
+// ============================================
+
 async function loadLessonFromAPI(lessonSlot) {
     try {
         const response = await fetch(`${API_BASE}/lessons`, {
@@ -418,11 +164,13 @@ function loadLessonData() {
     const titleEl = document.getElementById('lessonTitle');
     const descEl = document.getElementById('lessonDescription');
     const bodyEl = document.getElementById('lessonBody');
+    const statusEl = document.getElementById('lessonStatus');
     
     if (slotEl) slotEl.value = currentLesson.slot || '';
     if (titleEl) titleEl.value = currentLesson.lessonTitle || currentLesson.lessonName || '';
     if (descEl) descEl.value = currentLesson.description || currentLesson.lessonDescription || '';
     if (bodyEl) bodyEl.innerHTML = currentLesson.body || currentLesson.content || '';
+    if (statusEl) statusEl.value = (currentLesson.status || 'draft');
     
     // Load images
     currentLesson.images = currentLesson.images || [];
@@ -441,29 +189,39 @@ function loadLessonData() {
     currentLesson.tools = currentTools;
 }
 
+// ============================================
 // Tab Management
+// ============================================
+
 function switchTab(tabName) {
     currentTab = tabName;
     
-    document.querySelectorAll('.editor-tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
+    // Update tab buttons
     document.querySelectorAll('.editor-tab').forEach(btn => {
         btn.classList.remove('active');
     });
-    
-    const tabContent = document.getElementById(`${tabName}Tab`);
     const tabButton = document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
-    
-    if (tabContent) tabContent.classList.add('active');
     if (tabButton) tabButton.classList.add('active');
     
+    // Update tab content
+    document.querySelectorAll('.editor-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    const tabContent = document.getElementById(`${tabName}Tab`);
+    if (tabContent) tabContent.classList.add('active');
+    
+    // Load tab-specific content
     if (tabName === 'preview') {
         renderPreview();
+    } else if (tabName === 'pages') {
+        loadPages();
     }
 }
 
-// Rich Text Editor Functions
+// ============================================
+// Rich Text Editor
+// ============================================
+
 function formatText(command) {
     const editor = document.getElementById('lessonBody');
     if (!editor) return;
@@ -497,7 +255,10 @@ function insertImage() {
     }
 }
 
+// ============================================
 // Image Management
+// ============================================
+
 function setupImageHandlers() {
     const imageInput = document.getElementById('supportingImages');
     if (imageInput) {
@@ -545,7 +306,10 @@ function removeImage(button) {
     }
 }
 
+// ============================================
 // Tools Management
+// ============================================
+
 function loadTools() {
     const container = document.getElementById('toolsContainer');
     if (!container) return;
@@ -560,13 +324,10 @@ function loadTools() {
     }
     
     container.innerHTML = Object.entries(currentTools).map(([toolId, tool]) => {
-        const modelType = tool.modelType || tool.modelUrl ? (tool.modelType || (tool.modelUrl ? 'unknown' : null)) : null;
-        const modelBadge = modelType ? `<span class="tool-model-badge" style="display: inline-block; padding: 4px 8px; background: #C19A6B; color: white; border-radius: 4px; font-size: 12px; margin-left: 8px;">3D Model: ${modelType.toUpperCase()}</span>` : '';
-        
         return `
         <div class="tool-card" data-tool-id="${toolId}">
             <div class="tool-card-header">
-                <h3 class="tool-name">${tool.name || 'Unnamed Tool'}${modelBadge}</h3>
+                <h3 class="tool-name">${tool.name || 'Unnamed Tool'}</h3>
                 <div class="tool-card-actions">
                     <button class="btn-tool-edit" onclick="editTool('${toolId}')"><i class="fas fa-edit"></i> Edit</button>
                     <button class="btn-tool-delete" onclick="deleteTool('${toolId}')"><i class="fas fa-trash"></i> Delete</button>
@@ -574,18 +335,10 @@ function loadTools() {
             </div>
             <div class="tool-card-content">
                 <p class="tool-description">${tool.description || 'No description'}</p>
-                ${tool.category ? `<span class="tool-category">${tool.category}</span>` : ''}
-                ${(tool.imageUrl || tool.imageURL) ? `
-                    <div class="tool-image-preview">
-                        <img src="${tool.imageUrl || tool.imageURL}" alt="${tool.name}">
-                    </div>
-                ` : ''}
             </div>
         </div>
     `;
     }).join('');
-    currentLesson = currentLesson || {};
-    currentLesson.tools = currentTools;
 }
 
 function addNewTool() {
@@ -593,9 +346,6 @@ function addNewTool() {
     document.getElementById('toolForm').reset();
     document.getElementById('toolId').value = '';
     document.getElementById('toolImagePreview').innerHTML = '';
-    const modelInput = document.getElementById('tool3DModel');
-    if (modelInput) modelInput.value = '';
-    disposeModelPreview();
     document.getElementById('toolModal').style.display = 'flex';
 }
 
@@ -610,7 +360,6 @@ function editTool(toolId) {
     document.getElementById('toolCategory').value = tool.category || '';
     document.getElementById('toolInstructions').value = tool.instructions || '';
     
-    // Show existing image
     const imagePreview = document.getElementById('toolImagePreview');
     if (tool.imageUrl || tool.imageURL) {
         imagePreview.innerHTML = `<img src="${tool.imageUrl || tool.imageURL}" alt="${tool.name}" style="max-width: 100%; max-height: 200px; border-radius: 4px;">`;
@@ -618,22 +367,11 @@ function editTool(toolId) {
         imagePreview.innerHTML = '';
     }
     
-    const modelInput = document.getElementById('tool3DModel');
-    if (modelInput) modelInput.value = '';
-
-    const derivedType = tool.modelType || getModelExtension(tool.modelFileName || '');
-    if (tool.modelUrl && derivedType) {
-        loadModelPreviewFromStoredData(tool.modelUrl, derivedType);
-    } else {
-        disposeModelPreview();
-    }
-    
     document.getElementById('toolModal').style.display = 'flex';
 }
 
 function closeToolModal() {
     document.getElementById('toolModal').style.display = 'none';
-    disposeModelPreview();
 }
 
 async function saveTool(event) {
@@ -649,30 +387,14 @@ async function saveTool(event) {
         };
         
         const imageFile = document.getElementById('toolImage').files[0];
-        const modelFile = document.getElementById('tool3DModel').files[0];
-        
         if (imageFile) {
-            tool.imageUrl = await readFileAsDataURL(imageFile);
+            const reader = new FileReader();
+            tool.imageUrl = await new Promise((resolve) => {
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(imageFile);
+            });
         } else if (currentTools[toolId]) {
             tool.imageUrl = currentTools[toolId].imageUrl || currentTools[toolId].imageURL || '';
-        }
-        
-        if (modelFile) {
-            const extension = getModelExtension(modelFile.name);
-            if (!extension || !['fbx', 'glb', 'obj'].includes(extension)) {
-                showAlertModal('3D model must be an FBX, GLB, or OBJ file.', 'Error');
-                return;
-            }
-            tool.modelType = extension;
-            tool.modelFileName = modelFile.name;
-            tool.modelUrl = await readFileAsDataURL(modelFile);
-        } else if (currentTools[toolId]) {
-            if (currentTools[toolId].modelUrl) tool.modelUrl = currentTools[toolId].modelUrl;
-            if (currentTools[toolId].modelType) tool.modelType = currentTools[toolId].modelType;
-            if (currentTools[toolId].modelFileName) tool.modelFileName = currentTools[toolId].modelFileName;
-            if (!tool.modelType && tool.modelFileName) {
-                tool.modelType = getModelExtension(tool.modelFileName);
-            }
         }
         
         currentTools[toolId] = tool;
@@ -697,12 +419,16 @@ function deleteTool(toolId) {
     }
 }
 
-// Save lesson to API
+// ============================================
+// Lesson Save
+// ============================================
+
 async function saveLesson() {
     const titleEl = document.getElementById('lessonTitle');
     const descEl = document.getElementById('lessonDescription');
     const bodyEl = document.getElementById('lessonBody');
     const isNewEl = document.getElementById('isNewLesson');
+    const statusEl = document.getElementById('lessonStatus');
     
     if (!titleEl || !descEl || !bodyEl) {
         showError('Form elements not found');
@@ -711,16 +437,12 @@ async function saveLesson() {
     
     const title = titleEl.value.trim();
     const description = descEl.value.trim();
-    const body = bodyEl.innerHTML.trim();
+    const body = bodyEl.innerHTML.trim() || '<p></p>';
     const isNew = isNewEl ? isNewEl.value === 'true' : true;
+    const status = statusEl ? statusEl.value : 'draft';
     
     if (!title || !description) {
         showAlertModal('Please fill in the title and description', 'Error');
-        return;
-    }
-    
-    if (!body || body === '<br>' || body === '<div><br></div>') {
-        showAlertModal('Please add lesson content', 'Error');
         return;
     }
     
@@ -778,7 +500,8 @@ async function saveLesson() {
                 description: description,
                 body: body,
                 images: images,
-                tools: toolsPayload
+                tools: toolsPayload,
+                status
             })
         });
 
@@ -806,7 +529,8 @@ async function saveLesson() {
                 lessonDescription: description,
                 body,
                 images,
-                tools: toolsPayload
+                tools: toolsPayload,
+                status
             };
             currentTools = toolsPayload;
             const isNewElUpdated = document.getElementById('isNewLesson');
@@ -819,6 +543,10 @@ async function saveLesson() {
             if (slotInput) slotInput.value = lessonSlot;
             window.history.replaceState({}, '', `/admin-lesson-editor?slot=${lessonSlot}&action=edit&tab=${currentTab}`);
             loadLessonData();
+            // Reload pages if we're on the pages tab
+            if (currentTab === 'pages') {
+                loadPages();
+            }
             showSuccess('Lesson saved successfully');
         }
     } catch (error) {
@@ -827,144 +555,548 @@ async function saveLesson() {
     }
 }
 
-// Shared 3D Model Preview Helper
-function setupToolModelPreview(containerElement, modelUrl, modelType) {
-    if (!containerElement || !modelUrl || !modelType || typeof THREE === 'undefined') {
-        if (containerElement) {
-            containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">No 3D model attached.</div>';
+// ============================================
+// Page Management
+// ============================================
+
+async function loadPages() {
+    if (!currentLessonSlot) {
+        const emptyState = document.getElementById('pagesEmptyState');
+        const container = document.getElementById('pagesContainer');
+        if (container && emptyState) {
+            container.innerHTML = '';
+            const emptyStateClone = emptyState.cloneNode(true);
+            container.appendChild(emptyStateClone);
         }
-        return null;
+        return;
     }
-
-    const lowerType = modelType.toLowerCase();
-    if (!['fbx', 'glb', 'obj'].includes(lowerType)) {
-        containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">Unsupported 3D model type.</div>';
-        return null;
-    }
-
-    // Clear container
-    containerElement.innerHTML = '<canvas style="width: 100%; height: 100%; border-radius: 8px;"></canvas>';
-    const canvas = containerElement.querySelector('canvas');
-    if (!canvas) return null;
-
-    // Setup scene
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f5f5);
     
-    const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 5);
-    
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-    
-    let currentModel = null;
-    let animationId = null;
-    
-    const cleanup = () => {
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-            animationId = null;
-        }
-        if (currentModel) {
-            scene.remove(currentModel);
-            currentModel.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose && mat.dispose());
-                        } else {
-                            child.material.dispose && child.material.dispose();
-                        }
-                    }
-                }
-            });
-            currentModel = null;
-        }
-        renderer.dispose();
-    };
-    
-    const onLoad = (object) => {
-        if (currentModel) {
-            scene.remove(currentModel);
-            currentModel.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose && mat.dispose());
-                        } else {
-                            child.material.dispose && child.material.dispose();
-                        }
-                    }
-                }
-            });
-        }
-        
-        let model = object;
-        if (object.scene) {
-            model = object.scene;
-        }
-        
-        // Fit model to view
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-        const scale = 2 / maxDim;
-        model.scale.setScalar(scale);
-        
-        const boxCenter = new THREE.Vector3();
-        box.getCenter(boxCenter);
-        model.position.sub(boxCenter);
-        
-        scene.add(model);
-        currentModel = model;
-        
-        // Auto-rotate animation
-        const animate = () => {
-            if (currentModel) {
-                currentModel.rotation.y += 0.01;
-            }
-            renderer.render(scene, camera);
-            animationId = requestAnimationFrame(animate);
-        };
-        animate();
-    };
-    
-    const onError = (error) => {
-        console.error('3D model load error:', error);
-        containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #DC2626;">Unable to load 3D model.</div>';
-        cleanup();
-    };
-    
-    // Load model based on type
     try {
-        if (lowerType === 'glb' || lowerType === 'gltf') {
-            const loader = new THREE.GLTFLoader();
-            loader.load(modelUrl, onLoad, undefined, onError);
-        } else if (lowerType === 'fbx') {
-            const loader = new THREE.FBXLoader();
-            loader.load(modelUrl, onLoad, undefined, onError);
-        } else if (lowerType === 'obj') {
-            const loader = new THREE.OBJLoader();
-            loader.load(modelUrl, onLoad, undefined, onError);
+        const response = await fetch(`${API_BASE}/lessons/${currentLessonSlot}/pages`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            // If 404, lesson has no pages yet - that's okay
+            if (response.status === 404) {
+                allPages = [];
+                renderPages();
+                return;
+            }
+            throw new Error('Failed to fetch pages');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            allPages = data.pages || [];
+            renderPages();
         }
     } catch (error) {
-        onError(error);
+        console.error('Load pages error:', error);
+        // Don't show error if it's just that pages don't exist yet
+        if (error.message && !error.message.includes('404')) {
+            showError('Failed to load pages');
+        } else {
+            allPages = [];
+            renderPages();
+        }
+    }
+}
+
+function renderPages() {
+    const container = document.getElementById('pagesContainer');
+    const emptyState = document.getElementById('pagesEmptyState');
+    if (!container) return;
+
+    if (allPages.length === 0) {
+        container.innerHTML = '';
+        if (emptyState) {
+            const emptyStateClone = emptyState.cloneNode(true);
+            container.appendChild(emptyStateClone);
+        }
+        return;
+    }
+
+    container.innerHTML = allPages.map((page, index) => {
+        const pageNumber = index + 1;
+        const isFirst = index === 0;
+        const isLast = index === allPages.length - 1;
+        return `
+            <div class="page-card" data-page-id="${page.id}" data-page-order="${page.order}" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #C19A6B; color: white; border-radius: 50%; font-weight: 600; font-size: 14px;">${pageNumber}</span>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1F2937;">${escapeHtml(page.title || 'Untitled Page')}</h3>
+                        </div>
+                        <p style="margin: 0; color: #64748B; font-size: 14px; line-height: 1.5;">${escapeHtml((page.content || '').substring(0, 150))}${(page.content || '').length > 150 ? '...' : ''}</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        ${!isFirst ? `<button type="button" class="btn-secondary" onclick="movePageUp('${page.id}')" style="padding: 6px 10px; font-size: 12px; cursor: pointer;" title="Move Up"><i class="fas fa-arrow-up"></i></button>` : ''}
+                        ${!isLast ? `<button type="button" class="btn-secondary" onclick="movePageDown('${page.id}')" style="padding: 6px 10px; font-size: 12px; cursor: pointer;" title="Move Down"><i class="fas fa-arrow-down"></i></button>` : ''}
+                        <button type="button" class="btn-secondary" onclick="editPage('${page.id}')" style="padding: 8px 16px; font-size: 14px; cursor: pointer;">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="deletePage('${page.id}')" style="padding: 8px 16px; font-size: 14px; color: #DC2626; cursor: pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #E5E7EB;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 600; color: #1F2937;">Assessment Questions</h4>
+                        <button type="button" class="btn-primary" onclick="addAssessment('${page.id}')" style="padding: 6px 12px; font-size: 13px; cursor: pointer;">
+                            <i class="fas fa-plus"></i> Add Question
+                        </button>
+                    </div>
+                    <div id="assessments-${page.id}" class="assessments-list">
+                        <!-- Assessments will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Load assessments for each page
+    allPages.forEach(page => {
+        loadPageAssessments(page.id);
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function loadPageAssessments(pageId) {
+    if (!currentLessonSlot) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/lessons/${currentLessonSlot}/pages/${pageId}/assessments`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                currentPageAssessments[pageId] = data.assessments || [];
+                renderPageAssessments(pageId);
+            }
+        } else if (response.status === 404) {
+            // No assessments yet - that's okay
+            currentPageAssessments[pageId] = [];
+            renderPageAssessments(pageId);
+        }
+    } catch (error) {
+        console.error('Load assessments error:', error);
+        currentPageAssessments[pageId] = [];
+        renderPageAssessments(pageId);
+    }
+}
+
+function renderPageAssessments(pageId) {
+    const container = document.getElementById(`assessments-${pageId}`);
+    if (!container) return;
+
+    const assessments = currentPageAssessments[pageId] || [];
+    
+    if (assessments.length === 0) {
+        container.innerHTML = '<p style="color: #9CA3AF; font-size: 13px; margin: 0;">No assessment questions yet. Click "Add Question" to create one.</p>';
+        return;
+    }
+
+    container.innerHTML = assessments.map(assessment => {
+        const correctAnswer = assessment.correctAnswer || '';
+        return `
+            <div class="assessment-item" style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <p style="margin: 0 0 8px 0; font-weight: 500; color: #1F2937; font-size: 14px;">${escapeHtml(assessment.question || 'No question')}</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #64748B;">
+                            <div>A: ${escapeHtml(assessment.answerA || '')}</div>
+                            <div>B: ${escapeHtml(assessment.answerB || '')}</div>
+                            <div>C: ${escapeHtml(assessment.answerC || '')}</div>
+                            <div>D: ${escapeHtml(assessment.answerD || '')}</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 12px; color: #C19A6B; font-weight: 500;">Correct: ${correctAnswer}</div>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="btn-secondary" onclick="editAssessment('${pageId}', '${assessment.id}')" style="padding: 4px 8px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="deleteAssessment('${pageId}', '${assessment.id}')" style="padding: 4px 8px; font-size: 12px; color: #DC2626; cursor: pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function addNewPage() {
+    if (!currentLessonSlot) {
+        showAlertModal('Please save the lesson first before adding pages.', 'Info');
+        return;
     }
     
-    // Return cleanup function
-    return cleanup;
+    document.getElementById('pageModalTitle').textContent = 'Add New Page';
+    document.getElementById('pageId').value = '';
+    document.getElementById('pageTitle').value = '';
+    document.getElementById('pageContent').value = '';
+    document.getElementById('pageModal').style.display = 'flex';
 }
+
+function editPage(pageId) {
+    const page = allPages.find(p => p.id === pageId);
+    if (!page) return;
+    
+    document.getElementById('pageModalTitle').textContent = 'Edit Page';
+    document.getElementById('pageId').value = pageId;
+    document.getElementById('pageTitle').value = page.title || '';
+    document.getElementById('pageContent').value = page.content || '';
+    document.getElementById('pageModal').style.display = 'flex';
+}
+
+async function savePage(event) {
+    event.preventDefault();
+    if (!currentLessonSlot) {
+        showAlertModal('Please save the lesson first.', 'Info');
+        return;
+    }
+    
+    const pageId = document.getElementById('pageId').value;
+    const title = document.getElementById('pageTitle').value.trim();
+    const content = document.getElementById('pageContent').value;
+    
+    if (!title) {
+        showError('Page title is required');
+        return;
+    }
+    
+    try {
+        const url = pageId 
+            ? `${API_BASE}/lessons/${currentLessonSlot}/pages/${pageId}`
+            : `${API_BASE}/lessons/${currentLessonSlot}/pages`;
+        const method = pageId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, content })
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to save page');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Page saved successfully');
+            closePageModal();
+            await loadPages();
+        }
+    } catch (error) {
+        console.error('Save page error:', error);
+        showError(error.message || 'Failed to save page');
+    }
+}
+
+async function deletePage(pageId) {
+    if (!confirm('Are you sure you want to delete this page? All assessments will also be deleted.')) {
+        return;
+    }
+    
+    if (!currentLessonSlot) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/lessons/${currentLessonSlot}/pages/${pageId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to delete page');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Page deleted successfully');
+            await loadPages();
+        }
+    } catch (error) {
+        console.error('Delete page error:', error);
+        showError(error.message || 'Failed to delete page');
+    }
+}
+
+function closePageModal() {
+    document.getElementById('pageModal').style.display = 'none';
+}
+
+// Page reordering
+async function movePageUp(pageId) {
+    const pageIndex = allPages.findIndex(p => p.id === pageId);
+    if (pageIndex <= 0) return;
+    
+    const page = allPages[pageIndex];
+    const prevPage = allPages[pageIndex - 1];
+    
+    // Swap orders
+    const tempOrder = page.order;
+    page.order = prevPage.order;
+    prevPage.order = tempOrder;
+    
+    // Reorder array
+    allPages[pageIndex] = prevPage;
+    allPages[pageIndex - 1] = page;
+    
+    await savePageOrder();
+}
+
+async function movePageDown(pageId) {
+    const pageIndex = allPages.findIndex(p => p.id === pageId);
+    if (pageIndex < 0 || pageIndex >= allPages.length - 1) return;
+    
+    const page = allPages[pageIndex];
+    const nextPage = allPages[pageIndex + 1];
+    
+    // Swap orders
+    const tempOrder = page.order;
+    page.order = nextPage.order;
+    nextPage.order = tempOrder;
+    
+    // Reorder array
+    allPages[pageIndex] = nextPage;
+    allPages[pageIndex + 1] = page;
+    
+    await savePageOrder();
+}
+
+async function savePageOrder() {
+    if (!currentLessonSlot) return;
+    
+    try {
+        // Create array of { pageId, order } in the new order
+        const pageOrders = allPages.map((page, index) => ({
+            pageId: page.id,
+            order: index
+        }));
+        
+        const response = await fetch(`${API_BASE}/lessons/${currentLessonSlot}/pages/reorder`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ pageOrders })
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to reorder pages');
+        }
+
+        // Reload pages to get updated order
+        await loadPages();
+    } catch (error) {
+        console.error('Save page order error:', error);
+        showError('Failed to reorder pages');
+        // Reload to restore original order
+        await loadPages();
+    }
+}
+
+// ============================================
+// Assessment Management
+// ============================================
+
+function addAssessment(pageId) {
+    document.getElementById('assessmentModalTitle').textContent = 'Add Assessment Question';
+    document.getElementById('assessmentPageId').value = pageId;
+    document.getElementById('assessmentId').value = '';
+    document.getElementById('assessmentQuestion').value = '';
+    document.getElementById('assessmentAnswerA').value = '';
+    document.getElementById('assessmentAnswerB').value = '';
+    document.getElementById('assessmentAnswerC').value = '';
+    document.getElementById('assessmentAnswerD').value = '';
+    document.getElementById('assessmentCorrectAnswer').value = '';
+    document.getElementById('assessmentExplanation').value = '';
+    document.getElementById('assessmentModal').style.display = 'flex';
+}
+
+async function editAssessment(pageId, assessmentId) {
+    const assessments = currentPageAssessments[pageId] || [];
+    const assessment = assessments.find(a => a.id === assessmentId);
+    if (!assessment) return;
+    
+    document.getElementById('assessmentModalTitle').textContent = 'Edit Assessment Question';
+    document.getElementById('assessmentPageId').value = pageId;
+    document.getElementById('assessmentId').value = assessmentId;
+    document.getElementById('assessmentQuestion').value = assessment.question || '';
+    document.getElementById('assessmentAnswerA').value = assessment.answerA || '';
+    document.getElementById('assessmentAnswerB').value = assessment.answerB || '';
+    document.getElementById('assessmentAnswerC').value = assessment.answerC || '';
+    document.getElementById('assessmentAnswerD').value = assessment.answerD || '';
+    document.getElementById('assessmentCorrectAnswer').value = assessment.correctAnswer || '';
+    document.getElementById('assessmentExplanation').value = assessment.explanation || '';
+    document.getElementById('assessmentModal').style.display = 'flex';
+}
+
+async function saveAssessment(event) {
+    event.preventDefault();
+    if (!currentLessonSlot) {
+        showAlertModal('Please save the lesson first.', 'Info');
+        return;
+    }
+    
+    const pageId = document.getElementById('assessmentPageId').value;
+    const assessmentId = document.getElementById('assessmentId').value;
+    const question = document.getElementById('assessmentQuestion').value.trim();
+    const answerA = document.getElementById('assessmentAnswerA').value.trim();
+    const answerB = document.getElementById('assessmentAnswerB').value.trim();
+    const answerC = document.getElementById('assessmentAnswerC').value.trim();
+    const answerD = document.getElementById('assessmentAnswerD').value.trim();
+    const correctAnswer = (document.getElementById('assessmentCorrectAnswer').value || '').trim().toUpperCase();
+    const explanation = document.getElementById('assessmentExplanation').value.trim();
+    
+    if (!question || !answerA || !answerB || !answerC || !answerD || !correctAnswer) {
+        showError('All fields are required');
+        return;
+    }
+    
+    try {
+        const url = assessmentId
+            ? `${API_BASE}/lessons/${currentLessonSlot}/pages/${pageId}/assessments/${assessmentId}`
+            : `${API_BASE}/lessons/${currentLessonSlot}/pages/${pageId}/assessments`;
+        const method = assessmentId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question,
+                answerA,
+                answerB,
+                answerC,
+                answerD,
+                correctAnswer,
+                explanation
+            })
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to save assessment');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Assessment question saved successfully');
+            closeAssessmentModal();
+            await loadPageAssessments(pageId);
+        }
+    } catch (error) {
+        console.error('Save assessment error:', error);
+        showError(error.message || 'Failed to save assessment');
+    }
+}
+
+async function deleteAssessment(pageId, assessmentId) {
+    if (!confirm('Are you sure you want to delete this assessment question?')) {
+        return;
+    }
+    
+    if (!currentLessonSlot) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/lessons/${currentLessonSlot}/pages/${pageId}/assessments/${assessmentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to delete assessment');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Assessment deleted successfully');
+            await loadPageAssessments(pageId);
+        }
+    } catch (error) {
+        console.error('Delete assessment error:', error);
+        showError(error.message || 'Failed to delete assessment');
+    }
+}
+
+function closeAssessmentModal() {
+    document.getElementById('assessmentModal').style.display = 'none';
+}
+
+
+// ============================================
+// Preview
+// ============================================
 
 function renderPreview() {
     const previewContent = document.getElementById('previewContent');
@@ -978,79 +1110,18 @@ function renderPreview() {
     const description = descEl ? descEl.value : '';
     const body = bodyEl ? bodyEl.innerHTML : '';
     
-    // Get current tools
-    const tools = currentTools || {};
-    const toolKeys = Object.keys(tools);
-    
-    let toolsHtml = '';
-    if (toolKeys.length > 0) {
-        toolsHtml = `
-            <div class="preview-tools-section" style="margin-top: 32px; padding-top: 32px; border-top: 1px solid #E5E7EB;">
-                <h2 style="font-size: 20px; font-weight: 600; color: #1F2937; margin-bottom: 20px;">Tools Used in This Lesson</h2>
-                <div class="preview-tools-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-                    ${toolKeys.map(toolId => {
-                        const tool = tools[toolId];
-                        const toolName = tool.name || 'Unnamed Tool';
-                        const toolDesc = tool.description || 'No description';
-                        const toolImage = tool.imageUrl || tool.imageURL;
-                        const toolModelUrl = tool.modelUrl;
-                        const toolModelType = tool.modelType;
-                        const firstLetter = toolName.charAt(0).toUpperCase();
-                        
-                        return `
-                            <div class="preview-tool-card" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
-                                    <div style="flex-shrink: 0;">
-                                        ${toolImage ? 
-                                            `<img src="${toolImage}" alt="${toolName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB;">` :
-                                            `<div style="width: 80px; height: 80px; background: #C19A6B; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600;">${firstLetter}</div>`
-                                        }
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <h3 style="font-size: 16px; font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">${toolName}</h3>
-                                        <p style="font-size: 14px; color: #64748B; margin: 0; line-height: 1.5;">${toolDesc}</p>
-                                        ${toolModelType ? `<span style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #C19A6B; color: white; border-radius: 4px; font-size: 11px; font-weight: 500;">3D Model: ${toolModelType.toUpperCase()}</span>` : ''}
-                                    </div>
-                                </div>
-                                ${toolModelUrl && toolModelType ? `
-                                    <div class="preview-tool-3d-container" data-tool-id="${toolId}" style="width: 100%; height: 200px; background: #F9FAFB; border-radius: 8px; margin-top: 12px; position: relative; overflow: hidden;">
-                                        <!-- 3D preview will be rendered here -->
-                                    </div>
-                                ` : `
-                                    <div style="padding: 20px; text-align: center; color: #9CA3AF; font-size: 14px; background: #F9FAFB; border-radius: 8px; margin-top: 12px;">No 3D model attached.</div>
-                                `}
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
     previewContent.innerHTML = `
         <div class="preview-lesson">
-            <h1 class="preview-title">${title || 'Untitled Lesson'}</h1>
-            <p class="preview-description">${description || 'No description'}</p>
+            <h1 class="preview-title">${escapeHtml(title || 'Untitled Lesson')}</h1>
+            <p class="preview-description">${escapeHtml(description || 'No description')}</p>
             <div class="preview-body">${body || '<p>No content yet</p>'}</div>
-            ${toolsHtml}
         </div>
     `;
-    
-    // Setup 3D previews for tools with models
-    if (toolKeys.length > 0) {
-        toolKeys.forEach(toolId => {
-            const tool = tools[toolId];
-            if (tool.modelUrl && tool.modelType) {
-                const container = previewContent.querySelector(`.preview-tool-3d-container[data-tool-id="${toolId}"]`);
-                if (container) {
-                    setTimeout(() => {
-                        setupToolModelPreview(container, tool.modelUrl, tool.modelType);
-                    }, 100);
-                }
-            }
-        });
-    }
 }
+
+// ============================================
+// Navigation & Utilities
+// ============================================
 
 function goBack() {
     window.location.href = '/admin-lessons';
@@ -1065,7 +1136,6 @@ function closeDeleteModal() {
 }
 
 function confirmDelete() {
-    // Note: Backend doesn't have delete endpoint yet, so this is a placeholder
     showAlertModal('Delete functionality not yet implemented in backend', 'Info');
     closeDeleteModal();
 }
@@ -1084,27 +1154,45 @@ function confirmLogout() {
     window.location.href = '/admin-login';
 }
 
-function showAlertModal(message, title = 'Notice') {
-    const modal = document.getElementById('alertModal');
-    const msg = document.getElementById('alertMessage');
-    const ttl = document.getElementById('alertTitle');
-    if (!modal || !msg || !ttl) {
-        alert(message);
-        return;
-    }
-    ttl.textContent = title;
-    msg.textContent = message;
-    modal.style.display = 'flex';
-}
+// ============================================
+// Global Function Exports
+// ============================================
 
-function closeAlertModal() {
-    const modal = document.getElementById('alertModal');
-    if (modal) modal.style.display = 'none';
-}
+window.saveLesson = saveLesson;
+window.formatText = formatText;
+window.insertImage = insertImage;
+window.switchTab = switchTab;
+window.goBack = goBack;
+window.addNewPage = addNewPage;
+window.editPage = editPage;
+window.deletePage = deletePage;
+window.addAssessment = addAssessment;
+window.editAssessment = editAssessment;
+window.deleteAssessment = deleteAssessment;
+window.closePageModal = closePageModal;
+window.movePageUp = movePageUp;
+window.movePageDown = movePageDown;
+window.closeAssessmentModal = closeAssessmentModal;
+window.addNewTool = addNewTool;
+window.editTool = editTool;
+window.deleteTool = deleteTool;
+window.closeToolModal = closeToolModal;
+window.saveTool = saveTool;
+window.removeImage = removeImage;
+window.logout = logout;
+window.closeLogoutModal = closeLogoutModal;
+window.confirmLogout = confirmLogout;
+window.deleteLesson = deleteLesson;
+window.closeDeleteModal = closeDeleteModal;
+window.confirmDelete = confirmDelete;
+window.closeAlertModal = closeAlertModal;
 
-// Modal close on outside click
+// ============================================
+// Modal Close Handlers
+// ============================================
+
 window.onclick = function(event) {
-    const modals = ['toolModal', 'logoutModal', 'deleteModal', 'alertModal'];
+    const modals = ['toolModal', 'logoutModal', 'deleteModal', 'alertModal', 'pageModal', 'assessmentModal'];
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
         if (event.target === modal) {
@@ -1112,17 +1200,23 @@ window.onclick = function(event) {
             else if (modalId === 'logoutModal') closeLogoutModal();
             else if (modalId === 'deleteModal') closeDeleteModal();
             else if (modalId === 'alertModal') closeAlertModal();
+            else if (modalId === 'pageModal') closePageModal();
+            else if (modalId === 'assessmentModal') closeAssessmentModal();
         }
     });
 };
 
-// Initialize
+// ============================================
+// Initialize on DOM Ready
+// ============================================
+
 document.addEventListener('DOMContentLoaded', function() {
+    try {
     initErrorMessageContainer();
     setupImageHandlers();
-    setupModelInputHandler();
     initializeEditor();
+    } catch (error) {
+        console.error('Initialization error:', error);
+        alert('Error initializing editor: ' + error.message);
+    }
 });
-
-
-
