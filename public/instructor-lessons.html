@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lessons - CareSim Student Portal</title>
+    <title>Lessons - CareSim Instructor Portal</title>
     <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
     <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
     <link rel="shortcut icon" type="image/png" href="asat.png">
@@ -11,24 +11,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
 </head>
-<body class="student-portal">
+<body class="instructor-portal">
     <!-- Header / Navigation -->
     <header class="portal-header">
         <div class="header-content">
             <div class="logo">
-                <a class="logo-link" href="/student-dashboard">
+                <a class="logo-link" href="/instructor-dashboard">
                     <img src="caresimm.png" alt="CareSim" class="header-logo">
                 </a>
             </div>
             <div class="header-right">
                 <nav class="nav-tabs">
-                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
-                    <a href="/student-lessons" class="nav-tab active">Lessons</a>
-                    <a href="/student-assessment" class="nav-tab">Assessment</a>
-                    <a href="/student-certificates" class="nav-tab">Certificates</a>
-                    <a href="/student-profile" class="nav-tab">Profile</a>
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-lessons" class="nav-tab active">Lessons</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
+                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
+                    <a href="/instructor-profile" class="nav-tab">Profile</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
@@ -40,13 +40,7 @@
         <aside class="lessons-list-panel">
             <div class="lessons-list-header">
                 <h2>Lessons</h2>
-                <p class="lessons-subtitle">View and track your available lessons.</p>
-                <div class="lessons-progress-indicator">
-                    <div class="lessons-progress-bar">
-                        <div class="lessons-progress-fill" id="lessonsProgressFill" style="width: 0%"></div>
-                    </div>
-                    <span class="lessons-progress-text" id="lessonsProgressText">0 of 6 completed</span>
-                </div>
+                <p class="lessons-subtitle">View available lessons.</p>
             </div>
             <div class="lessons-list" id="lessonsList">
                 <!-- Lesson cards will be inserted here -->
@@ -71,7 +65,7 @@
             <div id="lessonViewer" class="lesson-viewer" style="display: none;">
                 <!-- Breadcrumb -->
                 <nav class="lesson-breadcrumb">
-                    <a href="/student-dashboard">Dashboard</a>
+                    <a href="/instructor-dashboard">Dashboard</a>
                     <span class="breadcrumb-separator">/</span>
                     <span>Lessons</span>
                     <span class="breadcrumb-separator">/</span>
@@ -114,9 +108,6 @@
                         <!-- Lesson content will be inserted here -->
                     </div>
                     <div class="lesson-content-actions">
-                        <button class="btn-primary" id="markCompletedBtn" onclick="markLessonCompleted()">
-                            Mark as Completed
-                        </button>
                         <button class="btn-outline" onclick="goToDashboard()">Back to Dashboard</button>
                     </div>
                 </div>
@@ -219,7 +210,7 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('studentToken');
+        const token = localStorage.getItem('instructorToken');
         if (!token) {
             window.location.href = '/caresim-login';
         }
@@ -227,18 +218,17 @@
         let allLessons = [];
         let currentLesson = null;
         let currentLessonSlot = null;
-        let studentProgress = {};
 
-        // Load lessons and student progress
+        // Load lessons
         async function loadLessons() {
             try {
                 // Fetch lessons from API
-                const lessonsResponse = await fetch('/api/user/lessons?t=' + Date.now(), {
+                const lessonsResponse = await fetch('/api/instructor/lessons?t=' + Date.now(), {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
                 if (lessonsResponse.status === 401 || lessonsResponse.status === 403) {
-                    localStorage.removeItem('studentToken');
+                    localStorage.removeItem('instructorToken');
                     window.location.href = '/caresim-login';
                     return;
                 }
@@ -259,22 +249,6 @@
                     console.error('Failed to fetch lessons:', lessonsResponse.status);
                     showAlertModal('Failed to load lessons. Please try again.', 'Error');
                     allLessons = [];
-                }
-
-                // Load student progress from dashboard API
-                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.data && data.data.lessons) {
-                        data.data.lessons.forEach(lesson => {
-                            studentProgress[lesson.slot] = {
-                                status: lesson.status || 'not_started',
-                                progress: lesson.progress || 0
-                            };
-                        });
-                    }
                 }
 
                 renderLessonsList();
@@ -300,71 +274,20 @@
                 container.innerHTML = '<p class="empty-lessons">No lessons available.</p>';
                 return;
             }
-            
-            // Update progress indicator
-            updateLessonsProgress();
 
             container.innerHTML = allLessons.map(lesson => {
-                const progress = studentProgress[lesson.slot] || {};
-                const status = progress.status || 'not_started';
-                const progressValue = progress.progress || 0;
-
-                // Determine status badge
-                let statusBadgeClass = 'not-started';
-                let statusBadgeText = 'Not Started';
-                if (status === 'completed') {
-                    statusBadgeClass = 'completed';
-                    statusBadgeText = 'Completed';
-                } else if (status === 'in_progress') {
-                    statusBadgeClass = 'in-progress';
-                    statusBadgeText = 'In Progress';
-                }
-
                 return `
-                    <div class="lesson-list-card ${status === 'completed' ? 'is-complete' : ''} ${currentLessonSlot === lesson.slot ? 'active' : ''}" 
+                    <div class="lesson-list-card ${currentLessonSlot === lesson.slot ? 'active' : ''}" 
                          onclick="loadLesson(${lesson.slot})">
                         <div class="lesson-list-card-header">
                             <h3>${lesson.lessonName || `Lesson ${lesson.slot}`}</h3>
-                            <span class="lesson-status-badge ${statusBadgeClass}">${statusBadgeText}</span>
                         </div>
                         <p class="lesson-list-description">${lesson.lessonDescription || 'No description available.'}</p>
-                        <div class="lesson-list-footer">
-                            <div class="lesson-list-progress">
-                                <div class="lesson-list-progress-bar">
-                                    <div class="lesson-list-progress-fill" style="width: ${progressValue}%"></div>
-                                </div>
-                                <span>${progressValue}%</span>
-                            </div>
-                        </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function updateLessonsProgress() {
-            const totalLessons = allLessons.length;
-            let completedCount = 0;
-            
-            allLessons.forEach(lesson => {
-                const progress = studentProgress[lesson.slot] || {};
-                if (progress.status === 'completed') {
-                    completedCount++;
-                }
-            });
-            
-            const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-            
-            const progressFill = document.getElementById('lessonsProgressFill');
-            const progressText = document.getElementById('lessonsProgressText');
-            
-            if (progressFill) {
-                progressFill.style.width = `${progressPercent}%`;
-            }
-            
-            if (progressText) {
-                progressText.textContent = `${completedCount} of ${totalLessons} completed`;
-            }
-        }
 
         function loadLesson(slot) {
             const lesson = allLessons.find(l => l.slot === slot);
@@ -472,21 +395,6 @@
 
             // Load tools tab
             loadToolsTab(lesson.tools || {}, lesson.lessonName || `Lesson ${slot}`);
-
-            // Update mark completed button
-            const progress = studentProgress[slot] || {};
-            const markBtn = document.getElementById('markCompletedBtn');
-            if (markBtn) {
-                if (progress.status === 'completed') {
-                    markBtn.textContent = 'Completed';
-                    markBtn.disabled = true;
-                    markBtn.classList.add('completed');
-                } else {
-                    markBtn.textContent = 'Mark as Completed';
-                    markBtn.disabled = false;
-                    markBtn.classList.remove('completed');
-                }
-            }
 
             // Switch to content tab by default
             switchLessonTab('content');
@@ -811,37 +719,9 @@
             document.getElementById('tool3DTab').classList.toggle('active', tab === '3d');
         }
 
-        async function markLessonCompleted() {
-            if (!currentLessonSlot) return;
-
-            try {
-                // Update local state
-                if (!studentProgress[currentLessonSlot]) {
-                    studentProgress[currentLessonSlot] = {};
-                }
-                studentProgress[currentLessonSlot].status = 'completed';
-                studentProgress[currentLessonSlot].progress = 100;
-
-                // Update UI
-                const markBtn = document.getElementById('markCompletedBtn');
-                if (markBtn) {
-                    markBtn.textContent = 'Completed';
-                    markBtn.disabled = true;
-                    markBtn.classList.add('completed');
-                }
-
-                // TODO: Update Firebase via API
-                // For now, just show success message
-                showAlertModal('Lesson marked as completed!', 'Success');
-                renderLessonsList();
-            } catch (error) {
-                console.error('Error marking lesson as completed:', error);
-                showAlertModal('Failed to update lesson status.', 'Error');
-            }
-        }
 
         function goToDashboard() {
-            window.location.href = '/student-dashboard';
+            window.location.href = '/instructor-dashboard';
         }
 
         function logout() {
@@ -853,8 +733,8 @@
         }
 
         function confirmLogout() {
-            localStorage.removeItem('studentToken');
-            localStorage.removeItem('studentData');
+            localStorage.removeItem('instructorToken');
+            localStorage.removeItem('instructorData');
             window.location.href = '/caresim-login';
         }
 

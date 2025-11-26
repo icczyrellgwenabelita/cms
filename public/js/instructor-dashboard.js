@@ -9,22 +9,43 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   try {
     // Load dashboard data
+    console.log('Loading instructor dashboard data...');
     const data = await instructorAPI.get('/dashboard');
+    console.log('Instructor dashboard API response:', data);
+
+    // Check if data structure is correct
+    if (!data || !data.stats) {
+      console.error('Invalid dashboard response structure:', data);
+      alert('Failed to load dashboard data: Invalid response structure');
+      return;
+    }
 
     // Update statistics
     const statValues = document.querySelectorAll('.instructor-stat-value');
     if (statValues.length >= 4) {
-      statValues[0].textContent = data.stats.totalStudents;
+      const stats = data.stats;
+      console.log('Updating stats with:', stats);
+      
+      statValues[0].textContent = stats.totalStudents || 0;
+      
       // avgQuizScore is in raw format (0-10), display as "X.X / 10"
-      statValues[1].textContent = `${data.stats.avgQuizScore.toFixed(1)} / 10`;
-      statValues[2].textContent = `${Math.round(data.stats.avgSimulationCompletionRate)}%`;
-      statValues[3].textContent = data.stats.atRiskStudents;
+      const avgScore = typeof stats.avgQuizScore === 'number' ? stats.avgQuizScore : 0;
+      statValues[1].textContent = `${avgScore.toFixed(1)} / 10`;
+      
+      const simRate = typeof stats.avgSimulationCompletionRate === 'number' ? stats.avgSimulationCompletionRate : 0;
+      statValues[2].textContent = `${Math.round(simRate)}%`;
+      
+      statValues[3].textContent = stats.atRiskStudents || 0;
+    } else {
+      console.warn('Expected 4 stat values, found:', statValues.length);
     }
 
-    // Update recent activity
+    // Update recent activity (limit to 4 items)
     const activityList = document.querySelector('.activity-list');
     if (activityList && data.recentActivity && data.recentActivity.length > 0) {
-      activityList.innerHTML = data.recentActivity.map(activity => {
+      // Limit to first 4 items
+      const limitedActivity = data.recentActivity.slice(0, 4);
+      activityList.innerHTML = limitedActivity.map(activity => {
         const date = new Date(activity.date);
         const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const icon = activity.type === 'quiz' 
@@ -76,7 +97,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   } catch (error) {
     console.error('Dashboard load error:', error);
-    alert('Failed to load dashboard data. Please try again.');
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+    
+    let errorMessage = 'Failed to load dashboard data. Please try again.';
+    if (error.message) {
+      errorMessage = `Failed to load dashboard: ${error.message}`;
+    }
+    alert(errorMessage);
   }
 });
 

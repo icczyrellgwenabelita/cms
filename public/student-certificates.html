@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="student-portal.css">
 </head>
@@ -189,27 +190,49 @@
                 <button type="button" class="modal-close" id="closeCertificateModal">&times;</button>
             </div>
             <div class="modal-body certificate-modal-body">
-                <div class="certificate-preview">
-                    <div class="certificate-preview-header">
-                        <div class="cert-logo-container">
-                            <div class="cert-logo-placeholder">ASAT</div>
-                            <div class="cert-logo-placeholder">CareSim</div>
+                <div id="certificateCard" class="certificate-frame">
+                    <!-- Header with logos -->
+                    <div class="certificate-header">
+                        <div class="cert-logo-row">
+                            <div class="cert-logo-badge cert-logo-asat">ASAT</div>
+                            <div class="cert-logo-badge cert-logo-caresim">CareSim</div>
+                        </div>
+                        <h1 class="certificate-title">Certificate of Completion</h1>
+                    </div>
+                    
+                    <!-- Body content -->
+                    <div class="certificate-body">
+                        <p class="certificate-intro-text">This certifies that</p>
+                        <h2 class="certificate-student-name" id="modalStudentName">Student Name</h2>
+                        <p class="certificate-completion-text">has successfully completed</p>
+                        <p class="certificate-lesson-title" id="modalCertificateDescription">Lesson 1: Vital Signs Monitoring</p>
+                    </div>
+                    
+                    <!-- Details row -->
+                    <div class="certificate-details-row">
+                        <div class="cert-detail-item">
+                            <span class="cert-detail-label">DATE</span>
+                            <span class="cert-detail-value" id="modalCertificateDate">Nov 18, 2025</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-detail-label">CERTIFICATE ID</span>
+                            <span class="cert-detail-value" id="modalCertificateId">L1-2025-0001</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-detail-label">LESSON / LEVEL</span>
+                            <span class="cert-detail-value" id="modalCertificateLesson">Lesson 1</span>
                         </div>
                     </div>
-                    <div class="certificate-preview-body">
-                        <p class="certificate-intro">This certifies that</p>
-                        <h3 class="certificate-student-name" id="modalStudentName">Student Name</h3>
-                        <p class="certificate-description" id="modalCertificateDescription">
-                            has successfully completed<br>
-                            Lesson 1: Vital Signs Monitoring
-                        </p>
-                        <div class="certificate-footer">
-                            <div class="certificate-date">
-                                <strong>Date:</strong> <span id="modalCertificateDate">Nov 18, 2025</span>
-                            </div>
-                            <div class="certificate-id">
-                                <strong>Certificate ID:</strong> <span id="modalCertificateId">L1-2025-0001</span>
-                            </div>
+                    
+                    <!-- Signature area -->
+                    <div class="certificate-signatures">
+                        <div class="cert-signature-block">
+                            <div class="signature-line"></div>
+                            <p class="signature-label">Instructor Name</p>
+                        </div>
+                        <div class="cert-signature-block">
+                            <div class="signature-line"></div>
+                            <p class="signature-label">ASAT Representative</p>
                         </div>
                     </div>
                 </div>
@@ -221,6 +244,10 @@
         </div>
     </div>
 
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    
     <script>
         const token = localStorage.getItem('studentToken');
         if (!token) {
@@ -618,22 +645,114 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
+        let currentCertificateData = {
+            lessonName: '',
+            certId: '',
+            date: '',
+            type: 'lesson'
+        };
+
         function showCertificateModal(lessonName, certId, date, type) {
             document.getElementById('modalCertificateTitle').textContent = 
                 type === 'lesson' ? 'Lesson Completion Certificate' : 'Certificate';
             document.getElementById('modalStudentName').textContent = certificatesData.studentName;
-            document.getElementById('modalCertificateDescription').innerHTML = 
-                type === 'lesson' 
-                    ? `has successfully completed<br>${lessonName}`
-                    : 'has successfully completed the course';
+            
+            const lessonTitleEl = document.getElementById('modalCertificateDescription');
+            const lessonLevelEl = document.getElementById('modalCertificateLesson');
+            
+            if (type === 'lesson') {
+                lessonTitleEl.textContent = lessonName;
+                lessonLevelEl.textContent = `Lesson ${certId.split('-')[0]?.replace('lesson', '') || ''}`;
+            } else {
+                lessonTitleEl.textContent = 'CareSim Course Completion';
+                lessonLevelEl.textContent = 'Full Course';
+            }
+            
             document.getElementById('modalCertificateDate').textContent = date;
             document.getElementById('modalCertificateId').textContent = certId;
+            
+            // Store current certificate data for PDF download
+            currentCertificateData = {
+                lessonName: lessonName,
+                certId: certId,
+                date: date,
+                type: type
+            };
+            
             document.getElementById('certificateModal').style.display = 'flex';
         }
 
+        async function downloadCertificatePdf() {
+            const certificateElement = document.getElementById('certificateCard');
+            if (!certificateElement) {
+                alert('Certificate element not found');
+                return;
+            }
+
+            try {
+                // Scroll to top of modal to ensure certificate is fully visible
+                const modalBody = document.querySelector('.certificate-modal-body');
+                if (modalBody) {
+                    modalBody.scrollTop = 0;
+                }
+
+                // Wait a moment for any rendering to complete
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const { jsPDF } = window.jspdf;
+
+                // Use html2canvas to render the certificate element
+                const canvas = await html2canvas(certificateElement, {
+                    scale: 2, // Higher resolution for better quality
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/png', 1.0);
+
+                // Create A4 portrait PDF
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+
+                // Fit certificate image into page with margin
+                const margin = 10;
+                const imgWidth = pageWidth - (margin * 2);
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                // Center vertically
+                const y = (pageHeight - imgHeight) / 2;
+                pdf.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
+
+                // Generate filename
+                const certId = currentCertificateData.certId || 'certificate';
+                const filename = `CareSim_Certificate_${certId}.pdf`;
+                pdf.save(filename);
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Failed to generate PDF. Please try again.');
+            }
+        }
+
         function downloadCertificate(id, type) {
-            // Placeholder - will generate PDF later
-            alert('PDF download will be available soon!');
+            // If called from modal, use the stored data
+            if (document.getElementById('certificateModal').style.display === 'flex') {
+                downloadCertificatePdf();
+            } else {
+                // Otherwise, open modal first
+                const btn = event?.target;
+                if (btn && btn.classList.contains('download-cert-btn')) {
+                    const viewBtn = btn.closest('.certificate-actions')?.querySelector('.view-cert-btn');
+                    if (viewBtn && !viewBtn.disabled) {
+                        viewBtn.click();
+                        // Wait for modal to open, then download
+                        setTimeout(() => {
+                            downloadCertificatePdf();
+                        }, 300);
+                    }
+                }
+            }
         }
 
         // Modal close handlers
@@ -646,7 +765,7 @@
         });
 
         document.getElementById('downloadFromModalBtn').addEventListener('click', function() {
-            downloadCertificate(null, 'lesson');
+            downloadCertificatePdf();
         });
 
         // View progress buttons

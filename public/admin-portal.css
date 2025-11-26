@@ -2176,6 +2176,41 @@ input[type="file"]::file-selector-button:hover {
     text-align: center;
 }
 
+.model-upload-spinner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.model-upload-spinner.hidden {
+    display: none;
+}
+
+.model-upload-spinner .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #C19A6B;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: admin-spin 0.8s linear infinite;
+}
+
+@keyframes admin-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .model-placeholder {
     color: #94A3B8;
     font-size: 13px;
