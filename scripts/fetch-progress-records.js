@@ -25,7 +25,7 @@ async function fetchProgressRecords() {
     console.log('='.repeat(60));
     console.log(`Database URL: ${process.env.FIREBASE_DATABASE_URL}\n`);
 
-    const usersRef = db.ref('system/users');
+    const usersRef = db.ref('users');
     const usersSnapshot = await usersRef.once('value');
     const users = usersSnapshot.val() || {};
 

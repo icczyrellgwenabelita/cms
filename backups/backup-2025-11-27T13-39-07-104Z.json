@@ -1,0 +1,1696 @@
+{
+  "timestamp": "2025-11-27T13:39:07.104Z",
+  "triggeredBy": "admin@gmail.com",
+  "data": {
+    "users": {
+      "-OefIqhauGUyVoTCV4XG": {
+        "active": true,
+        "address": "",
+        "assignedStudents": {
+          "6cN1xUmByOhG8j2LY0w1QrtchuG2": true,
+          "yY5I96Gk2rgBDns8biYP6vCa4LM2": true
+        },
+        "birthday": "",
+        "contactNumber": "",
+        "createdAt": "2025-11-22T11:25:03.829Z",
+        "department": "",
+        "email": "instructor@gmail.com",
+        "idNumber": "",
+        "lastLogin": 1763813698667,
+        "name": "Mr. Instructor",
+        "passwordHash": "$2a$10$ejv5y181oUFJGpJhQ1i9Rus8tTPRoMTVphKt/bfEsx8dZz2PIkQWS",
+        "role": "instructor",
+        "verified": true
+      },
+      "6cN1xUmByOhG8j2LY0w1QrtchuG2": {
+        "createdAt": "2025-11-26T17:16:43.755Z",
+        "email": "jjimu365@gmail.com",
+        "lastActiveAt": "2025-11-26T17:16:43.755Z",
+        "loginCount": 1,
+        "name": "",
+        "role": "student"
+      },
+      "7zynSMzVaqRDcTChC9IMfQhVY1B2": {
+        "active": false,
+        "createdAt": "Wed, 26 Nov 2025 17:14:03 GMT",
+        "email": "jmdc1827@gmail.com",
+        "fullName": "marker",
+        "inviteCreatedAt": "2025-11-27T07:43:28.404Z",
+        "inviteExpiresAt": "2025-11-28T07:43:28.404Z",
+        "inviteStatus": "pending",
+        "name": "marker",
+        "role": "student",
+        "studentInfo": {
+          "address": "B11 L9 P3, Zennia St.,\nSan Nicolas III, Celina Royale Subdivision",
+          "batch": "2025",
+          "birthday": "2025-11-27",
+          "contactNumber": "09615010049",
+          "studentNumber": "6769"
+        },
+        "uid": "7zynSMzVaqRDcTChC9IMfQhVY1B2",
+        "updatedAt": "2025-11-27T07:43:28.404Z",
+        "verified": false
+      },
+      "EhqW8Da5mAa588GNNj2h2uMPnIO2": {
+        "active": true,
+        "createdAt": "2025-11-26T15:16:29.530Z",
+        "email": "morant@gmail.com",
+        "fullName": "Andrie Moral",
+        "loginCount": 0,
+        "name": "Andrie Moral",
+        "role": "student",
+        "studentInfo": {
+          "address": "23232",
+          "batch": "2131313131",
+          "birthday": "2002-02-09",
+          "contactNumber": "2313131",
+          "studentNumber": "213412"
+        },
+        "uid": "EhqW8Da5mAa588GNNj2h2uMPnIO2",
+        "updatedAt": "2025-11-26T15:16:29.530Z",
+        "verified": true
+      },
+      "GK73MrMs1kbryboOwApqZXwGIJJ3": {
+        "active": false,
+        "createdAt": "Thu, 27 Nov 2025 07:06:32 GMT",
+        "email": "aprildestine8@gmail.com",
+        "fullName": "destine meow",
+        "inviteCreatedAt": "2025-11-27T08:14:17.640Z",
+        "inviteExpiresAt": "2025-11-28T08:14:17.640Z",
+        "inviteStatus": "pending",
+        "name": "destine meow",
+        "role": "student",
+        "studentInfo": {
+          "address": "hellerrrr",
+          "batch": "2025",
+          "birthday": "2003-10-14",
+          "contactNumber": "09897786666",
+          "studentNumber": "202201010"
+        },
+        "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3",
+        "updatedAt": "2025-11-27T08:14:17.640Z",
+        "verified": false
+      },
+      "I4rLI4McJfW9CNpYQOBrggFxVE53": {
+        "active": true,
+        "createdAt": "2025-11-26T15:21:12.464Z",
+        "email": "olrac@gmail.com",
+        "fullName": "Olrac Makabayan",
+        "loginCount": 0,
+        "name": "Olrac Makabayan",
+        "role": "student",
+        "studentInfo": {
+          "address": "B11 L9 P3, Zennia St.,\nSan Nicolas III, Celina Royale Subdivision",
+          "batch": "2025",
+          "birthday": "1998-11-26",
+          "contactNumber": "09674121386",
+          "studentNumber": "213412"
+        },
+        "uid": "I4rLI4McJfW9CNpYQOBrggFxVE53",
+        "updatedAt": "2025-11-26T15:21:12.464Z",
+        "verified": true
+      },
+      "OyukGxzuNsXjoogJwx06ypH0A3E3": {
+        "active": true,
+        "createdAt": "2025-11-27T13:09:06.935Z",
+        "email": "sampleteacher@gmail.com",
+        "fullName": "Lovelyn Fortaliza",
+        "loginCount": 0,
+        "name": "Lovelyn Fortaliza",
+        "role": "instructor",
+        "uid": "OyukGxzuNsXjoogJwx06ypH0A3E3",
+        "updatedAt": "2025-11-27T13:09:06.935Z",
+        "verified": true
+      },
+      "SYEEg91bcVZ8VhOV3BFMsDEAtfh2": {
+        "active": false,
+        "archived": true,
+        "assignedInstructor": "-Oef2y7KFfy_eKK_kuIV",
+        "createdAt": "Wed, 26 Nov 2025 16:55:25 GMT",
+        "email": "jmdc7127@gmail.com",
+        "fullName": "johnny",
+        "inviteCreatedAt": "2025-11-26T16:55:42.186Z",
+        "inviteExpiresAt": "2025-11-27T16:55:42.186Z",
+        "inviteStatus": "pending",
+        "name": "johnny",
+        "role": "student",
+        "studentInfo": {
+          "address": "B11 L9 P3, Zennia St.,\nSan Nicolas III, Celina Royale Subdivision",
+          "batch": "222",
+          "birthday": "",
+          "contactNumber": "09674121386",
+          "studentNumber": "2232"
+        },
+        "uid": "SYEEg91bcVZ8VhOV3BFMsDEAtfh2",
+        "updatedAt": "2025-11-27T12:27:53.949Z",
+        "verified": false
+      },
+      "hOM8Lvp8ERdqphpqIbwK9Ze8lJm1": {
+        "active": false,
+        "archived": false,
+        "createdAt": "Thu, 27 Nov 2025 11:18:17 GMT",
+        "email": "love.fortaliza14@gmail.com",
+        "fullName": "love",
+        "inviteCreatedAt": "2025-11-27T11:18:41.022Z",
+        "inviteExpiresAt": "2025-11-28T11:18:41.022Z",
+        "inviteStatus": "pending",
+        "name": "love",
+        "progress": {
+          "Lesson1": {
+            "simulation": {
+              "attempts": 1,
+              "avgTime": 278.4246826171875,
+              "completed": false
+            }
+          },
+          "lesson1": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson2": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson3": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson4": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson5": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson6": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          }
+        },
+        "role": "student",
+        "studentInfo": {
+          "address": "",
+          "batch": "2025",
+          "birthday": "2025-11-27",
+          "contactNumber": "0924224242",
+          "studentNumber": "20202"
+        },
+        "uid": "hOM8Lvp8ERdqphpqIbwK9Ze8lJm1",
+        "updatedAt": "2025-11-27T11:18:41.022Z",
+        "verified": false
+      },
+      "ib9hnz1tBJdDqHPICoE5N5KSgbZ2": {
+        "active": true,
+        "address": "",
+        "birthday": "",
+        "contactNumber": "",
+        "email": "destinezoned@gmail.com",
+        "history": {
+          "quizzes": {
+            "2025-11-22T17:22:17": {
+              "lesson": 1,
+              "score": 9,
+              "time": 65.21141052246094
+            }
+          }
+        },
+        "lastActiveAt": "2025-11-26T09:17:14.987Z",
+        "loginCount": 1,
+        "name": "Destine April Fortaliza",
+        "progress": {
+          "lesson1": {
+            "quiz": {
+              "attempts": 1,
+              "avgTime": 65.21141052246094,
+              "completed": true,
+              "highestScore": 9,
+              "latestScore": 9
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson2": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson3": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson4": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson5": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson6": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          }
+        },
+        "role": "public"
+      },
+      "xlKvU40iWecedKcXtTs0JShCbTo1": {
+        "active": false,
+        "archived": false,
+        "assignedInstructor": "-OezDLtPMSFPBZADA4J_",
+        "createdAt": "Thu, 27 Nov 2025 08:17:52 GMT",
+        "email": "jmpogs7@gmail.com",
+        "fullName": "jm pogi",
+        "inviteCreatedAt": "2025-11-27T09:30:16.349Z",
+        "inviteExpiresAt": "2025-11-28T09:30:16.349Z",
+        "inviteStatus": "pending",
+        "name": "jm pogi",
+        "role": "student",
+        "studentInfo": {
+          "address": "dyan lang",
+          "batch": "2022",
+          "birthday": "2003-10-14",
+          "contactNumber": "09198072322",
+          "studentNumber": "202210100"
+        },
+        "uid": "xlKvU40iWecedKcXtTs0JShCbTo1",
+        "updatedAt": "2025-11-27T09:30:16.349Z",
+        "verified": false
+      },
+      "yY5I96Gk2rgBDns8biYP6vCa4LM2": {
+        "active": true,
+        "assignedInstructor": "-OefIqhauGUyVoTCV4XG",
+        "email": "jmdc7737@gmail.com",
+        "lastLogin": 1764085960860,
+        "name": "John Mark Dela Cruz",
+        "passwordHash": "$2a$10$75.T3omn.twA7O.UpjHsdOm84rl0Vg5CwgLZDzePMhd3K0xPijVCS",
+        "profileCompletion": 50,
+        "progress": {
+          "lesson1": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson2": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson3": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson4": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson5": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          },
+          "lesson6": {
+            "quiz": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false,
+              "highestScore": 0,
+              "latestScore": 0
+            },
+            "simulation": {
+              "attempts": 0,
+              "avgTime": 0,
+              "completed": false
+            }
+          }
+        },
+        "role": "student",
+        "studentInfo": {
+          "address": "",
+          "batch": "2323232232",
+          "birthday": "",
+          "school": "2323232",
+          "studentNumber": "232232"
+        },
+        "verified": true
+      }
+    },
+    "lessons": {
+      "1": {
+        "body": "<div>Vital signs are key indicators of a patient’s overall health and physical condition. Caregivers must know how to measure these signs accurately and recognize when values fall outside the normal range.</div><div><br></div><div>In this lesson, you will learn the four primary vital signs:</div><div><br></div><div>1. Temperature&nbsp;&nbsp;</div><div>2. Pulse&nbsp;&nbsp;</div><div>3. Respiration&nbsp;&nbsp;</div><div>4. Blood Pressure&nbsp;&nbsp;</div><div><br></div><div>You will also understand how to:</div><div>• Use basic monitoring tools&nbsp;&nbsp;</div><div>• Ensure patient safety&nbsp;&nbsp;</div><div>• Identify abnormal vital sign patterns&nbsp;&nbsp;</div><div><br></div>",
+        "createdAt": "2025-11-26T06:06:25.015Z",
+        "description": "This lesson introduces the basic techniques for measuring a patient’s vital signs. Students will learn how to accurately monitor temperature, pulse, respiration, and blood pressure, and understand why these measurements are important in maintaining patient health.",
+        "lessonDescription": "This lesson introduces the basic techniques for measuring a patient’s vital signs. Students will learn how to accurately monitor temperature, pulse, respiration, and blood pressure, and understand why these measurements are important in maintaining patient health.",
+        "lessonName": "Lesson 1: Monitoring Vital Signs",
+        "lessonTitle": "Lesson 1: Monitoring Vital Signs",
+        "slot": 1,
+        "status": "published",
+        "updatedAt": "2025-11-26T07:39:43.965Z"
+      },
+      "2": {
+        "body": "dsddas",
+        "createdAt": "2025-11-26T08:17:25.360Z",
+        "description": "sample",
+        "lessonDescription": "sample",
+        "lessonName": "sample",
+        "lessonTitle": "sample",
+        "slot": 2,
+        "status": "published",
+        "updatedAt": "2025-11-26T08:17:39.204Z"
+      },
+      "lesson1": {
+        "lessonTitle": "Monitoring Vital Signs",
+        "questions": [
+          {
+            "choices": [
+              "Record previous readings",
+              "Wash their hands",
+              "Take the patient’s pulse",
+              "Prepare the thermometer"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always wash your hands before and after patient contact to prevent infection",
+            "questionText": "What is the first thing a caregiver should do before checking a patient’s vital signs?",
+            "updatedAt": "2025-11-11T07:49:17.900Z"
+          },
+          {
+            "choices": [
+              "Stethoscope",
+              "Sphygmomanometer",
+              "Thermometer",
+              "Pulse oximeter"
+            ],
+            "correctIndex": 1,
+            "explanation": "A sphygmomanometer measures blood pressure, usually with a stethoscope.",
+            "questionText": "Which tool is used to measure blood pressure?"
+          },
+          {
+            "choices": [
+              "Pulse",
+              "Temperature",
+              "Respiration",
+              "Blood pressure"
+            ],
+            "correctIndex": 1,
+            "explanation": "A thermometer measures body temperature, one of the four main vital signs.",
+            "questionText": "What vital sign is measured using a thermometer?"
+          },
+          {
+            "choices": [
+              "Neck (carotid)",
+              "Arm (brachial)",
+              "Wrist (radial)",
+              "All of the above"
+            ],
+            "correctIndex": 3,
+            "explanation": "The pulse can be checked in several areas, including the neck, arm, and wrist.",
+            "questionText": "Where is the pulse commonly taken when checking a patient?"
+          },
+          {
+            "choices": [
+              "34°C",
+              "35°C",
+              "36–37°C",
+              "38°C"
+            ],
+            "correctIndex": 2,
+            "explanation": "A normal body temperature is between 36°C and 37°C.",
+            "questionText": "What is the normal body temperature for a healthy adult?"
+          },
+          {
+            "choices": [
+              "Ignore it and continue",
+              "Retake after few minutes",
+              "Record it as normal",
+              "Ask another patient"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always double-check abnormal readings before reporting them to a nurse or doctor.",
+            "questionText": "What should you do if a patient’s blood pressure reading is abnormally high?"
+          },
+          {
+            "choices": [
+              "Temperature",
+              "Pain level",
+              "Pulse",
+              "Respiration rate"
+            ],
+            "correctIndex": 1,
+            "explanation": "While pain level is important, it’s not one of the four traditional vital signs.",
+            "questionText": "Which of the following is not considered a vital sign?"
+          },
+          {
+            "choices": [
+              "10 seconds",
+              "15 seconds",
+              "30 seconds",
+              "60 seconds"
+            ],
+            "correctIndex": 3,
+            "explanation": "Counting the pulse for a full 60 seconds gives the most accurate rate.",
+            "questionText": "How long should you count the pulse for accurate measurement?"
+          },
+          {
+            "choices": [
+              "Report without recording",
+              "Record results accurately",
+              "Estimate based on avg",
+              "Skip if all normal"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always record and report results, even if all readings are within normal range.",
+            "questionText": "What should you do after taking all the vital signs?"
+          },
+          {
+            "choices": [
+              "Fill medical charts",
+              "Observe patient changes",
+              "Impress supervisors",
+              "Complete daily routine"
+            ],
+            "correctIndex": 1,
+            "explanation": "Vital signs help track a patient’s health status and detect any sudden changes early.",
+            "questionText": "What is the purpose of monitoring a patient’s vital signs regularly?",
+            "updatedAt": "2025-11-11T05:21:49.235Z"
+          }
+        ]
+      },
+      "lesson2": {
+        "lessonTitle": "Medication Assistance",
+        "questions": [
+          {
+            "choices": [
+              "The medicine’s color",
+              "The patient’s identity",
+              "The container size",
+              "The room temperature"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always confirm the patient’s identity first to ensure the right medicine goes to the right person.",
+            "questionText": "What should a caregiver check first before giving any medication?",
+            "updatedAt": "2025-11-21T18:24:30.322Z"
+          },
+          {
+            "choices": [
+              "Give more if patient in pain",
+              "Give dose by doctor’s order",
+              "Let patient choose amount",
+              "Divide dose to save supply"
+            ],
+            "correctIndex": 1,
+            "explanation": "The “Right Dose” means following the exact prescribed amount.",
+            "questionText": "What does the “Right Dose” in the Five Rights of medication mean?"
+          },
+          {
+            "choices": [
+              "Pick it up and give it",
+              "Wipe it off and still give",
+              "Throw away and get new",
+              "Ask another patient"
+            ],
+            "correctIndex": 2,
+            "explanation": "Dropped medicine must never be reused; replace it immediately.",
+            "questionText": "What is the correct action if you drop a pill on the floor?"
+          },
+          {
+            "choices": [
+              "To impress supervisors",
+              "To avoid med errors",
+              "To memorize label",
+              "To finish faster"
+            ],
+            "correctIndex": 1,
+            "explanation": "Checking the label three times ensures the correct medicine, dose, and timing.",
+            "questionText": "Why should a caregiver check the medication label three times?"
+          },
+          {
+            "choices": [
+              "Force the patient",
+              "Record and report it",
+              "Ignore it",
+              "Mix with food secretly"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always respect the patient’s choice, document the refusal, and inform the nurse or doctor.",
+            "questionText": "What should you do if the patient refuses to take their medicine?"
+          },
+          {
+            "choices": [
+              "Correct delivery method",
+              "Patient’s walking path",
+              "Time of day",
+              "Food before taking"
+            ],
+            "correctIndex": 0,
+            "explanation": "“Right Route” means giving the medicine through the correct method prescribed.",
+            "questionText": "What does “Right Route” refer to in medication administration?"
+          },
+          {
+            "choices": [
+              "When bottle looks old",
+              "Before giving each time",
+              "After patient takes it",
+              "Once every week"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always check expiration before every administration to ensure medicine safety.",
+            "questionText": "When should the caregiver check the expiration date of medicine?"
+          },
+          {
+            "choices": [
+              "Record time and dose",
+              "Leave quietly",
+              "Ask for signature",
+              "Throw label away"
+            ],
+            "correctIndex": 0,
+            "explanation": "Documenting the dose and time ensures accurate patient records.",
+            "questionText": "What should a caregiver do after giving a patient their medication?"
+          },
+          {
+            "choices": [
+              "Stop and report it",
+              "Continue giving",
+              "Wait if it improves",
+              "Hide the incident"
+            ],
+            "correctIndex": 0,
+            "explanation": "Stop the medicine and inform the nurse or doctor right away.",
+            "questionText": "If a patient experiences side effects after medication, what is the first step?"
+          },
+          {
+            "choices": [
+              "To work faster",
+              "Prevent med errors",
+              "Test memory",
+              "Keep records neat"
+            ],
+            "correctIndex": 1,
+            "explanation": "The Five Rights help ensure patient safety and accurate medication administration.",
+            "questionText": "Why is it important to follow the “Five Rights” of medication?"
+          }
+        ]
+      },
+      "lesson3": {
+        "lessonTitle": "Meal Preparation and Feeding",
+        "questions": [
+          {
+            "choices": [
+              "To look professional",
+              "To prevent contamination",
+              "To make food taste better",
+              "To keep hands warm"
+            ],
+            "correctIndex": 1,
+            "explanation": "Handwashing prevents germs from spreading to food and the patient.",
+            "questionText": "Why should a caregiver wash hands before preparing food?"
+          },
+          {
+            "choices": [
+              "To make it colorful",
+              "Meet nutritional needs",
+              "Copy restaurant food",
+              "Make it spicy"
+            ],
+            "correctIndex": 1,
+            "explanation": "Meals should meet the patient’s dietary and nutritional requirements.",
+            "questionText": "What is the main goal when preparing a patient’s meal?"
+          },
+          {
+            "choices": [
+              "Temp and freshness",
+              "Plate design",
+              "Number of utensils",
+              "Smell of kitchen"
+            ],
+            "correctIndex": 0,
+            "explanation": "Always ensure food is fresh and at a safe temperature before serving.",
+            "questionText": "What should be checked before serving food to a patient?"
+          },
+          {
+            "choices": [
+              "For comfort only",
+              "To prevent choking",
+              "To look better",
+              "To rest back"
+            ],
+            "correctIndex": 1,
+            "explanation": "Upright posture prevents aspiration and helps swallowing.",
+            "questionText": "Why should the patient sit upright during feeding?"
+          },
+          {
+            "choices": [
+              "Stop feeding now",
+              "Continue slowly",
+              "Ignore it",
+              "Give more water"
+            ],
+            "correctIndex": 0,
+            "explanation": "Stop feeding, ensure safety, and report if the cough continues.",
+            "questionText": "What should you do if the patient starts coughing while eating?"
+          },
+          {
+            "choices": [
+              "Large and heavy",
+              "Small, easy to chew",
+              "Spicy and flavorful",
+              "Raw and fresh"
+            ],
+            "correctIndex": 1,
+            "explanation": "Small, soft portions help elderly patients eat comfortably and safely.",
+            "questionText": "How should food portions be prepared for elderly patients?"
+          },
+          {
+            "choices": [
+              "To check caregiver work",
+              "Monitor nutrition & health",
+              "Impress family",
+              "Complete paperwork"
+            ],
+            "correctIndex": 1,
+            "explanation": "Tracking food intake ensures the patient is receiving proper nutrition.",
+            "questionText": "Why is it important to record food intake?"
+          },
+          {
+            "choices": [
+              "Announce mealtime & ask",
+              "Feed quickly",
+              "Adjust lighting",
+              "Prepare dessert first"
+            ],
+            "correctIndex": 0,
+            "explanation": "Always inform and ask for consent before any caregiving task.",
+            "questionText": "What should you do before feeding the patient?"
+          },
+          {
+            "choices": [
+              "To make them shine",
+              "Prevent infection",
+              "Impress visitors",
+              "Save water"
+            ],
+            "correctIndex": 1,
+            "explanation": "Clean utensils prevent bacterial transfer and illness.",
+            "questionText": "Why should feeding utensils be clean and dry?"
+          },
+          {
+            "choices": [
+              "Feed quickly",
+              "Talk calmly, patiently",
+              "Force them to finish",
+              "Ignore preferences"
+            ],
+            "correctIndex": 1,
+            "explanation": "Communicating kindly encourages cooperation and improves appetite.",
+            "questionText": "What is the best way to encourage a patient to eat?"
+          }
+        ]
+      },
+      "lesson4": {
+        "lessonTitle": "Safe Patient Transfer",
+        "questions": [
+          {
+            "choices": [
+              "Prevent rolling accidents",
+              "Make it easier to push",
+              "Adjust seat height",
+              "Rest the brakes"
+            ],
+            "correctIndex": 0,
+            "explanation": "Locking the wheels prevents movement and keeps both caregiver and patient safe.",
+            "questionText": "Why should the wheelchair wheels be locked before transferring a patient?"
+          },
+          {
+            "choices": [
+              "Patient’s mood",
+              "Area for obstacles",
+              "Time of day",
+              "Wheelchair color"
+            ],
+            "correctIndex": 1,
+            "explanation": "Ensure the area is clear to prevent accidents during transfer.",
+            "questionText": "What should the caregiver check before moving the patient?"
+          },
+          {
+            "choices": [
+              "In front of patient",
+              "Behind wheelchair",
+              "On weaker side",
+              "On stronger side"
+            ],
+            "correctIndex": 3,
+            "explanation": "Stand on the stronger side to provide better support and balance.",
+            "questionText": "Where should the caregiver stand during transfer?"
+          },
+          {
+            "choices": [
+              "Count & communicate",
+              "Lift suddenly",
+              "Ask aide to leave",
+              "Wait patient to stand"
+            ],
+            "correctIndex": 0,
+            "explanation": "Communicating ensures both caregiver and patient move safely together.",
+            "questionText": "What should the caregiver do before lifting or assisting?"
+          },
+          {
+            "choices": [
+              "Feet together",
+              "Shoulder-width apart",
+              "One foot behind",
+              "Stand on one leg"
+            ],
+            "correctIndex": 1,
+            "explanation": "A wide stance provides better stability and prevents back injury.",
+            "questionText": "How should the caregiver position their feet while assisting transfer?"
+          },
+          {
+            "choices": [
+              "Adjust bed height & position",
+              "Move wheelchair away",
+              "Remove bed sheet",
+              "Ask patient to jump"
+            ],
+            "correctIndex": 0,
+            "explanation": "Proper positioning and bed height make the transfer easier and safer.",
+            "questionText": "What is the first thing to do before transferring a patient from bed to wheelchair?"
+          },
+          {
+            "choices": [
+              "To finish faster",
+              "Avoid strain or injury",
+              "Look professional",
+              "Test strength"
+            ],
+            "correctIndex": 1,
+            "explanation": "Good posture and body mechanics protect both caregiver and patient.",
+            "questionText": "Why is it important to use correct body mechanics during transfer?"
+          },
+          {
+            "choices": [
+              "Sit them & call help",
+              "Continue transfer",
+              "Walk them faster",
+              "Leave standing"
+            ],
+            "correctIndex": 0,
+            "explanation": "Safety first — stop the transfer and assist them to sit safely.",
+            "questionText": "What should you do if the patient feels dizzy during transfer?"
+          },
+          {
+            "choices": [
+              "Transfer belt/board",
+              "Pillow",
+              "Blanket",
+              "Tray table"
+            ],
+            "correctIndex": 0,
+            "explanation": "Use assistive devices to ensure safe and efficient transfers.",
+            "questionText": "What equipment helps move a patient safely with less effort?"
+          },
+          {
+            "choices": [
+              "Remove footrests",
+              "Secure belt & comfort",
+              "Leave immediately",
+              "Ask them to stand"
+            ],
+            "correctIndex": 1,
+            "explanation": "Always make sure the patient is stable, safe, and comfortable.",
+            "questionText": "After transferring the patient to a wheelchair, what must you do?"
+          }
+        ]
+      },
+      "lesson5": {
+        "lessonTitle": "Bathing and Grooming the Elderly",
+        "questions": [
+          {
+            "choices": [
+              "For fashion",
+              "For hygiene & comfort",
+              "Keep caregiver busy",
+              "Cool body only"
+            ],
+            "correctIndex": 1,
+            "explanation": "Bathing helps maintain cleanliness and prevents skin infections.",
+            "questionText": "Why is bathing important for elderly patients?"
+          },
+          {
+            "choices": [
+              "Water temp & privacy",
+              "Patient’s clothing",
+              "Soap color",
+              "Room furniture"
+            ],
+            "correctIndex": 0,
+            "explanation": "Always ensure warm water and privacy for patient comfort and dignity.",
+            "questionText": "What should be checked before starting a bath?"
+          },
+          {
+            "choices": [
+              "Face",
+              "Feet",
+              "Back",
+              "Legs"
+            ],
+            "correctIndex": 0,
+            "explanation": "Start with the cleanest area (face) to avoid spreading germs.",
+            "questionText": "Which part of the body should be washed first?"
+          },
+          {
+            "choices": [
+              "For modesty & warmth",
+              "To save towels",
+              "To dry faster",
+              "For decoration"
+            ],
+            "correctIndex": 0,
+            "explanation": "Covering helps maintain dignity and prevent chills.",
+            "questionText": "Why is it important to keep the patient covered during bathing?"
+          },
+          {
+            "choices": [
+              "Every hour",
+              "Daily or as needed",
+              "Once a month",
+              "During checkups"
+            ],
+            "correctIndex": 1,
+            "explanation": "Bathing daily or as needed keeps skin clean and comfortable.",
+            "questionText": "How often should elderly patients be bathed?"
+          },
+          {
+            "choices": [
+              "Change or rinse cloth",
+              "Use same cloth",
+              "Ask another aide",
+              "Ignore it"
+            ],
+            "correctIndex": 0,
+            "explanation": "Changing or rinsing the cloth prevents spreading dirt or bacteria.",
+            "questionText": "What should you do before washing a new area?"
+          },
+          {
+            "choices": [
+              "For style only",
+              "Prevent infection/odor",
+              "Please visitors",
+              "Reduce work"
+            ],
+            "correctIndex": 1,
+            "explanation": "Clean nails and hair are part of overall hygiene and infection prevention.",
+            "questionText": "Why should nails and hair be kept clean?"
+          },
+          {
+            "choices": [
+              "Stop & dry them",
+              "Add cold water",
+              "Ignore it",
+              "Continue quickly"
+            ],
+            "correctIndex": 0,
+            "explanation": "Always prioritize patient comfort and safety.",
+            "questionText": "What should you do if the patient feels cold during the bath?"
+          },
+          {
+            "choices": [
+              "Apply lotion & dress",
+              "Leave them wet",
+              "Change bedsheet",
+              "Record nothing"
+            ],
+            "correctIndex": 0,
+            "explanation": "Drying, moisturizing, and dressing ensure comfort and skin care.",
+            "questionText": "What should be done after bathing the patient?"
+          },
+          {
+            "choices": [
+              "Respect privacy & dignity",
+              "Finish quickly",
+              "Talk loudly",
+              "Use any tools"
+            ],
+            "correctIndex": 0,
+            "explanation": "Always maintain respect, comfort, and the patient’s dignity.",
+            "questionText": "What is the most important thing during grooming activities?"
+          }
+        ]
+      },
+      "lesson6": {
+        "lessonTitle": "Emergency Response (CPR Basics)",
+        "questions": [
+          {
+            "choices": [
+              "Check danger & call help",
+              "Start CPR right away",
+              "Pour water on them",
+              "Move them quickly"
+            ],
+            "correctIndex": 0,
+            "explanation": "Always check safety first and call for help before performing CPR.",
+            "questionText": "What should be the first thing to do when you find someone unresponsive?"
+          },
+          {
+            "choices": [
+              "Cardiac Pulse Rescue",
+              "Cardiopulmonary Resus.",
+              "Complete Patient Recovery",
+              "Chest Pressure Routine"
+            ],
+            "correctIndex": 1,
+            "explanation": "CPR means Cardiopulmonary Resuscitation — restoring breathing and circulation.",
+            "questionText": "What does CPR stand for?"
+          },
+          {
+            "choices": [
+              "When breathing normal",
+              "No breathing or pulse",
+              "When patient is awake",
+              "When coughing"
+            ],
+            "correctIndex": 1,
+            "explanation": "CPR starts when a person has no pulse and is not breathing.",
+            "questionText": "When should CPR be started?"
+          },
+          {
+            "choices": [
+              "Center of chest",
+              "Left chest side",
+              "On stomach",
+              "On neck"
+            ],
+            "correctIndex": 0,
+            "explanation": "Place hands on the center of the chest for effective compressions.",
+            "questionText": "What is the correct hand position for chest compressions?"
+          },
+          {
+            "choices": [
+              "About 2 inches (5 cm)",
+              "1 inch only",
+              "4 inches",
+              "As deep as possible"
+            ],
+            "correctIndex": 0,
+            "explanation": "Compress about 2 inches deep to effectively pump the heart.",
+            "questionText": "What is the correct compression depth for adults?"
+          },
+          {
+            "choices": [
+              "30–50",
+              "100–120",
+              "60–70",
+              "150–200"
+            ],
+            "correctIndex": 1,
+            "explanation": "Maintain 100–120 compressions per minute for best results.",
+            "questionText": "How many compressions per minute should be given in CPR?"
+          },
+          {
+            "choices": [
+              "Give 2 rescue breaths",
+              "Stop and rest",
+              "Change rescuer",
+              "Take a photo"
+            ],
+            "correctIndex": 0,
+            "explanation": "The CPR ratio is 30 compressions to 2 breaths.",
+            "questionText": "What should be done after every 30 chest compressions?"
+          },
+          {
+            "choices": [
+              "To open airway",
+              "To comfort patient",
+              "To see chest clearly",
+              "To align posture"
+            ],
+            "correctIndex": 0,
+            "explanation": "Tilting the head opens the airway for proper breathing.",
+            "questionText": "Why is it important to tilt the head before giving rescue breaths?"
+          },
+          {
+            "choices": [
+              "Use it & follow steps",
+              "Ignore it",
+              "Wait for doctor",
+              "Use after 10 mins"
+            ],
+            "correctIndex": 0,
+            "explanation": "Use the AED right away if available and follow its voice instructions.",
+            "questionText": "What should you do if an AED (defibrillator) is available?"
+          },
+          {
+            "choices": [
+              "When signs of life",
+              "When tired",
+              "After 1 minute",
+              "When watched"
+            ],
+            "correctIndex": 0,
+            "explanation": "Stop only when help arrives or the person starts breathing again.",
+            "questionText": "When should CPR be stopped?"
+          }
+        ]
+      }
+    },
+    "lmsLessons": [
+      null,
+      {
+        "pages": {
+          "-OeylL88qHw5PYds_VnE": {
+            "assessments": {
+              "-OeymsM_RPHF1iusRKDy": {
+                "answerA": "Temperature, Pulse, Respiration, Blood Pressure",
+                "answerB": "Pulse, Height, Weight, Temperature",
+                "answerC": "Blood Sugar, Oxygen, Pulse, Weight",
+                "answerD": "None of the above",
+                "correctAnswer": "A",
+                "createdAt": "2025-11-26T06:13:36.138Z",
+                "explanation": "Sample explanation",
+                "question": "What are considered the four primary vital signs?",
+                "updatedAt": "2025-11-26T06:13:36.139Z"
+              },
+              "-Oeyn-dnMFTBrxQ1sLFD": {
+                "answerA": "They indicate the patient’s overall health condition",
+                "answerB": "They show how hungry the patient is",
+                "answerC": "They measure emotional state",
+                "answerD": "They determine diagnosis immediately",
+                "correctAnswer": "A",
+                "createdAt": "2025-11-26T06:14:10.072Z",
+                "explanation": "",
+                "question": "Why are vital signs important?",
+                "updatedAt": "2025-11-26T06:14:10.072Z"
+              },
+              "-Oeyn6AJLTAR50UTU26j": {
+                "answerA": "Pulse",
+                "answerB": "Temperature",
+                "answerC": "Respiration",
+                "answerD": "Blood Pressure",
+                "correctAnswer": "B",
+                "createdAt": "2025-11-26T06:14:36.793Z",
+                "explanation": "",
+                "question": "Which vital sign measures body heat?",
+                "updatedAt": "2025-11-26T06:14:36.793Z"
+              }
+            },
+            "content": "Vital signs are measurements of the body's most basic functions. They help caregivers assess a patient’s current health status and detect early signs of medical problems.\n\nThe four primary vital signs are:\n• Temperature  \n• Pulse  \n• Respiration  \n• Blood Pressure  \n\nUnderstanding these helps caregivers respond appropriately to the patient's needs.\n",
+            "createdAt": "2025-11-26T06:06:53.794Z",
+            "order": 0,
+            "title": "Introduction to Vital Signs",
+            "updatedAt": "2025-11-26T06:06:53.794Z"
+          },
+          "-Oeyp7tD6OSv9sME1p_k": {
+            "assessments": {
+              "-OeypGRIxNe27snF6T8K": {
+                "answerA": "Pulse oximeter",
+                "answerB": "Thermometer",
+                "answerC": "Stethoscope",
+                "answerD": "Sphygmomanometer",
+                "correctAnswer": "B",
+                "createdAt": "2025-11-26T06:24:03.128Z",
+                "explanation": "",
+                "question": "Which tool is used to measure temperature?",
+                "updatedAt": "2025-11-26T06:24:03.128Z"
+              },
+              "-OeypTFF9SBX6urd6gGt": {
+                "answerA": "20–25°C",
+                "answerB": "39–41°C",
+                "answerC": "36.5–37.5°C",
+                "answerD": "18–22°C",
+                "correctAnswer": "C",
+                "createdAt": "2025-11-26T06:24:55.605Z",
+                "explanation": "",
+                "question": "What is the normal temperature range for adults?",
+                "updatedAt": "2025-11-26T06:24:55.605Z"
+              }
+            },
+            "content": "Body temperature helps determine whether a patient has fever, hypothermia, or is within the normal range. Caregivers commonly use digital thermometers, tympanic thermometers, or temporal scanners.\n\nNormal body temperature: 36.5°C to 37.5°C (97.7°F to 99.5°F)\n",
+            "createdAt": "2025-11-26T06:23:28.115Z",
+            "order": 1,
+            "title": "Measuring Body Temperature",
+            "updatedAt": "2025-11-26T06:23:28.115Z"
+          }
+        }
+      }
+    ],
+    "activityLog": {
+      "-OezCYA6RGthvYQYrCOm": {
+        "action": "backup_completed",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Manual backup completed",
+        "metadata": {
+          "fileName": "backup-2025-11-26T08-10-06-941Z.json"
+        },
+        "timestamp": "2025-11-26T08:10:06.941Z",
+        "type": "system"
+      },
+      "-OezCqRWhRiOvzlVoTVx": {
+        "action": "user_login",
+        "actorId": "6cN1xUmByOhG8j2LY0w1QrtchuG2",
+        "actorName": "Sample Entry Name",
+        "actorType": "student",
+        "description": "User logged in",
+        "timestamp": "2025-11-26T08:11:26.074Z",
+        "type": "auth"
+      },
+      "-OezED9NcJCUuVRqwKDG": {
+        "action": "lesson_updated",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Lesson 2 updated",
+        "relatedLesson": 2,
+        "timestamp": "2025-11-26T08:17:25.548Z",
+        "type": "lesson"
+      },
+      "-OezEGXfUirMHAAYfTGJ": {
+        "action": "lesson_updated",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Lesson 2 updated",
+        "relatedLesson": 2,
+        "timestamp": "2025-11-26T08:17:39.391Z",
+        "type": "lesson"
+      },
+      "-OezRk2nPNDyxWoodGy0": {
+        "action": "admin_login",
+        "actorId": "-OezDLtPMSFPBZADA4J_",
+        "actorName": "Sample Instructor",
+        "actorType": "instructor",
+        "description": "Admin logged in",
+        "timestamp": "2025-11-26T09:16:32.101Z",
+        "type": "auth"
+      },
+      "-OezRuWo0WPzmbQ75I7Y": {
+        "action": "user_login",
+        "actorId": "ib9hnz1tBJdDqHPICoE5N5KSgbZ2",
+        "actorName": "Destine April Fortaliza",
+        "actorType": "public",
+        "description": "User logged in",
+        "timestamp": "2025-11-26T09:17:14.987Z",
+        "type": "auth"
+      },
+      "-OezS-kb3IqjBOzHsug8": {
+        "action": "backup_completed",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Manual backup completed",
+        "metadata": {
+          "fileName": "backup-2025-11-26T09-17-40-304Z.json"
+        },
+        "timestamp": "2025-11-26T09:17:40.304Z",
+        "type": "system"
+      },
+      "-OezWEaREpIr6BInFO-Q": {
+        "action": "backup_completed",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Manual backup completed",
+        "metadata": {
+          "fileName": "backup-2025-11-26T09-36-09-735Z.json"
+        },
+        "timestamp": "2025-11-26T09:36:09.735Z",
+        "type": "system"
+      },
+      "-Of-YQwN2wktrtSjNewm": {
+        "action": "backup_completed",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Manual backup completed",
+        "metadata": {
+          "fileName": "backup-2025-11-26T14-25-22-079Z.json"
+        },
+        "timestamp": "2025-11-26T14:25:22.079Z",
+        "type": "system"
+      },
+      "-Of-j8-t41wKKjwUjc6g": {
+        "action": "student_created",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Admin created new student",
+        "metadata": {
+          "email": "morant@gmail.com",
+          "uid": "EhqW8Da5mAa588GNNj2h2uMPnIO2"
+        },
+        "timestamp": "2025-11-26T15:16:30.715Z",
+        "type": "auth"
+      },
+      "-Of-kDKAtTTyA8iXVY9Q": {
+        "action": "student_created",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Admin created new student",
+        "metadata": {
+          "email": "olrac@gmail.com",
+          "uid": "I4rLI4McJfW9CNpYQOBrggFxVE53"
+        },
+        "timestamp": "2025-11-26T15:21:14.637Z",
+        "type": "auth"
+      },
+      "-Of-ogMqC08evq4h2F4e": {
+        "action": "student_created",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Admin created new student",
+        "metadata": {
+          "email": "jmpogs7@gmail.com",
+          "uid": "EFt9XaVqq1b0Xl7tKhfmxyxCxoJ3"
+        },
+        "timestamp": "2025-11-26T15:40:46.264Z",
+        "type": "auth"
+      },
+      "-Of04Fp5nWLw0qNmusga": {
+        "action": "student_invited",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invited to set password",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "7R3EBzUZnEdgVLBs5c06zKjrpDM2"
+        },
+        "timestamp": "2025-11-26T16:53:09.989Z",
+        "type": "auth"
+      },
+      "-Of04qBl2pXrh0thk5bZ": {
+        "action": "student_invited",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invited to set password",
+        "metadata": {
+          "email": "jmdc7127@gmail.com",
+          "uid": "SYEEg91bcVZ8VhOV3BFMsDEAtfh2"
+        },
+        "timestamp": "2025-11-26T16:55:43.057Z",
+        "type": "auth"
+      },
+      "-Of096BcNM8MdR9Olh1z": {
+        "action": "student_invited",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invited to set password",
+        "metadata": {
+          "email": "jmdc1827@gmail.com",
+          "uid": "7zynSMzVaqRDcTChC9IMfQhVY1B2"
+        },
+        "timestamp": "2025-11-26T17:14:21.278Z",
+        "type": "auth"
+      },
+      "-Of09e3cn9q0Z_Iwrmzb": {
+        "action": "user_registered",
+        "actorId": "6cN1xUmByOhG8j2LY0w1QrtchuG2",
+        "actorName": "jjimu365@gmail.com",
+        "actorType": "student",
+        "description": "New user registered",
+        "timestamp": "2025-11-26T17:16:43.755Z",
+        "type": "auth"
+      },
+      "-Of37dnPsaDk8wUHd0XO": {
+        "action": "student_invited",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invited to set password",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:06:35.149Z",
+        "type": "auth"
+      },
+      "-Of3G0aNGQwf-nkXs8ww": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:43:09.843Z",
+        "type": "auth"
+      },
+      "-Of3G1FXb9U7hwxb71dd": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:43:12.541Z",
+        "type": "auth"
+      },
+      "-Of3G1U91VhNr8bjAMWW": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:43:13.477Z",
+        "type": "auth"
+      },
+      "-Of3G5wnI0GXwykKkzEV": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "jmdc1827@gmail.com",
+          "uid": "7zynSMzVaqRDcTChC9IMfQhVY1B2"
+        },
+        "timestamp": "2025-11-27T07:43:31.758Z",
+        "type": "auth"
+      },
+      "-Of3HGWD3KQotCQoUDfu": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:48:37.193Z",
+        "type": "auth"
+      },
+      "-Of3HHSV6X4_0USjLJyg": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:48:41.051Z",
+        "type": "auth"
+      },
+      "-Of3HLSP41tMURSuQyY3": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:48:57.429Z",
+        "type": "auth"
+      },
+      "-Of3HTwVl3YJYqsZmnzg": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T07:49:32.187Z",
+        "type": "auth"
+      },
+      "-Of3N6zYT2o6O2NQq9b1": {
+        "action": "admin_login",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "Admin",
+        "actorType": "admin",
+        "description": "Admin logged in",
+        "timestamp": "2025-11-27T08:14:10.848Z",
+        "type": "auth"
+      },
+      "-Of3N9PkozCU5gvNBpHQ": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "aprildestine8@gmail.com",
+          "uid": "GK73MrMs1kbryboOwApqZXwGIJJ3"
+        },
+        "timestamp": "2025-11-27T08:14:20.971Z",
+        "type": "auth"
+      },
+      "-Of3NzOsgms8ohrgJf5c": {
+        "action": "student_invited",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invited to set password",
+        "metadata": {
+          "email": "jmpogs7@gmail.com",
+          "uid": "xlKvU40iWecedKcXtTs0JShCbTo1"
+        },
+        "timestamp": "2025-11-27T08:17:58.003Z",
+        "type": "auth"
+      },
+      "-Of3dYqzfoi8hy2QMOrm": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "jmpogs7@gmail.com",
+          "uid": "xlKvU40iWecedKcXtTs0JShCbTo1"
+        },
+        "timestamp": "2025-11-27T09:30:21.626Z",
+        "type": "auth"
+      },
+      "-Of41I78VBG4B3_VXEuA": {
+        "action": "student_invited",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invited to set password",
+        "metadata": {
+          "email": "love.fortaliza14@gmail.com",
+          "uid": "hOM8Lvp8ERdqphpqIbwK9Ze8lJm1"
+        },
+        "timestamp": "2025-11-27T11:18:27.195Z",
+        "type": "auth"
+      },
+      "-Of41MKPiHXbctTYmZx8": {
+        "action": "student_invite_resent",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student invite resent",
+        "metadata": {
+          "email": "love.fortaliza14@gmail.com",
+          "uid": "hOM8Lvp8ERdqphpqIbwK9Ze8lJm1"
+        },
+        "timestamp": "2025-11-27T11:18:44.427Z",
+        "type": "auth"
+      },
+      "-Of4HBRgd3Z1VHRnZADt": {
+        "action": "student_archived",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Student archived",
+        "metadata": {
+          "email": "jmdc7127@gmail.com",
+          "uid": "SYEEg91bcVZ8VhOV3BFMsDEAtfh2"
+        },
+        "timestamp": "2025-11-27T12:27:54.142Z",
+        "type": "user"
+      },
+      "-Of4QcTUb10TpsgygzPW": {
+        "action": "instructor_created",
+        "actorId": "-Oef2y7KFfy_eKK_kuIV",
+        "actorName": "admin@gmail.com",
+        "actorType": "admin",
+        "description": "Admin created new instructor",
+        "metadata": {
+          "email": "sampleteacher@gmail.com",
+          "uid": "OyukGxzuNsXjoogJwx06ypH0A3E3"
+        },
+        "timestamp": "2025-11-27T13:09:08.241Z",
+        "type": "auth"
+      }
+    }
+  }
+}

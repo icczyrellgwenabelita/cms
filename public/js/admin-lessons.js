@@ -184,16 +184,16 @@ function renderLessons() {
 
     if (!filteredLessons.length) {
         if (!allLessons.length) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 60px 20px; color: #64748B;">
-                    <i class="fas fa-book-open" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-                    <h3 style="margin-bottom: 8px; color: #1F2937;">No lessons found</h3>
-                    <p style="margin-bottom: 24px;">Create your first lesson to get started.</p>
-                    <button class="btn-primary" onclick="createNewLesson()">
-                        <i class="fas fa-plus"></i> Create Lesson
-                    </button>
-                </div>
-            `;
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: #64748B;">
+                <i class="fas fa-book-open" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                <h3 style="margin-bottom: 8px; color: #1F2937;">No lessons found</h3>
+                <p style="margin-bottom: 24px;">Create your first lesson to get started.</p>
+                <button class="btn-primary" onclick="createNewLesson()">
+                    <i class="fas fa-plus"></i> Create Lesson
+                </button>
+            </div>
+        `;
         } else {
             container.innerHTML = `
                 <div style="text-align: center; padding: 60px 20px; color: #64748B;">
@@ -215,7 +215,7 @@ function renderLessons() {
         const status = (lesson.status || 'draft').toLowerCase();
         const statusLabel = status === 'published' ? 'Published' : 'Draft';
         const updatedLabel = formatUpdatedDate(lesson.lastUpdated || lesson.updatedAt || lesson.createdAt);
-
+        
         return `
             <div class="lesson-card" onclick="openLesson(${slot})">
                 <div class="lesson-card-header">

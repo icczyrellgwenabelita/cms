@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "student-admin-portal",
   "version": "1.0.0",
   "private": true,
@@ -16,6 +16,6 @@
     "express": "^4.19.2",
     "firebase-admin": "^12.6.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.15"
+    "nodemailer": "^6.10.1"
   }
 }

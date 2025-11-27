@@ -41,9 +41,7 @@
             <div class="section-header">
                 <h1 class="section-title">Unity Game Quizzes Management</h1>
                 <p style="color: #64748B; font-size: 14px; margin-top: 8px;">Manage quizzes for the 6 Unity game lessons. These quizzes are used by the Unity game application.</p>
-                <button class="btn-primary" id="addQuestionBtn" onclick="openAddQuestionModal()">
-                    <i class="fas fa-plus"></i> Add Question
-                </button>
+                
             </div>
             
             <!-- Lesson Tabs -->
@@ -58,76 +56,7 @@
         </section>
     </div>
 
-    <!-- Add Question Modal -->
-    <div id="addQuestionModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add New Question</h2>
-                <button class="modal-close" onclick="closeAddQuestionModal()">&times;</button>
-            </div>
-            <form id="addQuestionForm" onsubmit="saveNewQuestion(event); return false;">
-                <input type="hidden" id="newQuestionLesson" value="">
-                <div class="form-group">
-                    <label for="newQuestionLessonDisplay">Lesson</label>
-                    <input type="text" id="newQuestionLessonDisplay" readonly disabled>
-                </div>
-                <div class="form-group">
-                    <label for="newQuestion">Question</label>
-                    <textarea id="newQuestion" rows="3" maxlength="90" required></textarea>
-                    <div class="char-counter">
-                        <span id="newQuestionCharCount">0</span>/90
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newAnswerA">Answer A</label>
-                    <input type="text" id="newAnswerA" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="newAnswerACharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newAnswerB">Answer B</label>
-                    <input type="text" id="newAnswerB" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="newAnswerBCharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newAnswerC">Answer C</label>
-                    <input type="text" id="newAnswerC" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="newAnswerCCharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newAnswerD">Answer D</label>
-                    <input type="text" id="newAnswerD" maxlength="30" required>
-                    <div class="char-counter">
-                        <span id="newAnswerDCharCount">0</span>/30
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newCorrectAnswer">Correct Answer</label>
-                    <select id="newCorrectAnswer" required>
-                        <option value="">Select correct answer</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="newExplanation">Explanation</label>
-                    <textarea id="newExplanation" rows="4" placeholder="Enter explanation"></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeAddQuestionModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Question</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    
     <!-- Quiz Edit Modal -->
     <div id="quizModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -138,6 +67,7 @@
             <form id="quizForm" onsubmit="saveQuiz(event); return false;">
                 <input type="hidden" id="quizLesson" value="">
                 <input type="hidden" id="quizSlot" value="">
+                <input type="hidden" id="quizSlotDisplay" value="">
                 <div class="form-group">
                     <label for="quizLessonDisplay">Lesson</label>
                     <input type="text" id="quizLessonDisplay" readonly disabled>

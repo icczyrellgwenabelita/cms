@@ -45,7 +45,7 @@ function showSuccess(message) {
 // Load lessons for tabs - Only Unity game lessons (1-6)
 async function loadLessonsForTabs() {
     try {
-        const response = await fetch(`${API_BASE}/lessons`, {
+        const response = await fetch(`${API_BASE}/game-quizzes`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${adminToken}`,
@@ -65,11 +65,8 @@ async function loadLessonsForTabs() {
 
         const data = await response.json();
         if (data.success && data.lessons) {
-            // Filter to only Unity game lessons (slots 1-6)
-            allLessons = (data.lessons || []).filter(lesson => {
-                const slot = lesson.slot || 0;
-                return slot >= 1 && slot <= 6;
-            }).sort((a, b) => (a.slot || 0) - (b.slot || 0));
+            // data.lessons is already the 6 Unity game lessons
+            allLessons = data.lessons || [];
             
             renderLessonTabs();
             // Start with Lesson 1
@@ -95,13 +92,13 @@ function renderLessonTabs() {
             gameLessons.push(lesson);
         } else {
             // Create placeholder for missing lesson
-            gameLessons.push({ slot: i, lessonName: `Lesson ${i}`, lessonTitle: `Lesson ${i}` });
+            gameLessons.push({ slot: i, title: `Lesson ${i}` });
         }
     }
 
     tabsContainer.innerHTML = gameLessons.map(lesson => {
         const slot = lesson.slot || 0;
-        const lessonName = lesson.lessonName || lesson.lessonTitle || `Lesson ${slot}`;
+        const lessonName = lesson.title || `Lesson ${slot}`;
         const isActive = slot === currentLesson ? 'active' : '';
         return `
             <button class="lesson-tab ${isActive}" onclick="selectLesson(${slot})">
@@ -125,7 +122,7 @@ async function loadQuizzes(lessonSlot = currentLesson) {
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748B;">Loading quizzes...</div>';
         }
 
-        const response = await fetch(`${API_BASE}/quizzes/${lessonSlot}`, {
+        const response = await fetch(`${API_BASE}/game-quizzes/${lessonSlot}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${adminToken}`,
@@ -145,13 +142,26 @@ async function loadQuizzes(lessonSlot = currentLesson) {
         }
 
         const data = await response.json();
-        if (!data.success || !data.quizzes) {
+        if (!data.success || !data.questions) {
             throw new Error('Invalid response from server');
         }
 
-        const quizzes = data.quizzes || [];
+        // Convert questions array to format expected by renderQuizzes
+        const quizzes = (data.questions || []).map((q, idx) => ({
+            lesson: lessonSlot,
+            slot: idx + 1, // UI uses 1-based slot
+            questionIndex: q.index, // Store the actual DB index
+            question: q.questionText || '',
+            answerA: q.answerA || '',
+            answerB: q.answerB || '',
+            answerC: q.answerC || '',
+            answerD: q.answerD || '',
+            correctAnswer: q.correctAnswer || '',
+            explanation: q.explanation || ''
+        }));
+        
         allQuizzes[lessonSlot] = quizzes;
-        renderQuizzes(lessonSlot, quizzes);
+        renderQuizzes(lessonSlot, quizzes, data.lessonTitle);
     } catch (error) {
         console.error('Load quizzes error:', error);
         showError(error.message || 'Failed to load quizzes');
@@ -164,19 +174,19 @@ async function loadQuizzes(lessonSlot = currentLesson) {
 }
 
 // Render quizzes
-function renderQuizzes(lessonSlot, quizzes) {
+function renderQuizzes(lessonSlot, quizzes, lessonTitle = null) {
     const container = document.getElementById('quizzesContainer');
     if (!container) return;
 
     const lesson = allLessons.find(l => l.slot === lessonSlot);
-    const lessonName = lesson ? (lesson.lessonName || `Lesson ${lessonSlot}`) : `Lesson ${lessonSlot}`;
+    const lessonName = lessonTitle || (lesson ? lesson.title : `Lesson ${lessonSlot}`);
 
     if (quizzes.length === 0) {
         container.innerHTML = `
             <div class="quizzes-section-header">
                 <h2>${lessonName}</h2>
             </div>
-            <div style="text-align: center; padding: 40px; color: #64748B;">No quizzes found</div>
+            <div style="text-align: center; padding: 40px; color: #64748B;">No questions found. Click "Add Question" to create one.</div>
         `;
         return;
     }
@@ -188,6 +198,7 @@ function renderQuizzes(lessonSlot, quizzes) {
         <div class="quizzes-grid-inner">
             ${quizzes.map(quiz => {
                 const slot = quiz.slot || 0;
+                const questionIndex = quiz.questionIndex !== undefined ? quiz.questionIndex : (slot - 1);
                 const question = quiz.question || '(No question set)';
                 const answerA = quiz.answerA || '(Not set)';
                 const answerB = quiz.answerB || '(Not set)';
@@ -200,7 +211,9 @@ function renderQuizzes(lessonSlot, quizzes) {
                     <div class="quiz-card">
                         <div class="quiz-card-header">
                             <span class="quiz-number">Question ${slot}</span>
-                            <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${slot})">Edit</button>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-edit" onclick="editQuiz(${lessonSlot}, ${questionIndex}, ${slot})">Edit</button>
+                            </div>
                         </div>
                         <h3 class="quiz-question">${question}</h3>
                         <div class="quiz-answers">
@@ -259,7 +272,7 @@ async function saveNewQuestion(event) {
         return;
     }
     
-    const question = document.getElementById('newQuestion').value.trim();
+    const questionText = document.getElementById('newQuestion').value.trim();
     const answerA = document.getElementById('newAnswerA').value.trim();
     const answerB = document.getElementById('newAnswerB').value.trim();
     const answerC = document.getElementById('newAnswerC').value.trim();
@@ -267,35 +280,27 @@ async function saveNewQuestion(event) {
     const correctAnswer = document.getElementById('newCorrectAnswer').value;
     const explanation = document.getElementById('newExplanation').value.trim();
 
-    if (!question || !answerA || !answerB || !answerC || !answerD || !correctAnswer) {
+    if (!questionText || !answerA || !answerB || !answerC || !answerD || !correctAnswer) {
         showError('All fields are required');
         return;
     }
 
-    // Find next available slot (max 10 questions per lesson)
-    const quizzes = allQuizzes[lesson] || [];
-    const nextSlot = quizzes.length > 0 ? Math.max(...quizzes.map(q => q.slot || 0)) + 1 : 1;
-    
-    if (nextSlot > 10) {
-        showError('Maximum 10 questions allowed per Unity game lesson.');
-        return;
-    }
-
     try {
-        const response = await fetch(`${API_BASE}/quizzes/${lesson}/${nextSlot}`, {
+        const response = await fetch(`${API_BASE}/game-quizzes/${lesson}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${adminToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                question,
+                questionText,
                 answerA,
                 answerB,
                 answerC,
                 answerD,
                 correctAnswer,
                 explanation
+                // No questionIndex - backend will find next available index
             })
         });
 
@@ -322,19 +327,20 @@ async function saveNewQuestion(event) {
     }
 }
 
-function editQuiz(lesson, slot) {
+function editQuiz(lesson, questionIndex, slot) {
     const quizzes = allQuizzes[lesson] || [];
-    const quiz = quizzes.find(q => q.slot === slot);
+    const quiz = quizzes.find(q => (q.questionIndex !== undefined ? q.questionIndex : (q.slot - 1)) === questionIndex);
     if (!quiz) {
         showError('Quiz not found');
         return;
     }
 
     const lessonObj = allLessons.find(l => l.slot === lesson);
-    const lessonName = lessonObj ? (lessonObj.lessonName || `Lesson ${lesson}`) : `Lesson ${lesson}`;
+    const lessonName = lessonObj ? (lessonObj.title || `Lesson ${lesson}`) : `Lesson ${lesson}`;
     
     document.getElementById('quizLesson').value = lesson;
-    document.getElementById('quizSlot').value = slot;
+    document.getElementById('quizSlot').value = questionIndex; // Store DB index
+    document.getElementById('quizSlotDisplay').value = slot; // Store UI slot for display
     document.getElementById('quizLessonDisplay').value = lessonName;
     document.getElementById('quizQuestion').value = quiz.question || '';
     document.getElementById('quizAnswerA').value = quiz.answerA || '';
@@ -370,8 +376,8 @@ async function saveQuiz(event) {
     event.preventDefault();
     
     const lesson = parseInt(document.getElementById('quizLesson').value);
-    const slot = parseInt(document.getElementById('quizSlot').value);
-    const question = document.getElementById('quizQuestion').value.trim();
+    const questionIndex = parseInt(document.getElementById('quizSlot').value);
+    const questionText = document.getElementById('quizQuestion').value.trim();
     const answerA = document.getElementById('quizAnswerA').value.trim();
     const answerB = document.getElementById('quizAnswerB').value.trim();
     const answerC = document.getElementById('quizAnswerC').value.trim();
@@ -379,20 +385,21 @@ async function saveQuiz(event) {
     const correctAnswer = document.getElementById('quizCorrectAnswer').value;
     const explanation = document.getElementById('quizExplanation').value.trim();
 
-    if (!question || !answerA || !answerB || !answerC || !answerD || !correctAnswer) {
+    if (!questionText || !answerA || !answerB || !answerC || !answerD || !correctAnswer) {
         showError('All fields are required');
         return;
     }
 
     try {
-        const response = await fetch(`${API_BASE}/quizzes/${lesson}/${slot}`, {
+        const response = await fetch(`${API_BASE}/game-quizzes/${lesson}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${adminToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                question,
+                questionIndex: questionIndex, // Include index to update existing question
+                questionText,
                 answerA,
                 answerB,
                 answerC,
@@ -422,6 +429,42 @@ async function saveQuiz(event) {
     } catch (error) {
         console.error('Save quiz error:', error);
         showError(error.message || 'Failed to save quiz');
+    }
+}
+
+async function deleteQuiz(lesson, questionIndex) {
+    if (!confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/game-quizzes/${lesson}/${questionIndex}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to delete question');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Question deleted successfully');
+            await loadQuizzes(lesson);
+        }
+    } catch (error) {
+        console.error('Delete quiz error:', error);
+        showError(error.message || 'Failed to delete question');
     }
 }
 
@@ -541,10 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initErrorMessageContainer();
     loadLessonsForTabs();
 });
-
-
-
-
 
 
 

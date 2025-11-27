@@ -53,8 +53,11 @@
                 <button class="user-role-tab" onclick="switchRoleTab('admins')" id="tabAdmins">
                     <i class="fas fa-user-shield"></i> Admins
                 </button>
+                <button class="user-role-tab" onclick="switchRoleTab('public')" id="tabPublic">
+                    <i class="fas fa-users"></i> Public Users
+                </button>
                 <button class="user-role-tab" onclick="switchRoleTab('archived')" id="tabArchived">
-                    <i class="fas fa-archive"></i> Archived Users
+                    <i class="fas fa-archive"></i> Archived Students
                 </button>
             </div>
             <div class="tab-action-bar">
@@ -72,20 +75,29 @@
             <!-- Search and Filter Section -->
             <div class="users-filters">
                 <div class="search-group">
-                    <input type="text" id="searchName" placeholder="Search by name" class="search-input">
-                    <input type="text" id="searchEmail" placeholder="Search by email" class="search-input">
+                    <input type="text" id="searchBar" placeholder="Search..." class="search-input" style="width: 100%;">
                 </div>
                 <div class="filter-group">
-                    <select id="filterStatus" class="filter-select">
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="verified">Verified</option>
-                        <option value="expired">Expired</option>
-                    </select>
-                    <select id="sortBy" class="filter-select">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="name">Sort by Name</option>
+                    <button id="btnBulkActions" class="btn-secondary" onclick="toggleBulkMode()">
+                        <i class="fas fa-list-check"></i> Select Students
+                    </button>
+                    <div id="bulkActionsToolbar" style="display: none; gap: 8px;">
+                        <button class="btn-secondary" onclick="bulkAssignInstructor()">
+                            <i class="fas fa-user-plus"></i> Assign Instructor
+                        </button>
+                        <button class="btn-secondary" onclick="bulkArchiveStudents()" style="color: #EF4444; border-color: #EF4444;">
+                            <i class="fas fa-box-archive"></i> Archive
+                        </button>
+                    </div>
+                    <select id="filterBatch" class="filter-select">
+                        <option value="">All Batches</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
                     </select>
                 </div>
             </div>
@@ -96,21 +108,25 @@
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Student Number</th>
-                                <th>Batch</th>
-                                <th>Instructor</th>
-                                <th>Status</th>
-                                <th>Last Login</th>
-                                <th>Progress</th>
-                                <th>Actions</th>
+                                <th style="width: 40px; display: none;" class="col-checkbox"><input type="checkbox" id="selectAllStudents" onchange="toggleSelectAll(this)"></th>
+                                <th class="col-primary">Name</th>
+                                <th class="col-primary">Email</th>
+                                <th class="col-optional">Student Number</th>
+                                <th class="col-optional">Batch</th>
+                                <th class="col-optional">Instructor</th>
+                                <th class="col-primary">Status</th>
+                                <th class="col-optional" style="text-align: right;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="studentsTableBody">
-                            <!-- Students will be inserted here -->
+                            <tr><td colspan="8" style="text-align:center; padding:40px; color:#64748B;">No students found</td></tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-controls" id="studentsPagination">
+                    <button class="btn-secondary" onclick="changePage('students', -1)" id="studentsPrevBtn">Previous</button>
+                    <span class="pagination-info" id="studentsPageInfo">Page 1 of 1</span>
+                    <button class="btn-secondary" onclick="changePage('students', 1)" id="studentsNextBtn">Next</button>
                 </div>
             </div>
 
@@ -120,19 +136,24 @@
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Department</th>
-                                <th>Status</th>
-                                <th>Assigned Students</th>
-                                <th>Last Login</th>
-                                <th>Actions</th>
+                                <th class="col-primary">Name</th>
+                                <th class="col-primary">Email</th>
+                                <th class="col-optional">Department</th>
+                                <th class="col-primary">Status</th>
+                                <th class="col-optional">Assigned Students</th>
+                                <th class="col-optional">Last Login</th>
+                                <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="instructorsTableBody">
                             <!-- Instructors will be inserted here -->
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-controls" id="instructorsPagination">
+                    <button class="btn-secondary" onclick="changePage('instructors', -1)" id="instructorsPrevBtn">Previous</button>
+                    <span class="pagination-info" id="instructorsPageInfo">Page 1 of 1</span>
+                    <button class="btn-secondary" onclick="changePage('instructors', 1)" id="instructorsNextBtn">Next</button>
                 </div>
             </div>
 
@@ -142,12 +163,11 @@
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Created By</th>
-                                <th>Status</th>
-                                <th>Last Login</th>
-                                <th>Actions</th>
+                                <th class="col-primary">Name</th>
+                                <th class="col-primary">Email</th>
+                                <th class="col-optional">Role</th>
+                                <th class="col-optional">Last Login</th>
+                                <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="adminsTableBody">
@@ -155,25 +175,62 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination-controls" id="adminsPagination">
+                    <button class="btn-secondary" onclick="changePage('admins', -1)" id="adminsPrevBtn">Previous</button>
+                    <span class="pagination-info" id="adminsPageInfo">Page 1 of 1</span>
+                    <button class="btn-secondary" onclick="changePage('admins', 1)" id="adminsNextBtn">Next</button>
+                </div>
             </div>
 
-            <!-- Archived Users Tab Content -->
+            <!-- Public Users Tab Content -->
+            <div id="publicTab" class="role-tab-content">
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th class="col-primary">Name</th>
+                                <th class="col-primary">Email</th>
+                                <th class="col-optional">Account Created</th>
+                                <th class="col-optional">Converted To Student?</th>
+                                <th class="col-optional">Status</th>
+                                <th class="col-optional">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="publicTableBody">
+                            <!-- Public users will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls" id="publicPagination">
+                    <button class="btn-secondary" onclick="changePage('public', -1)" id="publicPrevBtn">Previous</button>
+                    <span class="pagination-info" id="publicPageInfo">Page 1 of 1</span>
+                    <button class="btn-secondary" onclick="changePage('public', 1)" id="publicNextBtn">Next</button>
+                </div>
+            </div>
+
+            <!-- Archived Students Tab Content -->
             <div id="archivedTab" class="role-tab-content">
                 <div class="table-wrapper">
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Student Number</th>
-                                <th>Batch</th>
-                                <th>Actions</th>
+                                <th class="col-primary">Name</th>
+                                <th class="col-primary">Email</th>
+                                <th class="col-optional">Student Number</th>
+                                <th class="col-optional">Batch</th>
+                                <th class="col-primary">Status</th>
+                                <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="archivedTableBody">
-                            <!-- Archived users will be inserted here -->
+                            <tr><td colspan="6" style="text-align:center; padding:40px; color:#64748B;">No archived students</td></tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-controls" id="archivedPagination">
+                    <button class="btn-secondary" onclick="changePage('archived', -1)" id="archivedPrevBtn">Previous</button>
+                    <span class="pagination-info" id="archivedPageInfo">Page 1 of 1</span>
+                    <button class="btn-secondary" onclick="changePage('archived', 1)" id="archivedNextBtn">Next</button>
                 </div>
             </div>
         </section>
@@ -216,16 +273,31 @@
                 <div id="studentFields" class="role-specific-fields" style="display: none;">
                     <h3 class="form-section-title">Student Information</h3>
                     <div class="form-group">
-                        <label for="addStudentNumber">Student Number</label>
-                        <input type="text" id="addStudentNumber" placeholder="Enter student number">
+                        <label for="addStudentNumber">Student Number <span style="color: red">*</span></label>
+                        <input type="text" id="addStudentNumber" placeholder="Enter student number (numbers only)" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <span class="form-error" id="errorStudentNumber" style="display:none; color: #EF4444; font-size: 12px; margin-top: 4px;"></span>
                     </div>
                     <div class="form-group">
-                        <label for="addBatch">Batch</label>
-                        <input type="text" id="addBatch" placeholder="Enter batch">
+                        <label for="addBatch">Batch <span style="color: red">*</span></label>
+                        <select id="addBatch">
+                            <option value="">Select Batch</option>
+                            <option value="2020">2020</option>
+                            <option value="2021">2021</option>
+                            <option value="2022">2022</option>
+                            <option value="2023">2023</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                        <span class="form-error" id="errorBatch" style="display:none; color: #EF4444; font-size: 12px; margin-top: 4px;"></span>
                     </div>
                     <div class="form-group">
                         <label for="addStudentPhone">Contact Number</label>
-                        <input type="tel" id="addStudentPhone" placeholder="Enter contact number">
+                        <div style="display: flex; align-items: center;">
+                            <span style="padding: 10px; background: #F3F4F6; border: 1px solid #E5E7EB; border-right: none; border-radius: 6px 0 0 6px; color: #6B7280; font-size: 14px;">+63</span>
+                            <input type="tel" id="addStudentPhone" placeholder="9xxxxxxxxx" maxlength="10" style="border-radius: 0 6px 6px 0;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        <span class="form-error" id="errorPhone" style="display:none; color: #EF4444; font-size: 12px; margin-top: 4px;"></span>
                     </div>
                     <div class="form-group">
                         <label for="addStudentBirthday">Birthday</label>
@@ -271,7 +343,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editUserPhone">Phone</label>
-                            <input type="tel" id="editUserPhone">
+                            <div style="display: flex; align-items: center;">
+                                <span style="padding: 10px; background: #F3F4F6; border: 1px solid #E5E7EB; border-right: none; border-radius: 6px 0 0 6px; color: #6B7280; font-size: 14px;">+63</span>
+                                <input type="tel" id="editUserPhone" placeholder="9xxxxxxxxx" maxlength="10" style="border-radius: 0 6px 6px 0;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            </div>
+                            <span class="form-error" id="errorEditPhone" style="display:none; color: #EF4444; font-size: 12px; margin-top: 4px;"></span>
                         </div>
                         <div class="form-group">
                             <label for="editUserBirthday">Birthday</label>
@@ -316,12 +392,23 @@
                     <h2 class="form-section-title">Student Information</h2>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editStudentNumber">Student Number</label>
-                            <input type="text" id="editStudentNumber">
+                            <label for="editStudentNumber">Student Number <span style="color: red">*</span></label>
+                            <input type="text" id="editStudentNumber" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <span class="form-error" id="errorEditStudentNumber" style="display:none; color: #EF4444; font-size: 12px; margin-top: 4px;"></span>
                         </div>
                         <div class="form-group">
-                            <label for="editBatch">Batch</label>
-                            <input type="text" id="editBatch">
+                            <label for="editBatch">Batch <span style="color: red">*</span></label>
+                            <select id="editBatch">
+                                <option value="">Select Batch</option>
+                                <option value="2020">2020</option>
+                                <option value="2021">2021</option>
+                                <option value="2022">2022</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                            <span class="form-error" id="errorEditBatch" style="display:none; color: #EF4444; font-size: 12px; margin-top: 4px;"></span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -329,15 +416,6 @@
                         <select id="editAssignedInstructor">
                             <option value="">-- No Instructor Assigned --</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Profile Completion</label>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" id="profileProgressBar">
-                                <div class="progress-fill" id="profileProgressFill" style="width: 0%"></div>
-                            </div>
-                            <span id="profileProgressText">0%</span>
-                        </div>
                     </div>
                 </div>
 
@@ -371,24 +449,7 @@
                 <h3 id="userDetailsName"></h3>
                 <p id="userDetailsEmail"></p>
             </div>
-            <div class="user-details-body">
-                <div class="detail-item">
-                    <span class="detail-label">Role:</span>
-                    <span id="userDetailsRole"></span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Status:</span>
-                    <span id="userDetailsStatus"></span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Last Login:</span>
-                    <span id="userDetailsLastLogin"></span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Account Created:</span>
-                    <span id="userDetailsCreated"></span>
-                </div>
-            </div>
+            <div class="user-details-body" id="userDetailsBody"></div>
             <div class="user-details-actions">
                 <button class="btn-primary" onclick="editUserFromPopup()">Edit User</button>
             </div>
@@ -464,6 +525,40 @@
             </div>
             <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" class="btn-primary" onclick="closeAlertModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Archive Confirmation Modal -->
+    <div id="bulkArchiveModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirm Archive</h2>
+                <button class="history-close" onclick="closeBulkArchiveModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p id="bulkArchiveMessage">Are you sure you want to archive selected students?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeBulkArchiveModal()">Cancel</button>
+                <button type="button" class="btn-primary" id="confirmBulkArchiveBtn" onclick="confirmBulkArchive()" style="background-color: #EF4444;">Archive</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Archive Confirmation Modal -->
+    <div id="archiveStudentModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirm Archive</h2>
+                <button class="history-close" onclick="closeArchiveModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Archive this student? They will move to Archived Students but remain in the database.</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeArchiveModal()">Cancel</button>
+                <button type="button" class="btn-primary" id="confirmArchiveBtn" style="background-color: #EF4444;" onclick="confirmArchiveStudent()">Confirm</button>
             </div>
         </div>
     </div>

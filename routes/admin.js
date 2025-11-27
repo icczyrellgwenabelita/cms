@@ -5,15 +5,16 @@ const { db, auth } = require('../config/firebase');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { logActivity } = require('../utils/activityLogger');
-const { sendEmail } = require('../utils/email');
+const { sendEmail, isEmailConfigured } = require('../utils/email');
 
 const BACKUP_DIR = path.join(__dirname, '..', 'backups');
 const ONLINE_THRESHOLD_MINUTES = 10;
 let backupInProgress = false;
 let restoreInProgress = false;
-const USERS_COLLECTION = 'system/users';
-const LEGACY_USERS_COLLECTION = 'users';
+const USERS_COLLECTION = 'users';
+const LEGACY_USERS_COLLECTION = 'system/users';
 
 function ensureBackupDir() {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -26,7 +27,6 @@ ensureBackupDir();
 const usersRef = () => db.ref(USERS_COLLECTION);
 const legacyUsersRef = () => db.ref(LEGACY_USERS_COLLECTION);
 const userRef = (uid) => db.ref(`${USERS_COLLECTION}/${uid}`);
-const legacyUserRef = (uid) => db.ref(`${LEGACY_USERS_COLLECTION}/${uid}`);
 
 function normalizeStudentInfo(info = {}) {
   return {
@@ -36,6 +36,26 @@ function normalizeStudentInfo(info = {}) {
     birthday: info.birthday || '',
     address: info.address || ''
   };
+}
+
+function generateTemporaryPassword(length = 20) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const bytes = crypto.randomBytes(length);
+  let password = '';
+  for (let i = 0; i < length; i += 1) {
+    password += chars[bytes[i] % chars.length];
+  }
+  // Ensure password complexity
+  if (!/[A-Z]/.test(password)) password += 'A';
+  if (!/[a-z]/.test(password)) password += 'a';
+  if (!/[0-9]/.test(password)) password += '1';
+  if (!/[!@#$%^&*]/.test(password)) password += '!';
+  return password;
+}
+
+function getPasswordSetupUrl() {
+  const base = process.env.PUBLIC_HOST || 'http://localhost:3000';
+  return `${base.replace(/\/$/, '')}/create-password`;
 }
 
 function sanitizeUserRecord(uid, data = {}) {
@@ -58,7 +78,12 @@ function sanitizeUserRecord(uid, data = {}) {
     progress: data.progress || {},
     contactNumber: data.contactNumber || data.studentInfo?.contactNumber || '',
     address: data.address || data.studentInfo?.address || '',
-    birthday: data.birthday || data.studentInfo?.birthday || ''
+    birthday: data.birthday || data.studentInfo?.birthday || '',
+    archived: !!data.archived,
+    inviteStatus: data.inviteStatus || null,
+    inviteCreatedAt: data.inviteCreatedAt || null,
+    inviteExpiresAt: data.inviteExpiresAt || null,
+    department: data.department || data.instructorInfo?.department || ''
   };
 }
 
@@ -109,7 +134,6 @@ async function createLmsUser({ name, email, password, role, studentInfo = {}, me
     progress: {}
   };
   await userRef(uid).set(baseData);
-  await legacyUserRef(uid).set(baseData);
 
   if (normalizedRole === 'admin' || normalizedRole === 'instructor') {
     const passwordHash = await bcrypt.hash(password, 10);
@@ -245,7 +269,7 @@ async function getAllUsersData() {
   ]);
   const primary = (primarySnap && primarySnap.val()) || {};
   const legacy = (legacySnap && legacySnap.val()) || {};
-  // Merge so that primary (/system/users) overrides legacy (/users) when keys collide
+  // Merge so that canonical /users overrides legacy /system/users when keys collide
   return { ...legacy, ...primary };
 }
 
@@ -285,14 +309,12 @@ router.post('/users/complete-invite', verifyAdminToken, async (req, res) => {
     }
     const [uid, data] = pair;
     const updates = {
-      ...data,
-      verified: true,
-      active: true,
+        verified: true,
+        active: true,
       inviteStatus: 'completed',
       updatedAt: new Date().toISOString()
     };
-    await userRef(uid).set(updates);
-    await legacyUserRef(uid).set(updates);
+    await userRef(uid).update(updates);
     await auth.updateUser(uid, { emailVerified: true });
     res.json({ success: true });
   } catch (error) {
@@ -312,40 +334,240 @@ router.post('/users/:uid/resend-invite', verifyAdminToken, async (req, res) => {
     if (!data.email) {
       return res.status(400).json({ error: 'User email missing' });
     }
+    if (data.archived) {
+      return res.status(400).json({ error: 'Cannot resend invite to an archived student' });
+    }
     const now = new Date();
     const inviteCreatedAt = now.toISOString();
     const inviteExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
-    const updated = {
-      ...data,
+    const updates = {
       inviteStatus: 'pending',
       inviteCreatedAt,
-      inviteExpiresAt
+      inviteExpiresAt,
+      updatedAt: inviteCreatedAt
     };
-    await userRef(uid).set(updated);
-    await legacyUserRef(uid).set(updated);
-    const link = await auth.generatePasswordResetLink(data.email, {
-      url: process.env.PUBLIC_HOST
-        ? `${process.env.PUBLIC_HOST}/create-password`
-        : 'http://localhost:3000/create-password',
-      handleCodeInApp: true
-    });
+    await userRef(uid).update(updates);
+    res.json({ success: true });
 
-    await sendEmail({
-      to: data.email,
-      subject: 'CareSim - Password Invite Link',
-      text: `Hello ${data.fullName || data.name || ''},\n\nHere is your updated link to set your CareSim password:\n\n${link}\n\nThis link will expire in 24 hours.\n\nIf you did not expect this email, you can ignore it.`,
-      html: `<p>Hello ${data.fullName || data.name || ''},</p>
-             <p>Here is your updated link to set your <strong>CareSim</strong> password.</p>
-             <p>This link will expire in 24 hours.</p>
-             <p><a href="${link}" style="display:inline-block;padding:10px 16px;background:#2563EB;color:#ffffff;text-decoration:none;border-radius:6px;">Set Your Password</a></p>
-             <p>If the button does not work, copy and paste this URL into your browser:</p>
-             <p><a href="${link}">${link}</a></p>`
+    (async () => {
+      try {
+        const linkStart = Date.now();
+        const firebaseLink = await auth.generatePasswordResetLink(data.email, {
+          url: getPasswordSetupUrl(),
+          handleCodeInApp: true
+        });
+        
+        const urlObj = new URL(firebaseLink);
+        const oobCode = urlObj.searchParams.get('oobCode');
+        const mode = urlObj.searchParams.get('mode') || 'resetPassword';
+        const customLink = `${getPasswordSetupUrl()}?mode=${encodeURIComponent(mode)}&oobCode=${encodeURIComponent(oobCode)}`;
+
+        console.log(`[ResendInvite] Link generated in ${Date.now() - linkStart}ms for ${data.email}`);
+        const name = data.name || data.fullName || data.email;
+
+        const emailStart = Date.now();
+        const emailResult = await sendEmail({
+          to: data.email,
+          subject: 'CareSim - Invitation reminder',
+          html: `
+            <p>Hello ${name},</p>
+            <p>This is a friendly reminder to complete your CareSim student account setup. Use the link below to set your password:</p>
+            <p><a href="${customLink}" style="color:#2563EB;">Set your password</a></p>
+            <p>This link will expire in 24 hours.</p>
+          `,
+          text: `Hello ${name},\n\nUse the link below to complete your CareSim student account setup (expires in 24 hours):\n\n${customLink}`
+        });
+        console.log(`[ResendInvite] Email send result for ${data.email}: ${emailResult.success ? 'success' : emailResult.error || 'failed'} in ${Date.now() - emailStart}ms`);
+      } catch (err) {
+        console.error('[ResendInvite] Post-response email error:', err);
+      }
+    })();
+
+    await logActivity({
+      type: 'auth',
+      action: 'student_invite_resent',
+      description: 'Student invite resent',
+      actorType: 'admin',
+      actorId: req.admin?.adminId || null,
+      actorName: req.admin?.email || 'Admin',
+      metadata: { uid: uid, email: data.email }
+    });
+  } catch (error) {
+    console.error('Resend invite error:', error);
+    res.status(500).json({ error: 'Failed to resend invite' });
+  }
+});
+
+router.post('/users/archive-batch', verifyAdminToken, async (req, res) => {
+  try {
+    const { uids } = req.body || {};
+    if (!Array.isArray(uids) || uids.length === 0) {
+      return res.status(400).json({ error: 'No users selected' });
+    }
+
+    const updatedAt = new Date().toISOString();
+    let archivedCount = 0;
+
+    for (const uid of uids) {
+      const snapshot = await userRef(uid).once('value');
+      if (snapshot.exists()) {
+        const user = snapshot.val();
+        // Only archive students
+        if (user.role === 'student') {
+          await userRef(uid).update({
+            archived: true,
+            active: false,
+            updatedAt
+          });
+          archivedCount++;
+
+          await logActivity({
+            type: 'user',
+            action: 'student_archived',
+            description: 'Student archived (batch)',
+            actorType: 'admin',
+            actorId: req.admin?.adminId || null,
+            actorName: req.admin?.email || 'Admin',
+            metadata: { uid, email: user.email }
+          });
+        }
+      }
+    }
+
+    res.json({ success: true, count: archivedCount });
+  } catch (error) {
+    console.error('Batch archive error:', error);
+    res.status(500).json({ error: 'Failed to archive students' });
+  }
+});
+
+router.post('/users/assign-instructor-batch', verifyAdminToken, async (req, res) => {
+  try {
+    const { uids, instructorId } = req.body || {};
+    if (!Array.isArray(uids) || uids.length === 0) {
+      return res.status(400).json({ error: 'No users selected' });
+    }
+
+    // If instructorId is provided, validate it exists and is an instructor/admin
+    if (instructorId) {
+      const instructorRef = db.ref(`admins/${instructorId}`);
+      const instructorSnapshot = await instructorRef.once('value');
+      if (!instructorSnapshot.exists()) {
+        return res.status(400).json({ error: 'Instructor not found' });
+      }
+      const instructorData = instructorSnapshot.val();
+      if (!instructorData.role || (instructorData.role !== 'instructor' && instructorData.role !== 'admin')) {
+        return res.status(400).json({ error: 'Invalid instructor' });
+      }
+    }
+
+    let updatedCount = 0;
+    for (const uid of uids) {
+      const snapshot = await userRef(uid).once('value');
+      if (snapshot.exists()) {
+        const user = snapshot.val();
+        if (user.role === 'student') {
+          const oldInstructorId = user.assignedInstructor;
+          
+          // Remove from old instructor if different
+          if (oldInstructorId && oldInstructorId !== instructorId) {
+            await db.ref(`admins/${oldInstructorId}/assignedStudents/${uid}`).remove();
+          }
+
+          if (instructorId) {
+            await userRef(uid).update({ assignedInstructor: instructorId });
+            await db.ref(`admins/${instructorId}/assignedStudents/${uid}`).set(true);
+          } else {
+            // Unassign
+            await userRef(uid).update({ assignedInstructor: null });
+          }
+          
+          updatedCount++;
+        }
+      }
+    }
+
+    res.json({ success: true, count: updatedCount });
+  } catch (error) {
+    console.error('Batch assign instructor error:', error);
+    res.status(500).json({ error: 'Failed to assign instructor to students' });
+  }
+});
+
+router.post('/users/:uid/archive', verifyAdminToken, async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const snapshot = await userRef(uid).once('value');
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const data = snapshot.val() || {};
+    if ((data.role || '').toLowerCase() !== 'student') {
+      return res.status(400).json({ error: 'Only students can be archived' });
+    }
+    if (data.archived) {
+      return res.status(400).json({ error: 'Student is already archived' });
+    }
+    const updatedAt = new Date().toISOString();
+    const updates = {
+      archived: true,
+      active: false,
+      updatedAt
+    };
+    await userRef(uid).update(updates);
+
+    await logActivity({
+      type: 'user',
+      action: 'student_archived',
+      description: 'Student archived',
+      actorType: 'admin',
+      actorId: req.admin?.adminId || null,
+      actorName: req.admin?.email || 'Admin',
+      metadata: { uid, email: data.email }
     });
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Resend invite error:', error);
-    res.status(500).json({ error: 'Failed to resend invite' });
+    console.error('Archive student error:', error);
+    res.status(500).json({ error: 'Failed to archive student' });
+  }
+});
+
+router.post('/users/:uid/restore', verifyAdminToken, async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const snapshot = await userRef(uid).once('value');
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const data = snapshot.val() || {};
+    if ((data.role || '').toLowerCase() !== 'student') {
+      return res.status(400).json({ error: 'Only students can be restored' });
+    }
+    if (!data.archived) {
+      return res.status(400).json({ error: 'Student is not archived' });
+    }
+    const updatedAt = new Date().toISOString();
+    const updates = {
+      archived: false,
+      updatedAt
+    };
+    await userRef(uid).update(updates);
+
+    await logActivity({
+      type: 'user',
+      action: 'student_restored',
+      description: 'Student restored from archive',
+      actorType: 'admin',
+      actorId: req.admin?.adminId || null,
+      actorName: req.admin?.email || 'Admin',
+      metadata: { uid, email: data.email }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Restore student error:', error);
+    res.status(500).json({ error: 'Failed to restore student' });
   }
 });
 
@@ -663,15 +885,19 @@ router.post('/users/invite-student', verifyAdminToken, async (req, res) => {
       return res.status(400).json({ error: 'name and email are required' });
     }
 
+    const normalizedStudentInfo = normalizeStudentInfo(studentInfo);
+    if (!normalizedStudentInfo.studentNumber || !normalizedStudentInfo.batch) {
+      return res.status(400).json({ error: 'studentNumber and batch are required' });
+    }
+
     let userRecord;
     try {
       userRecord = await auth.getUserByEmail(email);
     } catch (err) {
       if (err.code === 'auth/user-not-found') {
-        const tempPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
         userRecord = await auth.createUser({
           email,
-          password: tempPassword,
+          password: generateTemporaryPassword(20),
           displayName: name,
           emailVerified: false
         });
@@ -681,50 +907,82 @@ router.post('/users/invite-student', verifyAdminToken, async (req, res) => {
     }
 
     const uid = userRecord.uid;
+    const snapshot = await userRef(uid).once('value').catch(() => null);
+    const existingUser = (snapshot && snapshot.val()) || {};
+
+    if (existingUser.archived) {
+      return res.status(400).json({ error: 'User is archived. Restore the student before sending a new invite.' });
+    }
+
+    if (existingUser.verified && existingUser.inviteStatus === 'completed') {
+      return res.status(400).json({ error: 'User is already an active student' });
+    }
+
     const now = new Date();
     const inviteCreatedAt = now.toISOString();
     const inviteExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
-    const normalizedStudentInfo = normalizeStudentInfo(studentInfo);
+    const mergedStudentInfo = {
+      ...normalizeStudentInfo(existingUser.studentInfo || {}),
+      ...normalizedStudentInfo
+    };
+
+    const resolvedName = name || existingUser.name || existingUser.fullName || '';
+
     const userPayload = {
+      ...existingUser,
       uid,
-      name,
-      fullName: name,
+      name: resolvedName,
+      fullName: resolvedName,
       email,
       role: 'student',
       verified: false,
       active: false,
+      archived: false,
       inviteStatus: 'pending',
       inviteCreatedAt,
       inviteExpiresAt,
-      studentInfo: normalizedStudentInfo,
+      studentInfo: mergedStudentInfo,
       updatedAt: inviteCreatedAt,
-      createdAt: userRecord.metadata?.creationTime || inviteCreatedAt,
-      progress: {}
+      createdAt: existingUser.createdAt || userRecord.metadata?.creationTime || inviteCreatedAt
     };
 
     await userRef(uid).set(userPayload);
-    await legacyUserRef(uid).set(userPayload);
 
-    const link = await auth.generatePasswordResetLink(email, {
-      url: process.env.PUBLIC_HOST
-        ? `${process.env.PUBLIC_HOST}/create-password`
-        : 'http://localhost:3000/create-password',
-      handleCodeInApp: true
-    });
+    res.json({ success: true, uid });
 
-    await sendEmail({
-      to: email,
-      subject: 'CareSim - Set Your Password',
-      text: `Hello ${name},\n\nYou have been invited to CareSim as a student. Please click the link below to set your password:\n\n${link}\n\nThis link will expire in 24 hours.\n\nIf you did not expect this email, you can ignore it.`,
-      html: `<p>Hello ${name},</p>
-             <p>You have been invited to <strong>CareSim</strong> as a student.</p>
-             <p>Please click the button below to set your password. This link will expire in 24 hours.</p>
-             <p><a href="${link}" style="display:inline-block;padding:10px 16px;background:#2563EB;color:#ffffff;text-decoration:none;border-radius:6px;">Set Your Password</a></p>
-             <p>If the button does not work, copy and paste this URL into your browser:</p>
-             <p><a href="${link}">${link}</a></p>
-             <p>If you did not expect this email, you can ignore it.</p>`
-    });
+    (async () => {
+      try {
+        const linkStart = Date.now();
+        const firebaseLink = await auth.generatePasswordResetLink(email, {
+          url: getPasswordSetupUrl(),
+          handleCodeInApp: true
+        });
+        
+        const urlObj = new URL(firebaseLink);
+        const oobCode = urlObj.searchParams.get('oobCode');
+        const mode = urlObj.searchParams.get('mode') || 'resetPassword';
+        const customLink = `${getPasswordSetupUrl()}?mode=${encodeURIComponent(mode)}&oobCode=${encodeURIComponent(oobCode)}`;
+
+        console.log(`[InviteStudent] Link generated in ${Date.now() - linkStart}ms for ${email}`);
+
+        const emailStart = Date.now();
+        const emailResult = await sendEmail({
+          to: email,
+          subject: 'CareSim - Set up your student account',
+          html: `
+            <p>Hello ${resolvedName || email},</p>
+            <p>You have been invited as a student on CareSim. Click the link below to set your password:</p>
+            <p><a href="${customLink}" style="color:#2563EB;">Set your password</a></p>
+            <p>This link will expire in 24 hours.</p>
+          `,
+          text: `Hello ${resolvedName || email},\n\nYou have been invited as a student on CareSim. Use the link below to set your password (expires in 24 hours):\n\n${customLink}`
+        });
+        console.log(`[InviteStudent] Email send result for ${email}: ${emailResult.success ? 'success' : emailResult.error || 'failed'} in ${Date.now() - emailStart}ms`);
+      } catch (err) {
+        console.error('[InviteStudent] Post-response email error:', err);
+      }
+    })();
 
     await logActivity({
       type: 'auth',
@@ -735,8 +993,6 @@ router.post('/users/invite-student', verifyAdminToken, async (req, res) => {
       actorName: req.admin?.email || 'Admin',
       metadata: { uid, email }
     });
-
-    res.json({ success: true, uid });
   } catch (error) {
     console.error('Invite student error:', error);
     res.status(500).json({ error: 'Failed to invite student', details: error.message });
@@ -750,6 +1006,7 @@ router.post('/users/:uid/convert-to-student', verifyAdminToken, async (req, res)
       name,
       studentNumber,
       batch,
+      school = '',
       birthday = '',
       address = '',
       contactNumber = ''
@@ -779,6 +1036,7 @@ router.post('/users/:uid/convert-to-student', verifyAdminToken, async (req, res)
       studentInfo: {
         studentNumber,
         batch,
+        school,
         birthday,
         address,
         contactNumber
@@ -929,13 +1187,14 @@ router.post('/users/approve-student', verifyAdminToken, async (req, res) => {
       uid,
       studentNumber,
       batch,
+      school,
       birthday,
       address,
       contactNumber,
       assignedInstructor
     } = req.body || {};
 
-    if (!uid || !studentNumber || !batch || !birthday || !address || !assignedInstructor) {
+    if (!uid || !studentNumber || !batch || !school || !birthday || !address || !assignedInstructor) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -960,6 +1219,7 @@ router.post('/users/approve-student', verifyAdminToken, async (req, res) => {
       studentInfo: {
         studentNumber,
         batch,
+        school,
         birthday,
         address,
         contactNumber
@@ -988,12 +1248,12 @@ router.put('/users/:uid', verifyAdminToken, async (req, res) => {
       name,
       email,
       role,
+      active,
       studentInfo,
       assignedInstructor,
       contactNumber,
       address,
-      birthday,
-      archived
+      birthday
     } = req.body || {};
 
     const hasUpdates = Object.keys(req.body || {}).length > 0;
@@ -1024,6 +1284,10 @@ router.put('/users/:uid', verifyAdminToken, async (req, res) => {
       updatedData.role = role;
     }
 
+    if (active !== undefined) {
+      updatedData.active = active;
+    }
+
     if (studentInfo !== undefined) {
       updatedData.studentInfo = studentInfo;
     }
@@ -1044,10 +1308,6 @@ router.put('/users/:uid', verifyAdminToken, async (req, res) => {
       updatedData.birthday = birthday;
     }
 
-    if (archived !== undefined) {
-      updatedData.archived = archived;
-    }
-
     await ref.set(updatedData);
 
     res.json({
@@ -1063,7 +1323,32 @@ router.put('/users/:uid', verifyAdminToken, async (req, res) => {
 });
 
 router.put('/users/:uid/status', verifyAdminToken, async (req, res) => {
-  res.status(410).json({ error: 'User status toggling is no longer supported' });
+  try {
+    const { uid } = req.params;
+    const { active } = req.body || {};
+
+    if (typeof active !== 'boolean') {
+      return res.status(400).json({ error: '"active" must be a boolean' });
+    }
+
+    const ref = userRef(uid);
+    const snapshot = await ref.once('value');
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await ref.update({ active });
+
+    res.json({
+      success: true,
+      uid,
+      active
+    });
+  } catch (error) {
+    console.error('Update user status error:', error);
+    res.status(500).json({ error: 'Failed to update user status' });
+  }
 });
 
 /**
@@ -1072,22 +1357,22 @@ router.put('/users/:uid/status', verifyAdminToken, async (req, res) => {
  */
 router.get('/instructors', verifyAdminToken, async (req, res) => {
   try {
-    const adminsRef = db.ref('admins');
-    const snapshot = await adminsRef.once('value');
-    const adminsData = snapshot.val() || {};
-    
-    const instructors = [];
-    for (const [id, admin] of Object.entries(adminsData)) {
-      if (admin && (admin.role === 'instructor' || admin.role === 'admin')) {
-        instructors.push({
-          id,
-          name: admin.name || '',
-          email: admin.email || '',
-          role: admin.role || 'instructor',
-          department: admin.department || ''
-        });
-      }
-    }
+    const snapshot = await usersRef().once('value');
+    const users = (snapshot && snapshot.val()) || {};
+
+    const instructors = Object.entries(users)
+      .filter(([, data = {}]) => (data.role || '').toLowerCase() === 'instructor')
+      .map(([uid, data = {}]) => ({
+        id: uid,
+        uid,
+        name: data.name || data.fullName || '',
+        email: data.email || '',
+        role: 'instructor',
+        department: data.department || data.instructorInfo?.department || '',
+        loginCount: data.loginCount || 0,
+        lastLogin: data.lastLogin || null,
+        createdAt: data.createdAt || null
+      }));
     
     res.json({ success: true, instructors });
   } catch (error) {
@@ -1653,40 +1938,112 @@ router.delete('/lessons/:slot/pages/:pageId/assessments/:assessmentId', verifyAd
 // Unity Game Quizzes API (preserved for Unity game)
 // ============================================
 
-router.get('/quizzes/:lesson', verifyAdminToken, async (req, res) => {
+// GET /api/admin/game-quizzes - Returns list of 6 Unity game lessons
+router.get('/game-quizzes', verifyAdminToken, async (req, res) => {
   try {
-    const lesson = parseInt(req.params.lesson);
-    console.log(`Admin: Fetching quizzes for lesson ${lesson}`);
-    
-    if (isNaN(lesson) || lesson < 1 || lesson > 6) {
-      return res.status(400).json({ error: 'Invalid lesson number (1-6)' });
+    const lessons = [];
+    for (let slot = 1; slot <= 6; slot++) {
+      const lessonRef = db.ref(`lessons/lesson${slot}`);
+      const snapshot = await lessonRef.once('value');
+      const lessonData = snapshot.val() || {};
+      lessons.push({
+        slot,
+        key: `lesson${slot}`,
+        title: lessonData.lessonTitle || `Lesson ${slot}`
+      });
     }
-    const questionsRef = db.ref(`lessons/lesson${lesson}/questions`);
-    const snapshot = await questionsRef.once('value');
-    let questions = snapshot.val() || {};
+    res.json({ success: true, lessons });
+  } catch (error) {
+    console.error('Get game quizzes error:', error);
+    res.status(500).json({ error: 'Failed to fetch game quizzes', details: error.message });
+  }
+});
+
+// GET /api/admin/game-quizzes/:slot - Returns questions for a specific lesson slot
+router.get('/game-quizzes/:slot', verifyAdminToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    if (isNaN(slot) || slot < 1 || slot > 6) {
+      return res.status(400).json({ error: 'Invalid lesson slot (1-6)' });
+    }
     
-    console.log(`Admin: Raw questions data for lesson ${lesson}:`, JSON.stringify(questions, null, 2));
-    console.log(`Admin: Questions keys:`, questions ? Object.keys(questions) : 'none');
-    const quizzesArray = [];
-    for (let i = 0; i < 10; i++) {
-      const questionData = questions[i];
-      const slot = i + 1;
-      
-      if (questionData) {
+    const lessonRef = db.ref(`lessons/lesson${slot}`);
+    const lessonSnapshot = await lessonRef.once('value');
+    const lessonData = lessonSnapshot.val() || {};
+    const lessonTitle = lessonData.lessonTitle || `Lesson ${slot}`;
+    
+    const questionsRef = db.ref(`lessons/lesson${slot}/questions`);
+    const questionsSnapshot = await questionsRef.once('value');
+    const questions = questionsSnapshot.val() || {};
+    
+    // Convert questions object to array, only including actual questions
+    const questionsArray = [];
+    const questionKeys = Object.keys(questions).map(k => parseInt(k)).filter(k => !isNaN(k)).sort((a, b) => a - b);
+    
+    questionKeys.forEach((questionIndex) => {
+      const questionData = questions[questionIndex];
+      if (questionData && questionData.questionText) {
         const choices = questionData.choices || [];
         const correctIndex = questionData.correctIndex !== undefined ? questionData.correctIndex : -1;
         const correctAnswer = correctIndex >= 0 && correctIndex <= 3 ? ['A', 'B', 'C', 'D'][correctIndex] : '';
         
-        console.log(`Admin: Processing question ${i}:`, {
-          questionText: questionData.questionText,
-          choices: choices,
+        questionsArray.push({
+          index: questionIndex,
+          questionText: questionData.questionText || '',
+          answerA: choices[0] || '',
+          answerB: choices[1] || '',
+          answerC: choices[2] || '',
+          answerD: choices[3] || '',
+          correctAnswer: correctAnswer,
           correctIndex: correctIndex,
-          correctAnswer: correctAnswer
+          explanation: questionData.explanation || ''
         });
+      }
+    });
+    
+    res.json({ 
+      success: true, 
+      slot,
+      lessonTitle,
+      questions: questionsArray 
+    });
+  } catch (error) {
+    console.error('Get game quiz error:', error);
+    res.status(500).json({ error: 'Failed to fetch quiz', details: error.message });
+  }
+});
+
+// GET /api/admin/quizzes/:lesson - Legacy endpoint, redirects to game-quizzes
+router.get('/quizzes/:lesson', verifyAdminToken, async (req, res) => {
+  try {
+    const lesson = parseInt(req.params.lesson);
+    if (isNaN(lesson) || lesson < 1 || lesson > 6) {
+      return res.status(400).json({ error: 'Invalid lesson number (1-6)' });
+    }
+    
+    const lessonRef = db.ref(`lessons/lesson${lesson}`);
+    const lessonSnapshot = await lessonRef.once('value');
+    const lessonData = lessonSnapshot.val() || {};
+    const lessonTitle = lessonData.lessonTitle || `Lesson ${lesson}`;
+    
+    const questionsRef = db.ref(`lessons/lesson${lesson}/questions`);
+    const questionsSnapshot = await questionsRef.once('value');
+    const questions = questionsSnapshot.val() || {};
+    
+    // Return only actual questions (not empty slots)
+    const quizzesArray = [];
+    const questionKeys = Object.keys(questions).map(k => parseInt(k)).filter(k => !isNaN(k)).sort((a, b) => a - b);
+      
+    questionKeys.forEach((questionIndex) => {
+      const questionData = questions[questionIndex];
+      if (questionData && questionData.questionText) {
+        const choices = questionData.choices || [];
+        const correctIndex = questionData.correctIndex !== undefined ? questionData.correctIndex : -1;
+        const correctAnswer = correctIndex >= 0 && correctIndex <= 3 ? ['A', 'B', 'C', 'D'][correctIndex] : '';
         
         quizzesArray.push({
           lesson: lesson,
-          slot: slot,
+          slot: questionIndex + 1, // UI uses 1-based slot
           question: questionData.questionText || '',
           answerA: choices[0] || '',
           answerB: choices[1] || '',
@@ -1695,22 +2052,10 @@ router.get('/quizzes/:lesson', verifyAdminToken, async (req, res) => {
           correctAnswer: correctAnswer,
           explanation: questionData.explanation || ''
         });
-      } else {
-        quizzesArray.push({
-          lesson: lesson,
-          slot: slot,
-          question: '',
-          answerA: '',
-          answerB: '',
-          answerC: '',
-          answerD: '',
-          correctAnswer: '',
-          explanation: ''
-        });
       }
-    }
-    console.log(`Admin: Returning ${quizzesArray.length} quizzes for lesson ${lesson}`);
-    res.json({ success: true, lesson: lesson, quizzes: quizzesArray });
+    });
+    
+    res.json({ success: true, lesson: lesson, lessonTitle, quizzes: quizzesArray });
   } catch (error) {
     console.error('Get quizzes error:', error);
     res.status(500).json({ error: 'Failed to fetch quizzes', details: error.message });
@@ -1767,6 +2112,65 @@ router.get('/quizzes', verifyAdminToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch quizzes' });
   }
 });
+// PUT /api/admin/game-quizzes/:slot - Update or add a question for a lesson slot
+router.put('/game-quizzes/:slot', verifyAdminToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    if (slot < 1 || slot > 6) {
+      return res.status(400).json({ error: 'Invalid lesson slot (1-6)' });
+    }
+    
+    const { questionIndex, questionText, answerA, answerB, answerC, answerD, correctAnswer, explanation } = req.body;
+    
+    if (!questionText) {
+      return res.status(400).json({ error: 'Question text is required' });
+    }
+    
+    const correctIndexMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+    const correctIndex = correctIndexMap[correctAnswer] !== undefined ? correctIndexMap[correctAnswer] : -1;
+    
+    if (correctIndex === -1) {
+      return res.status(400).json({ error: 'Invalid correct answer (must be A, B, C, or D)' });
+    }
+    
+    const choices = [
+      answerA || '',
+      answerB || '',
+      answerC || '',
+      answerD || ''
+    ];
+    
+    // If questionIndex is provided, update that specific question
+    // Otherwise, find the next available index
+    let targetIndex;
+    if (questionIndex !== undefined && questionIndex !== null) {
+      targetIndex = parseInt(questionIndex);
+    } else {
+      // Find next available index
+      const questionsRef = db.ref(`lessons/lesson${slot}/questions`);
+      const snapshot = await questionsRef.once('value');
+      const questions = snapshot.val() || {};
+      const existingIndices = Object.keys(questions).map(k => parseInt(k)).filter(k => !isNaN(k));
+      targetIndex = existingIndices.length > 0 ? Math.max(...existingIndices) + 1 : 0;
+    }
+    
+    const questionRef = db.ref(`lessons/lesson${slot}/questions/${targetIndex}`);
+    await questionRef.set({
+      questionText: questionText,
+      choices: choices,
+      correctIndex: correctIndex,
+      explanation: explanation || '',
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({ success: true, message: 'Question saved successfully', questionIndex: targetIndex });
+  } catch (error) {
+    console.error('Update game quiz error:', error);
+    res.status(500).json({ error: 'Failed to update quiz', details: error.message });
+  }
+});
+
+// PUT /api/admin/quizzes/:lesson/:slot - Legacy endpoint for updating a question
 router.put('/quizzes/:lesson/:slot', verifyAdminToken, async (req, res) => {
   try {
     const lesson = parseInt(req.params.lesson);
@@ -1775,17 +2179,20 @@ router.put('/quizzes/:lesson/:slot', verifyAdminToken, async (req, res) => {
     if (lesson < 1 || lesson > 6) {
       return res.status(400).json({ error: 'Invalid lesson number (1-6)' });
     }
-    if (slot < 1 || slot > 10) {
-      return res.status(400).json({ error: 'Invalid quiz slot number (1-10)' });
-    }
+    
     const { question, answerA, answerB, answerC, answerD, correctAnswer, explanation } = req.body;
     
     if (!question) {
       return res.status(400).json({ error: 'Question is required' });
     }
-    const questionIndex = slot - 1;
+    
+    const questionIndex = slot - 1; // Convert 1-based slot to 0-based index
     const correctIndexMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
     const correctIndex = correctIndexMap[correctAnswer] !== undefined ? correctIndexMap[correctAnswer] : -1;
+    
+    if (correctIndex === -1) {
+      return res.status(400).json({ error: 'Invalid correct answer (must be A, B, C, or D)' });
+    }
     
     const choices = [
       answerA || '',
@@ -1793,20 +2200,147 @@ router.put('/quizzes/:lesson/:slot', verifyAdminToken, async (req, res) => {
       answerC || '',
       answerD || ''
     ];
+    
     const questionRef = db.ref(`lessons/lesson${lesson}/questions/${questionIndex}`);
-    const snapshot = await questionRef.once('value');
-    const existing = snapshot.val() || {};
     await questionRef.set({
-      questionText: question || existing.questionText || '',
+      questionText: question,
       choices: choices,
-      correctIndex: correctIndex !== -1 ? correctIndex : (existing.correctIndex !== undefined ? existing.correctIndex : 0),
-      explanation: explanation !== undefined ? explanation : (existing.explanation || ''),
+      correctIndex: correctIndex,
+      explanation: explanation || '',
       updatedAt: new Date().toISOString()
     });
+    
     res.json({ success: true, message: 'Quiz updated successfully' });
   } catch (error) {
     console.error('Update quiz error:', error);
-    res.status(500).json({ error: 'Failed to update quiz' });
+    res.status(500).json({ error: 'Failed to update quiz', details: error.message });
   }
 });
+
+// DELETE /api/admin/game-quizzes/:slot/:questionIndex - Delete a question and reindex
+router.delete('/game-quizzes/:slot/:questionIndex', verifyAdminToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    const questionIndex = parseInt(req.params.questionIndex);
+    
+    if (slot < 1 || slot > 6) {
+      return res.status(400).json({ error: 'Invalid lesson slot (1-6)' });
+    }
+    
+    if (isNaN(questionIndex) || questionIndex < 0) {
+      return res.status(400).json({ error: 'Invalid question index' });
+    }
+    
+    const questionsRef = db.ref(`lessons/lesson${slot}/questions`);
+    const snapshot = await questionsRef.once('value');
+    const questions = snapshot.val() || {};
+    
+    // Delete the question at the specified index
+    const questionToDeleteRef = db.ref(`lessons/lesson${slot}/questions/${questionIndex}`);
+    await questionToDeleteRef.remove();
+    
+    // Reindex remaining questions to keep indices dense (0, 1, 2, ...)
+    const remainingQuestions = [];
+    const questionKeys = Object.keys(questions).map(k => parseInt(k)).filter(k => !isNaN(k) && k !== questionIndex).sort((a, b) => a - b);
+    
+    for (let i = 0; i < questionKeys.length; i++) {
+      const oldIndex = questionKeys[i];
+      const newIndex = i;
+      
+      if (oldIndex !== newIndex) {
+        const oldQuestionRef = db.ref(`lessons/lesson${slot}/questions/${oldIndex}`);
+        const oldQuestionSnapshot = await oldQuestionRef.once('value');
+        const oldQuestionData = oldQuestionSnapshot.val();
+        
+        if (oldQuestionData) {
+          const newQuestionRef = db.ref(`lessons/lesson${slot}/questions/${newIndex}`);
+          await newQuestionRef.set(oldQuestionData);
+          await oldQuestionRef.remove();
+        }
+      }
+    }
+    
+    res.json({ success: true, message: 'Question deleted and reindexed successfully' });
+  } catch (error) {
+    console.error('Delete game quiz error:', error);
+    res.status(500).json({ error: 'Failed to delete question', details: error.message });
+  }
+});
+// ============================================
+// Email Test Endpoint
+// ============================================
+
+router.get('/test-email', verifyAdminToken, async (req, res) => {
+  try {
+    
+    // Check if email is configured
+    if (!isEmailConfigured) {
+      return res.status(503).json({
+        success: false,
+        error: 'Email not configured: missing SMTP_* environment variables. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file.'
+      });
+    }
+
+    // Get recipient email from query parameter
+    let to = req.query.to;
+    
+    // If no 'to' parameter, try to get admin email from token
+    if (!to) {
+      // JWT token contains email (see routes/auth.js admin login)
+      to = req.admin?.email;
+      
+      if (!to) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing recipient email. Please provide ?to=email@example.com or ensure your admin account has an email address.'
+        });
+      }
+    }
+
+    // Validate email format (basic check)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email address format'
+      });
+    }
+
+    // Send test email
+    const result = await sendEmail({
+      to,
+      subject: 'CareSim Email Test',
+      text: 'This is a test email from the CareSim backend. If you received this, email configuration is working correctly!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #C19A6B;">CareSim Email Test</h2>
+          <p>This is a <strong>test email</strong> from the CareSim backend.</p>
+          <p>If you received this email, your SMTP configuration is working correctly! ✅</p>
+          <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 20px 0;">
+          <p style="color: #64748B; font-size: 12px;">This is an automated test email. No action is required.</p>
+        </div>
+      `
+    });
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: `Test email sent successfully to ${to}`,
+        messageId: result.messageId
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Failed to send test email'
+      });
+    }
+  } catch (error) {
+    console.error('Test email endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Internal server error while sending test email'
+    });
+  }
+});
+
 module.exports = router;

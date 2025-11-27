@@ -5,15 +5,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { logActivity } = require('../utils/activityLogger');
 
-const USERS_COLLECTION = 'system/users';
+const USERS_COLLECTION = 'users';
 
 async function recordUserPresence(uid, baseData = {}, options = {}) {
   try {
-    const primaryRef = db.ref(`${USERS_COLLECTION}/${uid}`);
-    const legacyRef = db.ref(`users/${uid}`);
+    const userRef = db.ref(`${USERS_COLLECTION}/${uid}`);
     let existing = options.existingData;
     if (!existing) {
-      const snapshot = await primaryRef.once('value').catch(() => null);
+      const snapshot = await userRef.once('value').catch(() => null);
       existing = (snapshot && snapshot.val()) || {};
     }
     const now = options.timestamp || new Date().toISOString();
@@ -22,23 +21,20 @@ async function recordUserPresence(uid, baseData = {}, options = {}) {
       const newRecord = {
         email: baseData.email || '',
         name: baseData.fullName || baseData.name || '',
+        fullName: baseData.fullName || baseData.name || '',
         role: baseData.role || 'student',
         createdAt: baseData.createdAt || now,
         lastActiveAt: now,
-        loginCount
+        loginCount,
+        ...baseData
       };
-      await primaryRef.set(newRecord);
-      await legacyRef.set({ ...(existing || {}), ...newRecord });
+      await userRef.set(newRecord);
       existing = newRecord;
     } else {
-      await primaryRef.update({
+      await userRef.update({
         lastActiveAt: now,
         loginCount
       });
-      await legacyRef.update({
-        lastActiveAt: now,
-        loginCount
-      }).catch(() => {});
     }
     await logActivity({
       type: 'auth',

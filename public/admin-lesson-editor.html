@@ -223,8 +223,8 @@
                 </div>
                 <div class="form-group">
                     <label for="tool3DModel">3D Model (Optional)</label>
-                    <input type="file" id="tool3DModel" accept=".fbx,.glb,.gltf,.obj,.stl">
-                    <small class="form-hint">FBX, OBJ, GLB, GLTF, or STL format. Max 50MB.</small>
+                    <input type="file" id="tool3DModel" accept=".fbx,.glb,.obj">
+                    <small class="form-hint">FBX, GLB, or OBJ format. For future 3D viewer integration.</small>
                     <div class="model-file-info">
                         <span id="tool3DModelFileName" class="model-file-label hidden"></span>
                         <span id="tool3DModelUrl" class="model-file-label hidden"></span>
@@ -232,10 +232,6 @@
                     <div id="tool3DModelPreview" class="model-preview">
                         <div class="model-preview-empty">No 3D model selected</div>
                     </div>
-                </div>
-                <div id="toolUploadSpinner" class="model-upload-spinner hidden">
-                    <div class="spinner"></div>
-                    <span id="toolUploadSpinnerText">Uploading 3D model...</span>
                 </div>
                 <div class="form-group">
                     <label for="toolInstructions">How It's Used / Instructions</label>
@@ -377,124 +373,15 @@
         </div>
     </div>
 
-    <!-- 3D Model Preview Modal -->
-    <div id="modelPreviewModal" class="modal" style="display: none;">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h2>3D Model Preview</h2>
-                <button class="modal-close" onclick="closeModelPreviewModal()">&times;</button>
-            </div>
-            <div class="modal-body" style="padding: 20px;">
-                <div id="modelPreviewContainer" style="width: 100%; height: 500px; background: #F8FAFC; border-radius: 8px; overflow: hidden;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3D Model Upload/Replace Modal -->
-    <div id="modelUploadModal" class="modal" style="display: none;">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h2 id="modelUploadModalTitle">Upload 3D Model</h2>
-                <button class="modal-close" onclick="closeModelUploadModal()">&times;</button>
-            </div>
-            <form id="modelUploadForm" onsubmit="saveModelUpload(event)">
-                <div class="modal-body" style="padding: 20px;">
-                    <div class="form-group">
-                        <label for="modelUploadFileInput">3D Model File</label>
-                        <input type="file" id="modelUploadFileInput" accept=".fbx,.glb,.gltf,.obj" required>
-                        <small class="form-hint">FBX, OBJ, GLB, or GLTF format. Max 50MB.</small>
-                    </div>
-                    <div id="modelUploadPreview" class="model-preview" style="margin-top: 16px;">
-                        <div class="model-preview-empty">No 3D model selected</div>
-                    </div>
-                    <div id="modelUploadSpinner" class="model-upload-spinner hidden" style="margin-top: 16px;">
-                        <div class="spinner"></div>
-                        <span id="modelUploadSpinnerText">Uploading 3D model...</span>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModelUploadModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Upload Model</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Three.js Core - MUST load first -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    
-    <!-- OrbitControls - MUST load before loaders -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <!-- FBXLoader Dependencies (must load before FBXLoader) -->
-    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.1/lib/browser.min.js"></script>
-    
-    <!-- Three.js Loaders - MUST load in this order before 3d-viewer.js -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/FBXLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/OBJLoader.js"></script>
-    
-    <!-- Additional loaders for admin editor (not required for viewer) -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/STLLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/exporters/GLTFExporter.js"></script>
-    
-    <!-- Verify loaders are loaded and attach to THREE if needed -->
-    <script>
-        (function() {
-            function ensureLoadersAttached() {
-                if (typeof THREE === 'undefined') {
-                    console.error('Three.js not loaded!');
-                    return false;
-                }
-                
-                // Attach loaders from window to THREE if they exist there
-                if (typeof window.GLTFLoader !== 'undefined' && typeof THREE.GLTFLoader === 'undefined') {
-                    THREE.GLTFLoader = window.GLTFLoader;
-                    console.log('Attached GLTFLoader to THREE');
-                }
-                if (typeof window.FBXLoader !== 'undefined' && typeof THREE.FBXLoader === 'undefined') {
-                    THREE.FBXLoader = window.FBXLoader;
-                    console.log('Attached FBXLoader to THREE');
-                }
-                if (typeof window.OBJLoader !== 'undefined' && typeof THREE.OBJLoader === 'undefined') {
-                    THREE.OBJLoader = window.OBJLoader;
-                    console.log('Attached OBJLoader to THREE');
-                }
-                if (typeof window.OrbitControls !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
-                    THREE.OrbitControls = window.OrbitControls;
-                    console.log('Attached OrbitControls to THREE');
-                }
-                
-                // Verify all required loaders
-                const status = {
-                    'THREE': typeof THREE !== 'undefined',
-                    'GLTFLoader': typeof THREE.GLTFLoader !== 'undefined',
-                    'FBXLoader': typeof THREE.FBXLoader !== 'undefined',
-                    'OBJLoader': typeof THREE.OBJLoader !== 'undefined',
-                    'OrbitControls': typeof THREE.OrbitControls !== 'undefined'
-                };
-                
-                console.log('Three.js Loaders Status:', status);
-                
-                if (!status.FBXLoader) {
-                    console.error('FBXLoader missing! Check script loading order.');
-                }
-                
-                return status;
-            }
-            
-            // Check after scripts load
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', ensureLoadersAttached);
-            } else {
-                setTimeout(ensureLoadersAttached, 100);
-            }
-            window.addEventListener('load', ensureLoadersAttached);
-            window.checkThreeLoaders = ensureLoadersAttached;
-        })();
-    </script>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <script src="/js/common/3d-viewer.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/OBJLoader.js"></script>
+    <!-- Three.js for 3D Model Preview -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="/js/admin-lesson-editor.js"></script>
 </body>
 </html>
