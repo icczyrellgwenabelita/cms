@@ -140,8 +140,8 @@ function updateSummaryCards(lmsTotals = {}) {
     }
   }
 
-  // Overall progress is derived from lessonsCompleted / 6
-  const totalLessons = 6;
+  // Overall progress is derived from lessonsCompleted / total published lessons
+  const totalLessons = studentDashboardState.lms.lessons.length || 1; // Use actual published lessons count
   const overallPct =
     totalLessons > 0 ? Math.round((lessonsCompleted / totalLessons) * 100) : 0;
 
@@ -150,7 +150,8 @@ function updateSummaryCards(lmsTotals = {}) {
     overallTextEl.textContent = `${overallPct}%`;
   }
 
-  setDonutProgress(overallPct);
+  // Donut progress will be updated after computing combined LMS + Game stats
+  // setDonutProgress is called in loadStudentDashboard() after computeDashboardStats()
 
   const lessonsStat = document.getElementById('progressLessonsStat');
   if (lessonsStat) {
@@ -209,7 +210,8 @@ function computeDashboardStats() {
   const lmsTotals = studentDashboardState.lms.totals || {};
   const game = studentDashboardState.game || null;
 
-  const totalLessons = 6;
+  // Use actual number of published lessons instead of hardcoded 6
+  const totalLessons = lessons.length || 1;
 
   // LMS aggregates
   let lessonsCompleted = 0;
@@ -258,11 +260,15 @@ function computeDashboardStats() {
     countedGameLessons > 0 ? totalGameScore / countedGameLessons : 0;
 
   // Overall progress: 50% from LMS + 50% from Game
+  // LMS progress is based on published LMS lessons
   const lmsProgressPct =
-    totalLessons > 0 ? (lessonsCompleted / totalLessons) * 50 : 0;
+    totalLessons > 0 ? Math.min(100, (lessonsCompleted / totalLessons) * 100) : 0;
+  // Game progress is based on max 6 game lessons (Unity game has fixed 6 lessons)
+  const gameMaxLessons = 6;
   const gameProgressPct =
-    totalLessons > 0 ? (gameLessonsCompleted / totalLessons) * 50 : 0;
-  const overallLmsProgress = Math.round(lmsProgressPct + gameProgressPct);
+    gameMaxLessons > 0 ? Math.min(100, (gameLessonsCompleted / gameMaxLessons) * 100) : 0;
+  // Combine: 50% weight for LMS + 50% weight for Game
+  const overallLmsProgress = Math.round((lmsProgressPct * 0.5) + (gameProgressPct * 0.5));
 
   return {
     lessonsCompleted,
@@ -276,10 +282,18 @@ function computeDashboardStats() {
 
 function updateDashboardStats(stats) {
   const safeStats = stats || {};
+  const totalLessons = studentDashboardState.lms.lessons.length || 1;
 
   const lessonsCompletedEl = document.getElementById('stat-lessons-completed');
   if (lessonsCompletedEl) {
     lessonsCompletedEl.textContent = getNumeric(safeStats.lessonsCompleted, 0);
+  }
+
+  // Update the "out of X lessons" caption dynamically
+  const lessonsCompletedCard = document.getElementById('stat-lessons-completed')?.closest('.student-stat-card');
+  const lessonsCaptionEl = lessonsCompletedCard?.querySelector('.stat-caption');
+  if (lessonsCaptionEl) {
+    lessonsCaptionEl.textContent = `out of ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}`;
   }
 
   const assessmentsCompletedEl = document.getElementById(
@@ -447,7 +461,7 @@ function attachQuickActions() {
   const assessmentsCard = document.getElementById('myAssessmentsCard');
   if (assessmentsCard) {
     assessmentsCard.addEventListener('click', () => {
-      window.location.href = '/student-progress.html';
+      window.location.href = '/student-progress';
     });
   }
 
@@ -1235,6 +1249,9 @@ async function loadStudentDashboard() {
     // Compute and render top-row stats
     const stats = computeDashboardStats();
     updateDashboardStats(stats);
+    
+    // Update donut progress with combined LMS + Game progress (same as top right card)
+    setDonutProgress(stats.overallLmsProgress);
 
   // Update overall course progress card (LMS + Game breakdown)
   renderOverallProgressCard({
