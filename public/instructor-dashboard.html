@@ -27,12 +27,38 @@
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="/instructor-dashboard" class="nav-tab active">Dashboard</a>
-                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
-                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
-                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
-                    <a href="/instructor-announcements" class="nav-tab">Announcements</a>
-                    <a href="/instructor-profile" class="nav-tab">Profile</a>
+                    <a href="/instructor-class" class="nav-tab">Class</a>
+                    <a href="/instructor-students" class="nav-tab">Students</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessments</a>
                 </nav>
+                <div class="instr-nav-actions">
+                    <button 
+                        type="button" 
+                        id="instrNotificationButton" 
+                        class="instr-notification-button"
+                        aria-label="Notifications"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="instrNotificationBadge" class="instr-notification-badge" style="display: none;">0</span>
+                    </button>
+                    <div id="instrNotificationDropdown" class="instr-notification-dropdown" style="display: none;">
+                        <div class="instr-notification-dropdown-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="instr-notification-dropdown-body">
+                            <div id="instrNotificationList" class="instr-notification-list"></div>
+                            <div id="instrNotificationEmpty" class="instr-notification-empty" style="display: none;">
+                                <p>You're all caught up ✨</p>
+                            </div>
+                        </div>
+                        <div class="instr-notification-dropdown-footer">
+                            <a href="/instructor-class" class="instr-notification-view-all">View all in Class Feed</a>
+                        </div>
+                    </div>
+                </div>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -41,15 +67,8 @@
     <div class="portal-container">
         <!-- Page Header -->
         <div class="instructor-dashboard-header">
-            <h1>
-                <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Instructor Dashboard
-            </h1>
-            <p>Monitor student progress, quiz performance, and recent activity.</p>
+            <h1>Instructor Dashboard</h1>
+            <p>Monitor student progress, quiz performance, and class activity.</p>
         </div>
 
         <!-- Statistic Cards Row -->
@@ -66,8 +85,8 @@
                     </div>
                     <h3 class="instructor-stat-title">Total Students</h3>
                 </div>
-                <div class="instructor-stat-value">32</div>
-                <p class="instructor-stat-subtext">Enrolled in your classes</p>
+                <div class="instructor-stat-value" id="statTotalStudents">0</div>
+                <p class="instructor-stat-subtext">Enrolled in your class</p>
             </div>
 
             <div class="instructor-stat-card">
@@ -80,7 +99,7 @@
                     </div>
                     <h3 class="instructor-stat-title">Average Quiz Score</h3>
                 </div>
-                <div class="instructor-stat-value">78%</div>
+                <div class="instructor-stat-value" id="statAvgQuizScore">0.0 / 10</div>
                 <p class="instructor-stat-subtext">Across all quizzes</p>
             </div>
 
@@ -92,162 +111,58 @@
                             <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3 class="instructor-stat-title">Simulation Pass Rate</h3>
+                    <h3 class="instructor-stat-title">Lessons Completed</h3>
                 </div>
-                <div class="instructor-stat-value">65%</div>
-                <p class="instructor-stat-subtext">Students passing required simulations</p>
+                <div class="instructor-stat-value" id="statLessonsCompleted">0 / 6</div>
+                <p class="instructor-stat-subtext">Average across students</p>
             </div>
 
             <div class="instructor-stat-card">
                 <div class="instructor-stat-card-header">
                     <div class="instructor-stat-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3 class="instructor-stat-title">At-Risk Students</h3>
+                    <h3 class="instructor-stat-title">Simulations Passed</h3>
                 </div>
-                <div class="instructor-stat-value">5</div>
-                <p class="instructor-stat-subtext">Below passing score or inactive</p>
+                <div class="instructor-stat-value" id="statSimulationsPassed">0</div>
+                <p class="instructor-stat-subtext">Total across students</p>
             </div>
         </div>
 
-        <!-- Main Content - Three Columns -->
-        <div class="instructor-content-grid-three">
-            <!-- Left Column - Class Performance Overview -->
-            <div class="instructor-card">
-                <div class="instructor-card-header">
-                    <h2>Class Performance Overview</h2>
-                    <p class="centered-subtitle">Summary of lesson and quiz performance.</p>
-                </div>
-                <table class="performance-table">
-                    <thead>
-                        <tr>
-                            <th>Lesson</th>
-                            <th>Avg Quiz Score</th>
-                            <th>Completion Rate</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Lesson 1: Vital Signs Monitoring</strong></td>
-                            <td><span class="score-badge high">82%</span></td>
-                            <td>95%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Lesson 2: Medication Assistance</strong></td>
-                            <td><span class="score-badge medium">75%</span></td>
-                            <td>88%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Lesson 3: Meal Prep & Feeding</strong></td>
-                            <td><span class="score-badge low">68%</span></td>
-                            <td>72%</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- Class Performance Overview -->
+        <div class="instructor-card">
+            <div class="instructor-card-header">
+                <h2>Class Performance Overview</h2>
+                <p class="centered-subtitle">Summary of lesson and quiz performance.</p>
             </div>
-
-            <!-- Middle Column - Recent Activity -->
-            <div class="instructor-card">
-                <div class="instructor-card-header">
-                    <h2>Recent Activity</h2>
-                    <p class="centered-subtitle">Latest student actions.</p>
-                </div>
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Destine April passed Simulation 1</p>
-                            <span class="activity-time">Nov 18, 2025</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Juan Cruz completed Quiz: Lesson 2</p>
-                            <span class="activity-time">Nov 18, 2025</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M13 7C13 9.20914 10.2091 11 7 11C3.79086 11 1 9.20914 1 7C1 4.79086 3.79086 3 7 3C10.2091 3 13 4.79086 13 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">3 new students enrolled in Batch 2025</p>
-                            <span class="activity-time">Nov 17, 2025</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Maria Santos passed Simulation 2</p>
-                            <span class="activity-time">Nov 17, 2025</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Carlos Reyes completed Quiz: Lesson 1</p>
-                            <span class="activity-time">Nov 16, 2025</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column - Students Needing Attention -->
-            <div class="students-attention-summary-card">
-                <div class="instructor-card-header">
-                    <h2>Students Needing Attention</h2>
-                </div>
-                <div class="attention-summary-content">
-                    <div class="attention-summary-item">
-                        <span class="attention-label">At-Risk Students:</span>
-                        <span class="attention-value">5</span>
-                    </div>
-                    <div class="attention-summary-item">
-                        <span class="attention-label">Inactive Students:</span>
-                        <span class="attention-value">3</span>
-                    </div>
-                    <div class="attention-summary-item">
-                        <span class="attention-label">No Simulations Completed:</span>
-                        <span class="attention-value">4</span>
-                    </div>
-                </div>
-                <div class="attention-card-footer">
-                    <a href="/instructor-class-list" class="view-class-list-btn">View Class List</a>
-                </div>
-            </div>
+            <table class="performance-table">
+                <thead>
+                    <tr>
+                        <th>Lesson</th>
+                        <th>Avg Quiz Score</th>
+                        <th>Completion Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="lessonPerformanceTable">
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 20px;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-notifications.js"></script>
     <script src="js/instructor-dashboard.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('instructorToken');
+            window.location.href = '/caresim-login';
+        }
+    </script>
 </body>
 </html>
-

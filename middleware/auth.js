@@ -80,5 +80,62 @@ const verifyInstructorToken = async (req, res, next) => {
   }
 };
 
-module.exports = { verifyStudentToken, verifyAdminToken, verifyInstructorToken };
+// Combined middleware that accepts both student (Firebase) and instructor (JWT) tokens
+const verifyStudentOrInstructorToken = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split('Bearer ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    // Try Firebase token first (for students)
+    try {
+      const decodedToken = await auth.verifyIdToken(token);
+      req.user = decodedToken;
+      req.userId = decodedToken.uid;
+      return next();
+    } catch (firebaseError) {
+      // If Firebase token fails, try JWT (for instructors)
+      try {
+        const jwt = require('jsonwebtoken');
+        const { db } = require('../config/firebase');
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const adminId = decoded.adminId;
+        
+        if (!adminId) {
+          return res.status(401).json({ error: 'Invalid token: missing adminId' });
+        }
+
+        // Load admin record from Firebase
+        const adminRef = db.ref(`admins/${adminId}`);
+        const adminSnapshot = await adminRef.once('value');
+        const adminData = adminSnapshot.val();
+
+        if (!adminData) {
+          return res.status(401).json({ error: 'Instructor not found' });
+        }
+
+        // Check role: must be "instructor" or "admin"
+        const role = adminData.role || 'instructor';
+        if (role !== 'instructor' && role !== 'admin') {
+          return res.status(403).json({ error: 'Forbidden: not instructor' });
+        }
+
+        req.instructorId = adminId;
+        req.instructor = adminData;
+        req.userId = adminId; // Set userId for consistency
+        return next();
+      } catch (jwtError) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+    }
+  } catch (error) {
+    console.error('Token verification error:', error.message);
+    res.status(401).json({ error: 'Invalid token', details: error.message });
+  }
+};
+
+module.exports = { verifyStudentToken, verifyAdminToken, verifyInstructorToken, verifyStudentOrInstructorToken };
 

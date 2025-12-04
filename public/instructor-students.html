@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class" class="nav-tab">Class</a>
+                    <a href="/instructor-students" class="nav-tab active">Students</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessments</a>
+                </nav>
+                <div class="instr-nav-actions">
+                    <button 
+                        type="button" 
+                        id="instrNotificationButton" 
+                        class="instr-notification-button"
+                        aria-label="Notifications"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="instrNotificationBadge" class="instr-notification-badge" style="display: none;">0</span>
+                    </button>
+                    <div id="instrNotificationDropdown" class="instr-notification-dropdown" style="display: none;">
+                        <div class="instr-notification-dropdown-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="instr-notification-dropdown-body">
+                            <div id="instrNotificationList" class="instr-notification-list"></div>
+                            <div id="instrNotificationEmpty" class="instr-notification-empty" style="display: none;">
+                                <p>You're all caught up ✨</p>
+                            </div>
+                        </div>
+                        <div class="instr-notification-dropdown-footer">
+                            <a href="/instructor-class" class="instr-notification-view-all">View all in Class Feed</a>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Students</span>
+        </nav>
+
+        <!-- Page header -->
+        <div class="assessment-header">
+            <h1>
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19 8V14M22 11H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Students
+            </h1>
+            <p>Basic information and risk status for your class.</p>
+        </div>
+
+        <!-- Inline loading indicator -->
+        <div id="studentsInlineLoading" class="students-inline-loading" style="display: none;">
+            Loading class and students...
+        </div>
+
+        <!-- Search/Filter Bar -->
+        <div class="instructor-card" style="margin-bottom: 24px;">
+            <div class="filter-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="studentSearch" placeholder="Search by name, email, or student number..." />
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="instructor-card">
+            <div class="instructor-card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2>Students in this class</h2>
+                    <p>Basic information and risk status.</p>
+                </div>
+                <div style="text-align: right; align-self: center;">
+                    <span id="studentsCountLabel" style="font-size: 13px; color: #64748B;">0 students</span>
+                </div>
+            </div>
+
+            <div id="studentsLoadingOverlay" class="class-loading-overlay" style="display: none;">
+                <div class="class-loading-spinner">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Loading students...</p>
+                </div>
+            </div>
+            
+            <div id="noClassAssigned" class="empty-state-content" style="display: none; text-align: center; padding: 40px 20px;">
+                <i class="fas fa-exclamation-circle empty-state-icon" style="font-size: 48px; color: #94A3B8; margin-bottom: 16px;"></i>
+                <p class="empty-state-text" style="color: #64748B; font-size: 14px; margin: 0;">No class assigned to you. Please contact the administrator.</p>
+            </div>
+            
+            <div id="noStudents" class="empty-state-content" style="display: none; text-align: center; padding: 40px 20px;">
+                <i class="fas fa-user-slash empty-state-icon" style="font-size: 48px; color: #94A3B8; margin-bottom: 16px;"></i>
+                <p class="empty-state-text" style="color: #64748B; font-size: 14px; margin: 0;">No students in this class yet.</p>
+            </div>
+
+            <div class="certificates-table-wrapper" style="display: none;" id="studentsTableWrapper">
+                <table class="certificates-table" id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>EMAIL</th>
+                            <th>STUDENT NUMBER</th>
+                            <th>LAST ACTIVE</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Students will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-notifications.js"></script>
+    <script src="js/instructor-students.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('instructorToken');
+            window.location.href = '/caresim-login';
+        }
+    </script>
+</body>
+</html>
+

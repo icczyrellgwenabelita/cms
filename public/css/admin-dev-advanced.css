@@ -1,0 +1,538 @@
+/* =========================================
+   Dev Advanced Settings Page (Scoped)
+   ALL styles are prefixed with .dev-advanced-*
+   to ensure they ONLY affect this page
+   ========================================= */
+
+/* Main page container - only affects dev-advanced-page */
+.dev-advanced-page {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* Header section */
+.dev-advanced-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #E2E8F0;
+}
+
+.dev-advanced-actions-top {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.dev-advanced-btn-back,
+.dev-advanced-btn-devtools {
+    padding: 10px 16px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    background: white;
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.dev-advanced-btn-back:hover,
+.dev-advanced-btn-devtools:hover {
+    border-color: #C19A6B;
+    background: #FAF0E6;
+    color: #556B2F;
+}
+
+/* Layout */
+.dev-advanced-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+/* Left Column: Users List */
+.dev-advanced-users-list {
+    width: 320px;
+    flex-shrink: 0;
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+.dev-advanced-list-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.dev-advanced-btn-create {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    background: white;
+    color: #4B5563;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.dev-advanced-btn-create:hover {
+    border-color: #C19A6B;
+    background: #FAF0E6;
+    color: #556B2F;
+}
+
+.dev-advanced-create-form {
+    margin-bottom: 16px;
+}
+
+.dev-advanced-create-form.hidden {
+    display: none !important;
+}
+
+.dev-advanced-users-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dev-advanced-user-item {
+    padding: 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.dev-advanced-user-item:hover {
+    border-color: #C19A6B;
+    background: #FAF0E6;
+}
+
+.dev-advanced-user-item.selected {
+    border-color: #C19A6B;
+    background: #FFF8F0;
+    box-shadow: 0 2px 4px rgba(193, 154, 107, 0.2);
+}
+
+.dev-advanced-user-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.dev-advanced-user-item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1F2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    margin-right: 8px;
+}
+
+.dev-advanced-user-item-summary {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #6B7280;
+}
+
+.dev-advanced-empty,
+.dev-advanced-error {
+    padding: 20px;
+    text-align: center;
+    color: #9CA3AF;
+    font-style: italic;
+}
+
+.dev-advanced-error {
+    color: #DC2626;
+    font-style: normal;
+}
+
+/* Right Pane: User Details */
+.dev-advanced-details-pane {
+    flex: 1;
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 600px;
+}
+
+.dev-advanced-no-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: #9CA3AF;
+    text-align: center;
+}
+
+.dev-advanced-user-details.hidden {
+    display: none !important;
+}
+
+.dev-advanced-user-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.dev-advanced-user-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0 0 4px 0;
+}
+
+.dev-advanced-user-email {
+    font-size: 14px;
+    color: #6B7280;
+    margin: 0 0 8px 0;
+}
+
+/* Tabs */
+.dev-advanced-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #E2E8F0;
+}
+
+.dev-advanced-tab {
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748B;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+    font-family: inherit;
+}
+
+.dev-advanced-tab:hover {
+    color: #556B2F;
+    background: #FAF0E6;
+}
+
+.dev-advanced-tab.active {
+    color: #556B2F;
+    border-bottom-color: #C19A6B;
+    font-weight: 600;
+}
+
+.dev-advanced-tab-content {
+    display: none;
+}
+
+.dev-advanced-tab-content.active {
+    display: block;
+}
+
+.dev-advanced-tab-content.hidden {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Game Summary */
+.dev-advanced-game-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+
+.dev-advanced-summary-badge {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1F2937;
+}
+
+.dev-advanced-summary-badge strong {
+    color: #C19A6B;
+    font-size: 18px;
+}
+
+.dev-advanced-quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dev-advanced-quick-btn {
+    padding: 8px 12px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    background: white;
+    color: #4B5563;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.dev-advanced-quick-btn:hover {
+    border-color: #C19A6B;
+    background: #FAF0E6;
+    color: #556B2F;
+}
+
+/* Lessons Table */
+.dev-advanced-lessons-table-container {
+    overflow-x: auto;
+    margin-bottom: 16px;
+}
+
+.dev-advanced-lessons-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.dev-advanced-lessons-table thead {
+    background: #F9FAFB;
+}
+
+.dev-advanced-lessons-table th {
+    text-align: left;
+    padding: 12px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.dev-advanced-lessons-table td {
+    padding: 12px;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: top;
+}
+
+.dev-advanced-lessons-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.dev-advanced-lesson-row {
+    background: white;
+}
+
+.dev-advanced-badge-eligible {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: #D1FAE5;
+    color: #065F46;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dev-advanced-badge.completed {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.dev-advanced-badge.not-completed {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.dev-advanced-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* Form Controls */
+.dev-advanced-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #4B5563;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.dev-advanced-checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+.dev-advanced-quiz-controls,
+.dev-advanced-sim-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dev-advanced-number-input {
+    width: 80px;
+    padding: 6px;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    font-size: 13px;
+    text-align: center;
+    font-family: inherit;
+}
+
+.dev-advanced-number-input:focus {
+    outline: none;
+    border-color: #C19A6B;
+    box-shadow: 0 0 0 3px rgba(193, 154, 107, 0.1);
+}
+
+.dev-advanced-btn-apply,
+.dev-advanced-btn-quick {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 6px;
+    font-family: inherit;
+}
+
+.dev-advanced-btn-apply {
+    background: #2563EB;
+    color: white;
+}
+
+.dev-advanced-btn-apply:hover:not(:disabled) {
+    background: #1D4ED8;
+}
+
+.dev-advanced-btn-apply:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.dev-advanced-btn-quick {
+    background: #10B981;
+    color: white;
+}
+
+.dev-advanced-btn-quick:hover {
+    background: #059669;
+}
+
+.dev-advanced-help-text {
+    padding: 12px;
+    background: #EFF6FF;
+    border-left: 3px solid #3B82F6;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #1E40AF;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.dev-advanced-help-text i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .dev-advanced-layout {
+        flex-direction: column;
+    }
+
+    .dev-advanced-users-list {
+        width: 100%;
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dev-advanced-page {
+        padding: 16px;
+    }
+
+    .dev-advanced-header-section {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .dev-advanced-actions-top {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .dev-advanced-btn-back,
+    .dev-advanced-btn-devtools {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .dev-advanced-lessons-table-container {
+        overflow-x: scroll;
+    }
+
+    .dev-advanced-lessons-table {
+        min-width: 800px;
+    }
+
+    .dev-advanced-game-summary {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .dev-advanced-quick-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .dev-advanced-quick-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

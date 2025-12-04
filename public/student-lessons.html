@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="student-portal.css">
+    <!-- Model Viewer for 3D Tools -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body class="student-portal">
     <!-- Header / Navigation -->
@@ -26,7 +28,8 @@
                 <nav class="nav-tabs">
                     <a href="/student-dashboard" class="nav-tab">Dashboard</a>
                     <a href="/student-lessons" class="nav-tab active">Lessons</a>
-                    <a href="/student-assessment" class="nav-tab">Assessment</a>
+                    <a href="/student-progress" class="nav-tab">Progress</a>
+                    <a href="/student-class" class="nav-tab">Class</a>
                     <a href="/student-certificates" class="nav-tab">Certificates</a>
                     <a href="/student-profile" class="nav-tab">Profile</a>
                 </nav>
@@ -41,7 +44,21 @@
             <div class="lessons-list-header">
                 <h2>Lessons</h2>
                 <p class="lessons-subtitle">View and track your available lessons.</p>
-                <div class="lessons-progress-indicator">
+                
+                <!-- View Mode Switcher -->
+                <div class="view-mode-switcher">
+                    <button class="view-mode-btn active" data-mode="lessons" onclick="switchViewMode('lessons')">
+                        <i class="fas fa-book"></i> Lessons
+                    </button>
+                    <button class="view-mode-btn" data-mode="videos" onclick="switchViewMode('videos')">
+                        <i class="fas fa-video"></i> Videos
+                    </button>
+                    <button class="view-mode-btn" data-mode="tools" onclick="switchViewMode('tools')">
+                        <i class="fas fa-tools"></i> Tools
+                    </button>
+                </div>
+                
+                <div class="lessons-progress-indicator" id="lessonsProgressIndicator">
                     <div class="lessons-progress-bar">
                         <div class="lessons-progress-fill" id="lessonsProgressFill" style="width: 0%"></div>
                     </div>
@@ -78,58 +95,31 @@
                     <span id="breadcrumbLessonName">Lesson</span>
                 </nav>
 
-                <!-- Lesson Header -->
-                <div class="lesson-viewer-header">
-                    <h1 id="lessonViewerTitle">Lesson Title</h1>
-                    <p class="lesson-viewer-subtitle" id="lessonViewerDescription">Lesson description will appear here.</p>
-                </div>
-
-                <!-- Tabs -->
-                <div class="lesson-tabs">
-                    <button class="lesson-tab lesson-tab-btn-content active" data-tab="content" onclick="switchLessonTab('content')">
-                        <span class="tab-icon-wrapper">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6 2H20V22H6V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
-                        <span>Content</span>
-                    </button>
-                    <button class="lesson-tab lesson-tab-btn-tools" data-tab="tools" onclick="switchLessonTab('tools')">
-                        <span class="tab-icon-wrapper">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M14.7 6.3C15.1 5.9 15.1 5.3 14.7 4.9L13.1 3.3C12.7 2.9 12.1 2.9 11.7 3.3L10.3 4.7L13.3 7.7L14.7 6.3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M3 17.2V21H6.8L17.8 10L14 6.2L3 17.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
-                        <span>Tools</span>
-                    </button>
-                </div>
-
-                <!-- Content Tab -->
-                <div id="contentTab" class="lesson-tab-content active">
-                    <div class="lesson-content-body" id="lessonContentBody">
-                        <!-- Lesson content will be inserted here -->
+                <!-- Content Area (for Lessons view) -->
+                <div id="lessonsContentView" class="lessons-content-view">
+                    <!-- Content Mode: Page content + Take Assessment panel -->
+                    <div id="pageContentView">
+                        <!-- Content will be dynamically inserted here (intro view or page view) -->
                     </div>
-                    <div class="lesson-content-actions">
-                        <button class="btn-primary" id="markCompletedBtn" onclick="markLessonCompleted()">
-                            Mark as Completed
-                        </button>
-                        <button class="btn-outline" onclick="goToDashboard()">Back to Dashboard</button>
+                    
+                    <!-- Assessment Mode: Questions + Result Summary -->
+                    <div id="pageAssessmentView" style="display: none;">
+                        <div id="assessmentsContainer" class="assessments-container">
+                            <!-- Assessment form will be rendered here -->
+                        </div>
+                        <!-- Page-level assessment result + actions (assessment mode) -->
+                        <div id="pageAssessmentResultContainer"></div>
                     </div>
                 </div>
 
-                <!-- Tools Tab -->
-                <div id="toolsTab" class="lesson-tab-content">
-                    <div class="tools-tab-header">
-                        <h2>Tools Used in This Lesson</h2>
-                        <p class="tools-subtitle" id="toolsSubtitle">These tools are required to complete this lesson.</p>
+                <!-- Videos View -->
+                <div id="videosView" class="videos-view" style="display: none;">
+                    <!-- Videos content will be inserted here -->
                     </div>
-                    <div class="tools-grid" id="toolsGrid">
-                        <!-- Tool cards will be inserted here -->
-                    </div>
+
+                <!-- Tools View -->
+                <div id="toolsView" class="tools-view" style="display: none;">
+                    <!-- Tools content will be inserted here -->
                 </div>
             </div>
         </main>
@@ -218,798 +208,23 @@
         </div>
     </div>
 
-    <script>
-        const token = localStorage.getItem('studentToken');
-        if (!token) {
-            window.location.href = '/caresim-login';
-        }
+    <!-- Student lessons logic -->
+    <script src="/js/student-lessons.js"></script>
 
-        let allLessons = [];
-        let currentLesson = null;
-        let currentLessonSlot = null;
-        let studentProgress = {};
-
-        // Load lessons and student progress
-        async function loadLessons() {
-            try {
-                // Fetch lessons from API
-                const lessonsResponse = await fetch('/api/user/lessons?t=' + Date.now(), {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (lessonsResponse.status === 401 || lessonsResponse.status === 403) {
-                    localStorage.removeItem('studentToken');
-                    window.location.href = '/caresim-login';
-                    return;
-                }
-                
-                if (lessonsResponse.ok) {
-                    const lessonsData = await lessonsResponse.json();
-                    if (lessonsData.success && lessonsData.lessons) {
-                        allLessons = lessonsData.lessons.map(lesson => ({
-                            slot: lesson.slot,
-                            lessonName: lesson.lessonTitle || lesson.lessonName || `Lesson ${lesson.slot}`,
-                            lessonDescription: lesson.description || lesson.lessonDescription || 'No description available.',
-                            content: lesson.body || '<p>No content available for this lesson.</p>',
-                            images: lesson.images || [],
-                            tools: lesson.tools || {}
-                        }));
-                    }
-                } else {
-                    console.error('Failed to fetch lessons:', lessonsResponse.status);
-                    showAlertModal('Failed to load lessons. Please try again.', 'Error');
-                    allLessons = [];
-                }
-
-                // Load student progress from dashboard API
-                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.data && data.data.lessons) {
-                        data.data.lessons.forEach(lesson => {
-                            studentProgress[lesson.slot] = {
-                                status: lesson.status || 'not_started',
-                                progress: lesson.progress || 0
-                            };
-                        });
-                    }
-                }
-
-                renderLessonsList();
-                
-                // Check URL for lesson parameter
-                const urlParams = new URLSearchParams(window.location.search);
-                const lessonParam = urlParams.get('lesson');
-                if (lessonParam) {
-                    const slot = parseInt(lessonParam, 10);
-                    loadLesson(slot);
-                }
-            } catch (error) {
-                console.error('Error loading lessons:', error);
-                showAlertModal('Failed to load lessons. Please try again.', 'Error');
-            }
-        }
-
-        function renderLessonsList() {
-            const container = document.getElementById('lessonsList');
-            if (!container) return;
-
-            if (allLessons.length === 0) {
-                container.innerHTML = '<p class="empty-lessons">No lessons available.</p>';
-                return;
-            }
-            
-            // Update progress indicator
-            updateLessonsProgress();
-
-            container.innerHTML = allLessons.map(lesson => {
-                const progress = studentProgress[lesson.slot] || {};
-                const status = progress.status || 'not_started';
-                const progressValue = progress.progress || 0;
-
-                // Determine status badge
-                let statusBadgeClass = 'not-started';
-                let statusBadgeText = 'Not Started';
-                if (status === 'completed') {
-                    statusBadgeClass = 'completed';
-                    statusBadgeText = 'Completed';
-                } else if (status === 'in_progress') {
-                    statusBadgeClass = 'in-progress';
-                    statusBadgeText = 'In Progress';
-                }
-
-                return `
-                    <div class="lesson-list-card ${status === 'completed' ? 'is-complete' : ''} ${currentLessonSlot === lesson.slot ? 'active' : ''}" 
-                         onclick="loadLesson(${lesson.slot})">
-                        <div class="lesson-list-card-header">
-                            <h3>${lesson.lessonName || `Lesson ${lesson.slot}`}</h3>
-                            <span class="lesson-status-badge ${statusBadgeClass}">${statusBadgeText}</span>
-                        </div>
-                        <p class="lesson-list-description">${lesson.lessonDescription || 'No description available.'}</p>
-                        <div class="lesson-list-footer">
-                            <div class="lesson-list-progress">
-                                <div class="lesson-list-progress-bar">
-                                    <div class="lesson-list-progress-fill" style="width: ${progressValue}%"></div>
-                                </div>
-                                <span>${progressValue}%</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function updateLessonsProgress() {
-            const totalLessons = allLessons.length;
-            let completedCount = 0;
-            
-            allLessons.forEach(lesson => {
-                const progress = studentProgress[lesson.slot] || {};
-                if (progress.status === 'completed') {
-                    completedCount++;
-                }
-            });
-            
-            const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-            
-            const progressFill = document.getElementById('lessonsProgressFill');
-            const progressText = document.getElementById('lessonsProgressText');
-            
-            if (progressFill) {
-                progressFill.style.width = `${progressPercent}%`;
-            }
-            
-            if (progressText) {
-                progressText.textContent = `${completedCount} of ${totalLessons} completed`;
-            }
-        }
-
-        function loadLesson(slot) {
-            const lesson = allLessons.find(l => l.slot === slot);
-            if (!lesson) {
-                showAlertModal('Lesson not found.', 'Error');
-                return;
-            }
-
-            currentLesson = lesson;
-            currentLessonSlot = slot;
-
-            // Update URL without reload
-            const url = new URL(window.location);
-            url.searchParams.set('lesson', slot);
-            window.history.pushState({}, '', url);
-
-            // Hide empty state, show viewer
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('lessonViewer').style.display = 'block';
-
-            // Update breadcrumb
-            document.getElementById('breadcrumbLessonName').textContent = lesson.lessonName || `Lesson ${slot}`;
-
-            // Update header
-            document.getElementById('lessonViewerTitle').textContent = lesson.lessonName || `Lesson ${slot}`;
-            document.getElementById('lessonViewerDescription').textContent = lesson.lessonDescription || 'No description available.';
-
-            // Load content tab
-            const contentBody = document.getElementById('lessonContentBody');
-            if (contentBody) {
-                let contentHtml = lesson.content || '<p>No content available for this lesson.</p>';
-                
-                // Display supporting images if available
-                if (lesson.images && lesson.images.length > 0) {
-                    const imagesHtml = lesson.images.map(img => 
-                        `<img src="${img}" alt="Supporting image" style="max-width: 100%; margin: 16px 0; border-radius: 8px;" />`
-                    ).join('');
-                    contentHtml += '<div class="lesson-supporting-images" style="margin-top: 24px;">' + imagesHtml + '</div>';
-                }
-                
-                // Add tools section to content tab
-                const tools = lesson.tools || {};
-                const toolKeys = Object.keys(tools);
-                if (toolKeys.length > 0) {
-                    let toolsHtml = `
-                        <div class="lesson-tools-section" style="margin-top: 32px; padding-top: 32px; border-top: 1px solid #E5E7EB;">
-                            <h2 style="font-size: 20px; font-weight: 600; color: #1F2937; margin-bottom: 20px;">Tools Used in This Lesson</h2>
-                            <div class="lesson-tools-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                    `;
-                    
-                    toolKeys.forEach(toolId => {
-                        const tool = tools[toolId];
-                        const toolName = tool.name || 'Unnamed Tool';
-                        const toolDesc = tool.description || 'No description';
-                        const toolImage = tool.imageUrl || tool.imageURL;
-                        const toolModelUrl = tool.modelUrl;
-                        const toolModelType = tool.modelType;
-                        const firstLetter = toolName.charAt(0).toUpperCase();
-                        const modelBadge = toolModelType ? `<span style="display: inline-block; padding: 4px 8px; background: #C19A6B; color: white; border-radius: 4px; font-size: 11px; margin-left: 8px;">3D Model: ${toolModelType.toUpperCase()}</span>` : '';
-                        
-                        toolsHtml += `
-                            <div class="lesson-tool-card" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                                    <div style="flex-shrink: 0;">
-                                        ${toolImage ? 
-                                            `<img src="${toolImage}" alt="${toolName}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB;">` :
-                                            `<div style="width: 60px; height: 60px; background: #C19A6B; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 600;">${firstLetter}</div>`
-                                        }
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <h3 style="font-size: 15px; font-weight: 600; color: #1F2937; margin: 0 0 6px 0;">${toolName}${modelBadge}</h3>
-                                        <p style="font-size: 13px; color: #64748B; margin: 0; line-height: 1.4;">${toolDesc}</p>
-                                    </div>
-                                </div>
-                                ${toolModelUrl && toolModelType ? `
-                                    <div class="content-tool-3d-container" data-tool-id="${toolId}" style="width: 100%; height: 180px; background: #F9FAFB; border-radius: 8px; margin-top: 12px; position: relative; overflow: hidden;">
-                                        <!-- 3D preview will be rendered here -->
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `;
-                    });
-                    
-                    toolsHtml += '</div></div>';
-                    contentHtml += toolsHtml;
-                }
-                
-                contentBody.innerHTML = contentHtml;
-                
-                // Setup 3D previews for tools in content tab
-                if (toolKeys.length > 0) {
-                    toolKeys.forEach(toolId => {
-                        const tool = tools[toolId];
-                        if (tool.modelUrl && tool.modelType) {
-                            const container = contentBody.querySelector(`.content-tool-3d-container[data-tool-id="${toolId}"]`);
-                            if (container) {
-                                setTimeout(() => {
-                                    setupToolModelPreview(container, tool.modelUrl, tool.modelType);
-                                }, 100);
-                            }
-                        }
-                    });
-                }
-            }
-
-            // Load tools tab
-            loadToolsTab(lesson.tools || {}, lesson.lessonName || `Lesson ${slot}`);
-
-            // Update mark completed button
-            const progress = studentProgress[slot] || {};
-            const markBtn = document.getElementById('markCompletedBtn');
-            if (markBtn) {
-                if (progress.status === 'completed') {
-                    markBtn.textContent = 'Completed';
-                    markBtn.disabled = true;
-                    markBtn.classList.add('completed');
-                } else {
-                    markBtn.textContent = 'Mark as Completed';
-                    markBtn.disabled = false;
-                    markBtn.classList.remove('completed');
-                }
-            }
-
-            // Switch to content tab by default
-            switchLessonTab('content');
-
-            // Update active lesson in list
-            renderLessonsList();
-        }
-
-        // Shared 3D Model Preview Helper for Student Viewer
-        function setupToolModelPreview(containerElement, modelUrl, modelType) {
-            if (!containerElement || !modelUrl || !modelType || typeof THREE === 'undefined') {
-                if (containerElement) {
-                    containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">No 3D model attached.</div>';
-                }
-                return null;
-            }
-
-            const lowerType = modelType.toLowerCase();
-            if (!['fbx', 'glb', 'obj'].includes(lowerType)) {
-                containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">Unsupported 3D model type.</div>';
-                return null;
-            }
-
-            // Clear container
-            containerElement.innerHTML = '<canvas style="width: 100%; height: 100%; border-radius: 8px;"></canvas>';
-            const canvas = containerElement.querySelector('canvas');
-            if (!canvas) return null;
-
-            // Setup scene
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf5f5f5);
-            
-            const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-            camera.position.set(0, 0, 5);
-            
-            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 5, 5);
-            scene.add(directionalLight);
-            
-            let currentModel = null;
-            let animationId = null;
-            
-            const cleanup = () => {
-                if (animationId) {
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
-                }
-                if (currentModel) {
-                    scene.remove(currentModel);
-                    currentModel.traverse((child) => {
-                        if (child.isMesh) {
-                            if (child.geometry) child.geometry.dispose();
-                            if (child.material) {
-                                if (Array.isArray(child.material)) {
-                                    child.material.forEach(mat => mat.dispose && mat.dispose());
-                                } else {
-                                    child.material.dispose && child.material.dispose();
-                                }
-                            }
-                        }
-                    });
-                    currentModel = null;
-                }
-                renderer.dispose();
-            };
-            
-            const onLoad = (object) => {
-                if (currentModel) {
-                    scene.remove(currentModel);
-                    currentModel.traverse((child) => {
-                        if (child.isMesh) {
-                            if (child.geometry) child.geometry.dispose();
-                            if (child.material) {
-                                if (Array.isArray(child.material)) {
-                                    child.material.forEach(mat => mat.dispose && mat.dispose());
-                                } else {
-                                    child.material.dispose && child.material.dispose();
-                                }
-                            }
-                        }
-                    });
-                }
-                
-                let model = object;
-                if (object.scene) {
-                    model = object.scene;
-                }
-                
-                // Fit model to view
-                const box = new THREE.Box3().setFromObject(model);
-                const size = new THREE.Vector3();
-                box.getSize(size);
-                const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                const scale = 2 / maxDim;
-                model.scale.setScalar(scale);
-                
-                const boxCenter = new THREE.Vector3();
-                box.getCenter(boxCenter);
-                model.position.sub(boxCenter);
-                
-                scene.add(model);
-                currentModel = model;
-                
-                // Auto-rotate animation
-                const animate = () => {
-                    if (currentModel) {
-                        currentModel.rotation.y += 0.01;
-                    }
-                    renderer.render(scene, camera);
-                    animationId = requestAnimationFrame(animate);
-                };
-                animate();
-            };
-            
-            const onError = (error) => {
-                console.error('3D model load error:', error);
-                containerElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #DC2626;">Unable to load 3D model.</div>';
-                cleanup();
-            };
-            
-            // Load model based on type
-            try {
-                if (lowerType === 'glb' || lowerType === 'gltf') {
-                    const loader = new THREE.GLTFLoader();
-                    loader.load(modelUrl, onLoad, undefined, onError);
-                } else if (lowerType === 'fbx') {
-                    const loader = new THREE.FBXLoader();
-                    loader.load(modelUrl, onLoad, undefined, onError);
-                } else if (lowerType === 'obj') {
-                    const loader = new THREE.OBJLoader();
-                    loader.load(modelUrl, onLoad, undefined, onError);
-                }
-            } catch (error) {
-                onError(error);
-            }
-            
-            // Return cleanup function
-            return cleanup;
-        }
-
-        function loadToolsTab(tools, lessonName) {
-            const toolsGrid = document.getElementById('toolsGrid');
-            const toolsSubtitle = document.getElementById('toolsSubtitle');
-            if (!toolsGrid) return;
-
-            if (toolsSubtitle) {
-                toolsSubtitle.textContent = `These tools are required to perform ${lessonName}.`;
-            }
-
-            const toolKeys = Object.keys(tools);
-            if (toolKeys.length === 0) {
-                toolsGrid.innerHTML = '<p class="empty-tools">No tools assigned to this lesson.</p>';
-                return;
-            }
-
-            toolsGrid.innerHTML = toolKeys.map(toolId => {
-                const tool = tools[toolId];
-                const toolName = tool.name || 'Unnamed Tool';
-                const toolDesc = tool.description || 'No description';
-                const toolImage = tool.imageUrl || tool.imageURL;
-                const toolModelUrl = tool.modelUrl;
-                const toolModelType = tool.modelType;
-                const firstLetter = toolName.charAt(0).toUpperCase();
-                const modelBadge = toolModelType ? `<span style="display: inline-block; padding: 4px 8px; background: #C19A6B; color: white; border-radius: 4px; font-size: 11px; margin-left: 8px;">3D Model: ${toolModelType.toUpperCase()}</span>` : '';
-                
-                return `
-                    <div class="tool-card" onclick="openToolModal('${toolId}')" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
-                        <div style="display: flex; gap: 16px; margin-bottom: 16px;">
-                            <div style="flex-shrink: 0;">
-                                ${toolImage ? 
-                                    `<img src="${toolImage}" alt="${toolName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB;">` :
-                                    `<div style="width: 80px; height: 80px; background: #C19A6B; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600;">${firstLetter}</div>`
-                                }
-                            </div>
-                            <div style="flex: 1;">
-                                <h3 style="font-size: 16px; font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">${toolName}${modelBadge}</h3>
-                                <p style="font-size: 14px; color: #64748B; margin: 0 0 8px 0; line-height: 1.5;">${toolDesc}</p>
-                                <p style="font-size: 12px; color: #9CA3AF; margin: 0;">Used in this lesson</p>
-                            </div>
-                        </div>
-                        ${toolModelUrl && toolModelType ? `
-                            <div class="student-tool-3d-container" data-tool-id="${toolId}" style="width: 100%; height: 200px; background: #F9FAFB; border-radius: 8px; margin-top: 12px; position: relative; overflow: hidden;">
-                                <!-- 3D preview will be rendered here -->
-                            </div>
-                        ` : ''}
-                        <button class="btn-view-tool" onclick="event.stopPropagation(); openToolModal('${toolId}')" style="margin-top: 12px; width: 100%; padding: 10px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">
-                            View Details
-                        </button>
-                    </div>
-                `;
-            }).join('');
-            
-            // Setup 3D previews for tools with models
-            toolKeys.forEach(toolId => {
-                const tool = tools[toolId];
-                if (tool.modelUrl && tool.modelType) {
-                    const container = toolsGrid.querySelector(`.student-tool-3d-container[data-tool-id="${toolId}"]`);
-                    if (container) {
-                        setTimeout(() => {
-                            setupToolModelPreview(container, tool.modelUrl, tool.modelType);
-                        }, 100);
-                    }
-                }
-            });
-        }
-
-        function switchLessonTab(tab) {
-            // Update tab buttons
-            document.querySelectorAll('.lesson-tab').forEach(btn => {
-                if (btn.getAttribute('data-tab') === tab) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-
-            // Update tab content - hide all first
-            const contentTab = document.getElementById('contentTab');
-            const toolsTab = document.getElementById('toolsTab');
-            
-            if (contentTab) {
-                if (tab === 'content') {
-                    contentTab.classList.add('active');
-                } else {
-                    contentTab.classList.remove('active');
-                }
-            }
-            
-            if (toolsTab) {
-                if (tab === 'tools') {
-                    toolsTab.classList.add('active');
-                } else {
-                    toolsTab.classList.remove('active');
-                }
-            }
-        }
-
-        function openToolModal(toolId) {
-            if (!currentLesson || !currentLesson.tools || !currentLesson.tools[toolId]) {
-                showAlertModal('Tool information not available.', 'Error');
-                return;
-            }
-
-            const tool = currentLesson.tools[toolId];
-            const modal = document.getElementById('toolModal');
-
-            document.getElementById('toolModalTitle').textContent = tool.name || 'Unnamed Tool';
-            document.getElementById('toolModalDescription').textContent = tool.description || 'No description available.';
-            document.getElementById('toolModalPurpose').textContent = tool.instructions || tool.purpose || 'No purpose specified.';
-            document.getElementById('toolModalLessonName').textContent = currentLesson.lessonName || `Lesson ${currentLessonSlot}`;
-
-            // Set image
-            const toolImage = document.getElementById('toolModalImage');
-            if (tool.imageUrl || tool.imageURL) {
-                toolImage.src = tool.imageUrl || tool.imageURL;
-                toolImage.style.display = 'block';
-            } else {
-                toolImage.style.display = 'none';
-            }
-            
-            // Show 3D model viewer if available
-            let tool3DCleanup = null;
-            if (tool.modelType && tool.modelUrl) {
-                const modelType = tool.modelType;
-                const modelTab = document.querySelector('.tool-modal-tab[data-tab="3d"]');
-                if (modelTab) {
-                    modelTab.style.display = 'block';
-                    const viewerContainer = document.getElementById('tool3DViewerContainer');
-                    if (viewerContainer && typeof renderToolModel !== 'undefined') {
-                        viewerContainer.innerHTML = '';
-                        tool3DCleanup = renderToolModel(viewerContainer, tool.modelUrl, modelType);
-                    } else if (viewerContainer) {
-                        viewerContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B;">Loading 3D viewer...</div>';
-                    }
-                }
-            } else {
-                const modelTab = document.querySelector('.tool-modal-tab[data-tab="3d"]');
-                if (modelTab) {
-                    modelTab.style.display = 'none';
-                }
-            }
-            
-            // Store cleanup function for later
-            window.currentTool3DCleanup = tool3DCleanup;
-
-            // Set steps
-            const stepsList = document.getElementById('toolModalSteps');
-            if (tool.steps && Array.isArray(tool.steps) && tool.steps.length > 0) {
-                stepsList.innerHTML = tool.steps.map(step => `<li>${step}</li>`).join('');
-            } else if (tool.steps && typeof tool.steps === 'string') {
-                stepsList.innerHTML = `<li>${tool.steps}</li>`;
-            } else {
-                stepsList.innerHTML = '<li>No steps provided.</li>';
-            }
-
-            // Switch to image tab by default
-            switchToolModalTab('image');
-            modal.style.display = 'flex';
-        }
-
-        function closeToolModal() {
-            // Cleanup 3D viewer if active
-            if (window.currentTool3DCleanup) {
-                window.currentTool3DCleanup();
-                window.currentTool3DCleanup = null;
-            }
-            document.getElementById('toolModal').style.display = 'none';
-        }
-
-        function switchToolModalTab(tab) {
-            document.querySelectorAll('.tool-modal-tab').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
-            });
-            document.getElementById('toolImageTab').classList.toggle('active', tab === 'image');
-            document.getElementById('tool3DTab').classList.toggle('active', tab === '3d');
-        }
-
-        async function markLessonCompleted() {
-            if (!currentLessonSlot) return;
-
-            try {
-                // Update local state
-                if (!studentProgress[currentLessonSlot]) {
-                    studentProgress[currentLessonSlot] = {};
-                }
-                studentProgress[currentLessonSlot].status = 'completed';
-                studentProgress[currentLessonSlot].progress = 100;
-
-                // Update UI
-                const markBtn = document.getElementById('markCompletedBtn');
-                if (markBtn) {
-                    markBtn.textContent = 'Completed';
-                    markBtn.disabled = true;
-                    markBtn.classList.add('completed');
-                }
-
-                // TODO: Update Firebase via API
-                // For now, just show success message
-                showAlertModal('Lesson marked as completed!', 'Success');
-                renderLessonsList();
-            } catch (error) {
-                console.error('Error marking lesson as completed:', error);
-                showAlertModal('Failed to update lesson status.', 'Error');
-            }
-        }
-
-        function goToDashboard() {
-            window.location.href = '/student-dashboard';
-        }
-
-        function logout() {
-            document.getElementById('logoutModal').style.display = 'flex';
-        }
-
-        function closeLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'none';
-        }
-
-        function confirmLogout() {
-            localStorage.removeItem('studentToken');
-            localStorage.removeItem('studentData');
-            window.location.href = '/caresim-login';
-        }
-
-        function showAlertModal(message, title = 'Notice') {
-            const modal = document.getElementById('alertModal');
-            const msg = document.getElementById('alertMessage');
-            const ttl = document.getElementById('alertTitle');
-            if (!modal || !msg || !ttl) return alert(message);
-            ttl.textContent = title;
-            msg.textContent = message;
-            modal.style.display = 'flex';
-        }
-
-        function closeAlertModal() {
-            document.getElementById('alertModal').style.display = 'none';
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            // Close modals on outside click
-            window.onclick = function(event) {
-                const logoutModal = document.getElementById('logoutModal');
-                const alertModal = document.getElementById('alertModal');
-                const toolModal = document.getElementById('toolModal');
-                const tool3DViewerModal = document.getElementById('tool3DViewerModal');
-                if (event.target === logoutModal) closeLogoutModal();
-                if (event.target === alertModal) closeAlertModal();
-                if (event.target === toolModal) closeToolModal();
-                if (event.target === tool3DViewerModal) closeTool3DViewerModal();
-            };
-
-            loadLessons();
-        });
-        
-        // View 3D Model in separate modal
-        function viewTool3DModel(toolId) {
-            if (!currentLesson || !currentLesson.tools || !currentLesson.tools[toolId]) {
-                showAlertModal('Tool information not available.', 'Error');
-                return;
-            }
-            
-            const tool = currentLesson.tools[toolId];
-            if (!tool.modelUrl || !tool.modelType) {
-                showAlertModal('No 3D model available for this tool.', 'Info');
-                return;
-            }
-            
-            document.getElementById('tool3DViewerModal').style.display = 'flex';
-            const viewerContainer = document.getElementById('tool3DViewerModalContainer');
-            viewerContainer.innerHTML = '';
-            
-            if (typeof renderToolModel !== 'undefined') {
-                window.tool3DViewerCleanup = renderToolModel(viewerContainer, tool.modelUrl, tool.modelType);
-            } else {
-                viewerContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #DC2626;">3D viewer not loaded. Please refresh the page.</div>';
-            }
-        }
-        
-        function closeTool3DViewerModal() {
-            if (window.tool3DViewerCleanup) {
-                window.tool3DViewerCleanup();
-                window.tool3DViewerCleanup = null;
-            }
-            document.getElementById('tool3DViewerModal').style.display = 'none';
-        }
-    </script>
-    
-    <!-- 3D Model Viewer Modal -->
-    <div id="tool3DViewerModal" class="history-modal" style="display: none;">
-        <div class="history-modal-content" style="max-width: 900px; width: 90%;">
-            <div class="history-modal-header">
-                <h2>3D Model Viewer</h2>
-                <button class="history-close" onclick="closeTool3DViewerModal()">&times;</button>
+    <!-- Assessment Result Modal -->
+    <div id="assessmentResultModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="assessmentResultTitle">Assessment Result</h2>
+                <button class="modal-close" onclick="closeAssessmentResultModal()">&times;</button>
             </div>
-            <div class="history-modal-body" style="padding: 20px;">
-                <div id="tool3DViewerModalContainer" style="width: 100%; height: 600px; background: #F8FAFC; border-radius: 8px; overflow: hidden;"></div>
+            <div class="modal-body" id="assessmentResultBody">
+                <!-- JS will render attempt details here -->
             </div>
-            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" class="btn-primary" onclick="closeTool3DViewerModal()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">Close</button>
+            <div class="modal-footer">
+                <button class="btn-primary" id="assessmentRetakeButton">Retake Assessment</button>
             </div>
         </div>
     </div>
-
-    <!-- Three.js Core - MUST load first -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    
-    <!-- OrbitControls - MUST load before loaders -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <!-- FBXLoader Dependencies (must load before FBXLoader) -->
-    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.1/lib/browser.min.js"></script>
-    
-    <!-- Three.js Loaders - MUST load in this order before 3d-viewer.js -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/FBXLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/OBJLoader.js"></script>
-    
-    <!-- Verify loaders are loaded and attach to THREE if needed -->
-    <script>
-        (function() {
-            function ensureLoadersAttached() {
-                if (typeof THREE === 'undefined') {
-                    console.error('Three.js not loaded!');
-                    return false;
-                }
-                
-                // Attach loaders from window to THREE if they exist there
-                if (typeof window.GLTFLoader !== 'undefined' && typeof THREE.GLTFLoader === 'undefined') {
-                    THREE.GLTFLoader = window.GLTFLoader;
-                    console.log('Attached GLTFLoader to THREE');
-                }
-                if (typeof window.FBXLoader !== 'undefined' && typeof THREE.FBXLoader === 'undefined') {
-                    THREE.FBXLoader = window.FBXLoader;
-                    console.log('Attached FBXLoader to THREE');
-                }
-                if (typeof window.OBJLoader !== 'undefined' && typeof THREE.OBJLoader === 'undefined') {
-                    THREE.OBJLoader = window.OBJLoader;
-                    console.log('Attached OBJLoader to THREE');
-                }
-                if (typeof window.OrbitControls !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
-                    THREE.OrbitControls = window.OrbitControls;
-                    console.log('Attached OrbitControls to THREE');
-                }
-                
-                // Verify all required loaders
-                const status = {
-                    'THREE': typeof THREE !== 'undefined',
-                    'GLTFLoader': typeof THREE.GLTFLoader !== 'undefined',
-                    'FBXLoader': typeof THREE.FBXLoader !== 'undefined',
-                    'OBJLoader': typeof THREE.OBJLoader !== 'undefined',
-                    'OrbitControls': typeof THREE.OrbitControls !== 'undefined'
-                };
-                
-                console.log('Three.js Loaders Status:', status);
-                
-                if (!status.FBXLoader) {
-                    console.error('FBXLoader missing! Check script loading order.');
-                }
-                
-                return status;
-            }
-            
-            // Check after scripts load
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', ensureLoadersAttached);
-            } else {
-                setTimeout(ensureLoadersAttached, 100);
-            }
-            window.addEventListener('load', ensureLoadersAttached);
-            window.checkThreeLoaders = ensureLoadersAttached;
-        })();
-    </script>
-    
-    <!-- Unified 3D Viewer - MUST load after all loaders -->
-    <script src="/js/common/3d-viewer.js"></script>
 </body>
 </html>
-

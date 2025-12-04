@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Advanced Settings - CareSim Admin Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+    <link rel="stylesheet" href="css/admin-dev-advanced.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/admin-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab">Users</a>
+                    <a href="/admin-game-certificates" class="nav-tab">Certificates</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    <div class="portal-container">
+        <section class="content-section dev-advanced-page">
+            <div class="dev-advanced-header-section">
+                <div>
+                    <h1 class="section-title">Dev Advanced Settings – Demo Users</h1>
+                    <p class="section-subtitle">For super admin demo/testing only. Affects DEMO accounts only.</p>
+                </div>
+                <div class="dev-advanced-actions-top">
+                    <a href="/admin-dashboard" class="dev-advanced-btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Admin
+                    </a>
+                    <button class="dev-advanced-btn-devtools" onclick="window.location.href='/admin-dashboard'">
+                        <i class="fas fa-cog"></i> Open Dev Tools Panel
+                    </button>
+                </div>
+            </div>
+
+            <div class="dev-advanced-layout">
+                <!-- Left Column: Demo Users List -->
+                <div class="dev-advanced-users-list">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 class="dev-advanced-list-title" style="margin: 0;">Demo Users</h3>
+                        <button class="dev-advanced-btn-create" onclick="showCreateDemoUserForm()" title="Create Demo User">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="devAdvancedCreateForm" class="dev-advanced-create-form hidden">
+                        <div style="padding: 12px; background: #F8FAFC; border-radius: 6px; border: 1px solid #E2E8F0; margin-bottom: 12px;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #475569; font-weight: 600;">Create Demo User</h4>
+                            <div style="margin-bottom: 8px;">
+                                <label style="display: block; font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 4px;">Type</label>
+                                <select id="devCreateUserType" style="width: 100%; padding: 6px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 13px;">
+                                    <option value="lms">LMS Student</option>
+                                    <option value="game">Game User</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="display: block; font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 4px;">Email (Required)</label>
+                                <input type="email" id="devCreateUserEmail" style="width: 100%; padding: 6px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 13px;" placeholder="user@example.com">
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 4px;">Name (Optional)</label>
+                                <input type="text" id="devCreateUserName" style="width: 100%; padding: 6px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 13px;" placeholder="Demo User">
+                            </div>
+                            <div id="devCreateError" style="display: none; color: #DC2626; font-size: 12px; margin-bottom: 10px;"></div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="dev-advanced-btn-apply" onclick="submitCreateDemoUser()" style="flex: 1; padding: 8px;">Create</button>
+                                <button class="dev-advanced-btn-quick" onclick="hideCreateDemoUserForm()" style="flex: 1; padding: 8px; background: #6B7280;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="devAdvancedUsersList" class="dev-advanced-users-container">
+                        Loading...
+                    </div>
+                </div>
+
+                <!-- Right Pane: Selected User Details -->
+                <div class="dev-advanced-details-pane">
+                    <div id="devAdvancedNoSelection" class="dev-advanced-no-selection">
+                        <i class="fas fa-user-circle" style="font-size: 64px; color: #CBD5E1; margin-bottom: 16px;"></i>
+                        <p>Select a demo user from the list to view and edit their progress</p>
+                    </div>
+
+                    <div id="devAdvancedUserDetails" class="dev-advanced-user-details hidden">
+                        <div class="dev-advanced-user-header">
+                            <div>
+                                <h3 id="devAdvancedUserName" class="dev-advanced-user-name"></h3>
+                                <p id="devAdvancedUserEmail" class="dev-advanced-user-email"></p>
+                                <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                                    <span id="devAdvancedUserType" class="admin-devtools-badge"></span>
+                                    <div style="font-size: 13px; color: #6B7280;">
+                                        <strong>Password:</strong> <span id="devAdvancedUserPassword" style="font-family: monospace; color: #1F2937; background: #F3F4F6; padding: 2px 6px; border-radius: 4px;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabs -->
+                        <div class="dev-advanced-tabs" id="devAdvancedTabs">
+                            <button class="dev-advanced-tab active" data-tab="lms" id="devAdvancedLmsTabBtn" onclick="switchDevTab('lms')" style="display: none;">
+                                LMS Progress
+                            </button>
+                            <button class="dev-advanced-tab" data-tab="game" id="devAdvancedGameTabBtn" onclick="switchDevTab('game')">
+                                Game Progress
+                            </button>
+                        </div>
+
+                        <!-- LMS Progress Tab -->
+                        <div id="devAdvancedLmsTab" class="dev-advanced-tab-content active">
+                            <div class="dev-advanced-lessons-table-container">
+                                <table class="dev-advanced-lessons-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Lesson</th>
+                                            <th>Pages Completed</th>
+                                            <th>Assessments</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="devAdvancedLmsTableBody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="dev-advanced-help-text">
+                                <i class="fas fa-info-circle"></i>
+                                LMS Progress tracks pages and assessments. Quiz and Simulation are part of Game Progress.
+                            </div>
+                        </div>
+
+                        <!-- Game Progress Tab -->
+                        <div id="devAdvancedGameTab" class="dev-advanced-tab-content">
+                            <div class="dev-advanced-game-summary">
+                                <div class="dev-advanced-summary-badge">
+                                    <span>Lessons completed: <strong id="devAdvancedGameCompleted">0</strong>/6</span>
+                                </div>
+                                <div class="dev-advanced-quick-actions">
+                                    <button class="dev-advanced-quick-btn" id="btnMarkAllComplete" onclick="markAllGameComplete.call(this, event)">
+                                        <i class="fas fa-check-double"></i> Mark All Lessons Complete
+                                    </button>
+                                    <button class="dev-advanced-quick-btn" id="btnClearAllProgress" onclick="clearAllGameProgress.call(this, event)">
+                                        <i class="fas fa-eraser"></i> Clear All Game Progress
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="dev-advanced-lessons-table-container">
+                                <table class="dev-advanced-lessons-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Lesson</th>
+                                            <th>Overall</th>
+                                            <th>Quiz</th>
+                                            <th>Simulation</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="devAdvancedGameTableBody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="/js/admin-dev-advanced.js"></script>
+    <script>
+        function logout() {
+            fetch('/logout', { method: 'POST' })
+                .then(() => window.location.href = '/login');
+        }
+    </script>
+</body>
+</html>
+

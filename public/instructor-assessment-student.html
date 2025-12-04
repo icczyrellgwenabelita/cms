@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Assessment Record - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .portal-container {
+                max-width: 100%;
+                padding: 20px;
+            }
+            .instructor-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                page-break-inside: avoid;
+            }
+            .assessment-section {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+            .status-pill {
+                border: 1px solid #000;
+                background: white !important;
+                color: black !important;
+            }
+            .summary-tile {
+                border: 1px solid #ddd;
+                background: white !important;
+            }
+        }
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #E2E8F0;
+        }
+        .student-info h2 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            color: #1E293B;
+        }
+        .student-info p {
+            margin: 4px 0;
+            color: #64748B;
+            font-size: 14px;
+        }
+        .print-btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .print-btn:hover {
+            background: #2563EB;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .summary-tile {
+            background: #F8FAFC;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+        }
+        .summary-tile h3 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #64748B;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .summary-tile .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1E293B;
+        }
+        .summary-tile .subtext {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-top: 4px;
+        }
+        .assessment-section {
+            margin-bottom: 32px;
+        }
+        .assessment-section h3 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: #1E293B;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="student-portal">
+    <header class="portal-header no-print">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class" class="nav-tab">Class</a>
+                    <a href="/instructor-students" class="nav-tab">Students</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab active">Assessments</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <nav class="breadcrumb no-print">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <a href="/instructor-assessment-overview">Assessments</a>
+            <span class="breadcrumb-separator">></span>
+            <a href="/instructor-assessment-students">Student Gradebook</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Student Assessment Record</span>
+        </nav>
+
+        <div class="student-header">
+            <div class="student-info">
+                <h2 id="studentName">Loading...</h2>
+                <p id="studentDetails">Loading...</p>
+                <p id="className">Loading...</p>
+            </div>
+            <button class="print-btn no-print" onclick="window.print()">Print</button>
+        </div>
+
+        <div id="loading" class="class-loading-overlay" style="display: none;">
+            <div class="class-loading-spinner">
+                <div class="spinner"></div>
+                <p class="loading-text">Loading assessment record...</p>
+            </div>
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- Overall Summary -->
+            <div class="instructor-card assessment-section">
+                <div class="instructor-card-header">
+                    <h2>Overall Summary</h2>
+                </div>
+                <div class="summary-grid" id="summaryGrid">
+                    <!-- Summary tiles will be populated here -->
+                </div>
+            </div>
+
+            <!-- LMS Lessons -->
+            <div class="instructor-card assessment-section">
+                <div class="instructor-card-header">
+                    <h2>LMS Lessons</h2>
+                </div>
+                <div class="certificates-table-wrapper">
+                    <table class="certificates-table">
+                        <thead>
+                            <tr>
+                                <th>Lesson</th>
+                                <th>Pages Completed</th>
+                                <th>Progress %</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lmsLessonsBody">
+                            <!-- LMS lessons will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="lmsLessonsEmpty" style="display: none; text-align: center; padding: 20px; color: #64748B;">
+                    No LMS lessons found.
+                </div>
+            </div>
+
+            <!-- LMS Assessments -->
+            <div class="instructor-card assessment-section">
+                <div class="instructor-card-header">
+                    <h2>LMS Assessments</h2>
+                </div>
+                <div class="certificates-table-wrapper">
+                    <table class="certificates-table">
+                        <thead>
+                            <tr>
+                                <th>Assessment</th>
+                                <th>Lesson</th>
+                                <th>Best Score %</th>
+                                <th>Attempts</th>
+                                <th>Passed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lmsAssessmentsBody">
+                            <!-- LMS assessments will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="lmsAssessmentsEmpty" style="display: none; text-align: center; padding: 20px; color: #64748B;">
+                    No LMS assessments found.
+                </div>
+            </div>
+
+            <!-- Game Quizzes -->
+            <div class="instructor-card assessment-section">
+                <div class="instructor-card-header">
+                    <h2>Game Quizzes</h2>
+                </div>
+                <div class="certificates-table-wrapper">
+                    <table class="certificates-table">
+                        <thead>
+                            <tr>
+                                <th>Game Lesson</th>
+                                <th>Best Score</th>
+                                <th>Attempts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gameQuizzesBody">
+                            <!-- Game quizzes will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="gameQuizzesEmpty" style="display: none; text-align: center; padding: 20px; color: #64748B;">
+                    No game quiz data found.
+                </div>
+            </div>
+
+            <!-- Game Simulations -->
+            <div class="instructor-card assessment-section">
+                <div class="instructor-card-header">
+                    <h2>Game Simulations</h2>
+                </div>
+                <div class="certificates-table-wrapper">
+                    <table class="certificates-table">
+                        <thead>
+                            <tr>
+                                <th>Simulation</th>
+                                <th>Completed</th>
+                                <th>Passed</th>
+                                <th>Attempts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gameSimulationsBody">
+                            <!-- Game simulations will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="gameSimulationsEmpty" style="display: none; text-align: center; padding: 20px; color: #64748B;">
+                    No game simulation data found.
+                </div>
+            </div>
+
+            <!-- Instructor Tasks -->
+            <div class="instructor-card assessment-section">
+                <div class="instructor-card-header">
+                    <h2>Instructor Tasks</h2>
+                </div>
+                <div class="certificates-table-wrapper">
+                    <table class="certificates-table">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Due Date</th>
+                                <th>Score</th>
+                                <th>Score %</th>
+                                <th>Submitted At</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasksBody">
+                            <!-- Tasks will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="tasksEmpty" style="display: none; text-align: center; padding: 20px; color: #64748B;">
+                    No tasks found.
+                </div>
+            </div>
+        </div>
+
+        <div id="error" style="display: none; text-align: center; padding: 40px; color: #EF4444;">
+            <p>Failed to load assessment record. Please try again.</p>
+        </div>
+    </div>
+
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-assessment-student.js"></script>
+</body>
+</html>
+

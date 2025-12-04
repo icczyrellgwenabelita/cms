@@ -1,13 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const { verifyAdminToken } = require('../middleware/auth');
-const { db, auth } = require('../config/firebase');
+const { db, auth, bucket } = require('../config/firebase');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { logActivity } = require('../utils/activityLogger');
 const { sendEmail, isEmailConfigured } = require('../utils/email');
+const multer = require('multer');
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+});
 
 const BACKUP_DIR = path.join(__dirname, '..', 'backups');
 const ONLINE_THRESHOLD_MINUTES = 10;
@@ -26,6 +35,7 @@ ensureBackupDir();
 
 const usersRef = () => db.ref(USERS_COLLECTION);
 const legacyUsersRef = () => db.ref(LEGACY_USERS_COLLECTION);
+const adminsRef = () => db.ref('admins');
 const userRef = (uid) => db.ref(`${USERS_COLLECTION}/${uid}`);
 
 function normalizeStudentInfo(info = {}) {
@@ -263,14 +273,17 @@ async function getBackupInventory() {
 }
 
 async function getAllUsersData() {
-  const [primarySnap, legacySnap] = await Promise.all([
+  const [primarySnap, legacySnap, adminsSnap] = await Promise.all([
     usersRef().once('value').catch(() => null),
-    legacyUsersRef().once('value').catch(() => null)
+    legacyUsersRef().once('value').catch(() => null),
+    adminsRef().once('value').catch(() => null)
   ]);
   const primary = (primarySnap && primarySnap.val()) || {};
   const legacy = (legacySnap && legacySnap.val()) || {};
-  // Merge so that canonical /users overrides legacy /system/users when keys collide
-  return { ...legacy, ...primary };
+  const admins = (adminsSnap && adminsSnap.val()) || {};
+  
+  // Merge so that admins overrides canonical /users, which overrides legacy /system/users
+  return { ...legacy, ...primary, ...admins };
 }
 
 router.get('/users/invite-status', verifyAdminToken, async (req, res) => {
@@ -1357,7 +1370,7 @@ router.put('/users/:uid/status', verifyAdminToken, async (req, res) => {
  */
 router.get('/instructors', verifyAdminToken, async (req, res) => {
   try {
-    const snapshot = await usersRef().once('value');
+    const snapshot = await adminsRef().once('value');
     const users = (snapshot && snapshot.val()) || {};
 
     const instructors = Object.entries(users)
@@ -1498,6 +1511,74 @@ router.get('/lessons', verifyAdminToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch lessons' });
   }
 });
+/**
+ * DELETE /api/admin/lessons/:slot
+ * Deletes a lesson and all associated data
+ */
+router.delete('/lessons/:slot', verifyAdminToken, async (req, res) => {
+  try {
+    const slot = parseInt(req.params.slot);
+    if (slot < 1) {
+      return res.status(400).json({ error: 'Invalid slot number (must be >= 1)' });
+    }
+    
+    // Check if lesson exists
+    const lessonRef = db.ref(`lessons/${slot}`);
+    const lessonSnapshot = await lessonRef.once('value');
+    const lessonData = lessonSnapshot.val();
+    
+    if (!lessonData) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+    
+    // Delete intro video from storage if it exists
+    if (lessonData.introVideoStoragePath) {
+      try {
+        const file = bucket.file(lessonData.introVideoStoragePath);
+        const [exists] = await file.exists();
+        if (exists) {
+          await file.delete();
+          console.log(`Deleted intro video: ${lessonData.introVideoStoragePath}`);
+        }
+      } catch (videoError) {
+        console.error('Error deleting intro video:', videoError);
+        // Continue with lesson deletion even if video deletion fails
+      }
+    }
+    
+    // Delete lesson metadata
+    await lessonRef.remove();
+    
+    // Delete LMS lesson pages and assessments
+    const lmsLessonsRef = db.ref(`lmsLessons/${slot}`);
+    await lmsLessonsRef.remove();
+    
+    // Delete game quiz questions (if they exist)
+    const gameQuestionsRef = db.ref(`lessons/lesson${slot}/questions`);
+    await gameQuestionsRef.remove();
+    
+    // Log the deletion
+    await logActivity({
+      type: 'lesson',
+      action: 'lesson_deleted',
+      description: `Lesson ${slot} (${lessonData.lessonTitle || lessonData.lessonName || 'Untitled'}) deleted`,
+      actorType: 'admin',
+      actorId: req.admin?.adminId || null,
+      actorName: req.admin?.email || 'Admin',
+      relatedLesson: slot
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Lesson deleted successfully',
+      deletedSlot: slot
+    });
+  } catch (error) {
+    console.error('Delete lesson error:', error);
+    res.status(500).json({ error: 'Failed to delete lesson' });
+  }
+});
+
 router.put('/lessons/:slot', verifyAdminToken, async (req, res) => {
   try {
     const slot = parseInt(req.params.slot);
@@ -2267,6 +2348,556 @@ router.delete('/game-quizzes/:slot/:questionIndex', verifyAdminToken, async (req
   }
 });
 // ============================================
+// Lesson Intro Video Upload
+// ============================================
+
+router.post('/lessons/upload-intro', verifyAdminToken, upload.single('videoFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file provided' });
+    }
+
+    if (!bucket) {
+      return res.status(503).json({ 
+        error: 'Storage bucket not configured. Please set FIREBASE_STORAGE_BUCKET in .env or check server logs.' 
+      });
+    }
+
+    const lessonSlot = req.body.lessonSlot || 'unassigned';
+    
+    // Determine extension
+    const originalName = req.file.originalname || 'video';
+    const extMatch = originalName.match(/\.(\w+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'mp4';
+
+    // Basic validation - allow video formats
+    const allowedExts = ['mp4', 'webm', 'ogg', 'mov'];
+    if (!allowedExts.includes(ext)) {
+      return res.status(400).json({ error: `Unsupported video format: .${ext}. Allowed: mp4, webm, ogg, mov.` });
+    }
+
+    const timestamp = Date.now();
+    const filePath = `lessons/${lessonSlot}/intro-video/${timestamp}.${ext}`;
+    const file = bucket.file(filePath);
+
+    console.log(`[uploadLessonIntro] Uploading ${req.file.size} bytes to ${filePath}...`);
+
+    await file.save(req.file.buffer, {
+      contentType: req.file.mimetype || 'video/mp4',
+      resumable: false
+    });
+
+    // Make public for simple access
+    await file.makePublic();
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(filePath)}`;
+
+    console.log('[uploadLessonIntro] Success. URL:', publicUrl);
+
+    return res.json({
+      success: true,
+      introVideoUrl: publicUrl,
+      introVideoStoragePath: filePath
+    });
+  } catch (err) {
+    console.error('[uploadLessonIntro] Error uploading video:', err);
+    res.status(500).json({ 
+      error: 'Failed to upload intro video',
+      details: err.message 
+    });
+  }
+});
+
+// ============================================
+// Global Videos Management
+// ============================================
+
+// Get all videos
+router.get('/videos', verifyAdminToken, async (req, res) => {
+  try {
+    const videosRef = db.ref('videos');
+    const snapshot = await videosRef.once('value');
+    const videosData = snapshot.val() || {};
+    
+    const videos = Object.keys(videosData).map(id => ({
+      id,
+      ...videosData[id]
+    }));
+    
+    res.json({ success: true, videos });
+  } catch (error) {
+    console.error('Get videos error:', error);
+    res.status(500).json({ error: 'Failed to fetch videos' });
+  }
+});
+
+// Create new video
+router.post('/videos', verifyAdminToken, async (req, res) => {
+  try {
+    const { title, description, downloadUrl, storagePath, order } = req.body;
+    
+    console.log('[createVideo] Request body:', { title, description, downloadUrl: downloadUrl ? 'present' : 'missing', storagePath: storagePath ? 'present' : 'missing', order });
+    
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    
+    if (!downloadUrl) {
+      console.error('[createVideo] Missing downloadUrl in request body');
+      return res.status(400).json({ error: 'Video URL is required. Please upload a video file first.' });
+    }
+    
+    const videosRef = db.ref('videos');
+    const newVideoRef = videosRef.push();
+    
+    const videoData = {
+      title: title.trim(),
+      description: (description || '').trim(),
+      downloadUrl,
+      storagePath: storagePath || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Only add order if it's provided and valid
+    if (order !== undefined && order !== null && order !== '') {
+      const orderNum = parseInt(order, 10);
+      if (!isNaN(orderNum)) {
+        videoData.order = orderNum;
+      }
+    }
+    
+    console.log('[createVideo] Creating video with data:', { ...videoData, downloadUrl: 'present' });
+    
+    await newVideoRef.set(videoData);
+    
+    console.log('[createVideo] Video created successfully with ID:', newVideoRef.key);
+    
+    res.json({ success: true, video: { id: newVideoRef.key, ...videoData } });
+  } catch (error) {
+    console.error('[createVideo] Error creating video:', error);
+    console.error('[createVideo] Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to create video',
+      details: error.message 
+    });
+  }
+});
+
+// Update video
+router.put('/videos/:videoId', verifyAdminToken, async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const { title, description, downloadUrl, storagePath, order } = req.body;
+    
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    
+    const videoRef = db.ref(`videos/${videoId}`);
+    const snapshot = await videoRef.once('value');
+    
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+    
+    const existingData = snapshot.val();
+    const updateData = {
+      title: title.trim(),
+      description: (description || '').trim(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Only add order if it's provided and valid
+    if (order !== undefined && order !== null && order !== '') {
+      const orderNum = parseInt(order, 10);
+      if (!isNaN(orderNum)) {
+        updateData.order = orderNum;
+      }
+    }
+    
+    // Only update downloadUrl/storagePath if provided (from new upload)
+    if (downloadUrl) {
+      updateData.downloadUrl = downloadUrl;
+    }
+    if (storagePath) {
+      updateData.storagePath = storagePath;
+    }
+    
+    // Preserve existing URL/path if not updating
+    if (!downloadUrl && existingData.downloadUrl) {
+      updateData.downloadUrl = existingData.downloadUrl;
+    }
+    if (!storagePath && existingData.storagePath) {
+      updateData.storagePath = existingData.storagePath;
+    }
+    
+    // Preserve createdAt
+    if (existingData.createdAt) {
+      updateData.createdAt = existingData.createdAt;
+    }
+    
+    await videoRef.update(updateData);
+    
+    res.json({ success: true, video: { id: videoId, ...updateData } });
+  } catch (error) {
+    console.error('Update video error:', error);
+    res.status(500).json({ error: 'Failed to update video' });
+  }
+});
+
+// Delete video
+router.delete('/videos/:videoId', verifyAdminToken, async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    
+    const videoRef = db.ref(`videos/${videoId}`);
+    const snapshot = await videoRef.once('value');
+    
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+    
+    const videoData = snapshot.val();
+    
+    // Delete from Storage if path exists
+    if (videoData.storagePath && bucket) {
+      try {
+        const file = bucket.file(videoData.storagePath);
+        const [exists] = await file.exists();
+        if (exists) {
+          await file.delete();
+          console.log(`[deleteVideo] Deleted storage file: ${videoData.storagePath}`);
+        }
+      } catch (storageError) {
+        console.error('[deleteVideo] Error deleting storage file:', storageError);
+        // Continue with DB deletion even if storage deletion fails
+      }
+    }
+    
+    // Delete from database
+    await videoRef.remove();
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete video error:', error);
+    res.status(500).json({ error: 'Failed to delete video' });
+  }
+});
+
+// Upload video file
+router.post('/videos/upload', verifyAdminToken, upload.single('videoFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file provided' });
+    }
+
+    if (!bucket) {
+      return res.status(503).json({ 
+        error: 'Storage bucket not configured. Please set FIREBASE_STORAGE_BUCKET in .env or check server logs.' 
+      });
+    }
+
+    const videoId = req.body.videoId || `video_${Date.now()}`;
+    
+    // Determine extension
+    const originalName = req.file.originalname || 'video';
+    const extMatch = originalName.match(/\.(\w+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'mp4';
+
+    // Basic validation - allow video formats
+    const allowedExts = ['mp4', 'webm', 'ogg', 'mov'];
+    if (!allowedExts.includes(ext)) {
+      return res.status(400).json({ error: `Unsupported video format: .${ext}. Allowed: mp4, webm, ogg, mov.` });
+    }
+
+    const timestamp = Date.now();
+    const filePath = `videos/${videoId}_${timestamp}.${ext}`;
+    const file = bucket.file(filePath);
+
+    console.log(`[uploadVideo] Uploading ${req.file.size} bytes to ${filePath}...`);
+
+    await file.save(req.file.buffer, {
+      contentType: req.file.mimetype || 'video/mp4',
+      resumable: false
+    });
+
+    // Make public for simple access
+    await file.makePublic();
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(filePath)}`;
+
+    console.log('[uploadVideo] Success. URL:', publicUrl);
+
+    return res.json({
+      success: true,
+      downloadUrl: publicUrl,
+      storagePath: filePath
+    });
+  } catch (err) {
+    console.error('[uploadVideo] Error uploading video:', err);
+    res.status(500).json({ 
+      error: 'Failed to upload video',
+      details: err.message 
+    });
+  }
+});
+
+// ============================================
+// Tool 3D Model Upload
+// ============================================
+
+router.post('/tools/upload-model', verifyAdminToken, upload.single('modelFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      console.error('[uploadToolModel] No file provided');
+      return res.status(400).json({ error: 'No model file provided' });
+    }
+
+    if (!bucket) {
+      console.error('[uploadToolModel] Storage bucket not configured (bucket is null)');
+      return res.status(503).json({ 
+        error: 'Storage bucket not configured. Please set FIREBASE_STORAGE_BUCKET in .env or check server logs.' 
+      });
+    }
+
+    const lessonSlot = req.body.lessonSlot || 'unassigned';
+    const toolId = req.body.toolId || `tool_${Date.now()}`;
+
+    // Determine extension
+    const originalName = req.file.originalname || 'model';
+    const extMatch = originalName.match(/\.(\w+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'bin';
+
+    // Basic validation – allow glb, gltf, fbx, obj
+    const allowedExts = ['glb', 'gltf', 'fbx', 'obj'];
+    if (!allowedExts.includes(ext)) {
+      console.error('[uploadToolModel] Unsupported extension:', ext);
+      return res.status(400).json({ error: `Unsupported 3D format: .${ext}. Allowed: glb, gltf, fbx, obj.` });
+    }
+
+    const filePath = `tools/lesson${lessonSlot}/${toolId}.${ext}`;
+    const file = bucket.file(filePath);
+
+    console.log(`[uploadToolModel] Uploading ${req.file.size} bytes to ${filePath}...`);
+
+    await file.save(req.file.buffer, {
+      contentType: req.file.mimetype || 'application/octet-stream',
+      resumable: false
+    });
+
+    // Make public for simple access
+    await file.makePublic();
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(filePath)}`;
+
+    console.log('[uploadToolModel] Success. URL:', publicUrl);
+
+    return res.json({
+      success: true,
+      modelUrl: publicUrl,
+      storagePath: filePath,
+      format: ext
+    });
+  } catch (err) {
+    console.error('[uploadToolModel] Error uploading 3D model:', err);
+    res.status(500).json({ 
+      error: 'Failed to upload 3D model',
+      details: err.message 
+    });
+  }
+});
+
+// ============================================
+// Tool 3D Model Streaming (Proxy)
+// ============================================
+
+router.get('/tools/model', async (req, res) => {
+  try {
+    const { path: modelPath } = req.query;
+
+    if (!modelPath) {
+      return res.status(400).json({ error: 'Missing model path.' });
+    }
+
+    // Basic security check to ensure we only serve files from the tools directory
+    if (!modelPath.startsWith('tools/')) {
+        return res.status(400).json({ error: 'Invalid model path. Access denied.' });
+    }
+
+    if (!bucket) {
+       return res.status(503).json({ error: 'Storage bucket not configured.' });
+    }
+
+    const file = bucket.file(modelPath);
+    const [exists] = await file.exists();
+
+    if (!exists) {
+      return res.status(404).json({ error: 'Model file not found.' });
+    }
+
+    // Determine Content-Type
+    let contentType = 'application/octet-stream';
+    if (modelPath.endsWith('.glb')) contentType = 'model/gltf-binary';
+    else if (modelPath.endsWith('.gltf')) contentType = 'model/gltf+json';
+    else if (modelPath.endsWith('.fbx')) contentType = 'application/octet-stream'; // FBX often served as octet-stream
+    else if (modelPath.endsWith('.obj')) contentType = 'text/plain';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+
+    const readStream = file.createReadStream();
+
+    readStream.on('error', (err) => {
+      console.error('[streamToolModel] Error streaming model:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to stream model file.' });
+      } else {
+        res.end();
+      }
+    });
+
+    readStream.pipe(res);
+
+  } catch (error) {
+    console.error('[streamToolModel] Unexpected error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error streaming model.' });
+    }
+  }
+});
+
+// ============================================
+// Certificate Notification Endpoints
+// ============================================
+
+router.post('/certificates/notify-student', verifyAdminToken, async (req, res) => {
+  try {
+    const { uid, email, fullName } = req.body || {};
+
+    if (!uid || !email || !fullName) {
+      return res.status(400).json({ success: false, error: 'uid, email, and fullName are required' });
+    }
+
+    if (!isEmailConfigured) {
+      return res.status(503).json({ success: false, error: 'Email service not configured', details: 'SMTP settings are missing. Please configure email service in environment variables.' });
+    }
+
+    const certificateUrl = `${process.env.PUBLIC_HOST || 'http://localhost:3000'}/student-certificates.html`;
+
+    const emailResult = await sendEmail({
+      to: email,
+      subject: "You're now eligible for your CareSim LMS Certificate",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <h2 style="color: #C19A6B; border-bottom: 2px solid #C19A6B; padding-bottom: 10px;">Congratulations!</h2>
+          <p>Dear ${fullName},</p>
+          <p>You have successfully completed all required lessons and are now eligible to generate your CareSim LMS Certificate.</p>
+          <p>Click the button below to access your certificate page:</p>
+          
+          <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+             <a href="${certificateUrl}" style="display: inline-block; background-color: #C19A6B; color: white; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 6px;">View Certificate Page</a>
+          </div>
+
+          <p>Best regards,<br>The CareSim Team</p>
+        </div>
+      `,
+      text: `Dear ${fullName},\n\nYou have successfully completed all required lessons and are now eligible to generate your CareSim LMS Certificate.\n\nAccess your certificate here: ${certificateUrl}\n\nBest regards,\nThe CareSim Team`
+    });
+
+    if (emailResult.success) {
+      // Store notification timestamp in user record
+      const now = new Date().toISOString();
+      await db.ref(`users/${uid}/certificateNotificationSentAt`).set(now);
+      
+      await logActivity({
+        type: 'certificate',
+        action: 'student_notified',
+        description: `Notified student ${fullName} about certificate eligibility`,
+        actorType: 'admin',
+        actorId: req.admin?.adminId || null,
+        actorName: req.admin?.email || 'Admin',
+        metadata: { uid, email }
+      });
+
+      res.json({ success: true, message: 'Notification email sent successfully' });
+    } else {
+      console.error('Failed to send notification email:', emailResult.error);
+      res.status(500).json({ success: false, error: 'Failed to send email', details: emailResult.error || 'Unknown email error' });
+    }
+
+  } catch (error) {
+    console.error('Notify student endpoint error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error', details: error.message });
+  }
+});
+
+// ============================================
+// Game Certificate Issuance (Generic)
+// ============================================
+
+router.post('/issue-game-certificate', verifyAdminToken, async (req, res) => {
+  try {
+    const { uid, email, name, certId } = req.body || {};
+
+    if (!uid || !email || !name || !certId) {
+      return res.status(400).json({ error: 'uid, email, name, and certId are required' });
+    }
+
+    // Verify email config first
+    if (!isEmailConfigured) {
+       // If we can't send email, should we fail? The frontend asks to issue AND email.
+       // We'll try to send, if fails we log it but maybe not block if the DB write happened on frontend?
+       // Actually, frontend does DB writes first, then calls this.
+       // If this fails, we return error, frontend shows alert.
+       return res.status(503).json({ error: 'Email service not configured' });
+    }
+
+    const verifyUrl = `${process.env.PUBLIC_HOST || 'http://localhost:3000'}/generic-certificate.html?certId=${certId}`;
+
+    const emailResult = await sendEmail({
+      to: email,
+      subject: 'Your CareSim Game Certificate',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <h2 style="color: #C19A6B; border-bottom: 2px solid #C19A6B; padding-bottom: 10px;">Certificate of Completion</h2>
+          <p>Dear ${name},</p>
+          <p>Congratulations! You have successfully completed the CareSim Virtual Simulation Training Program game modules.</p>
+          <p>We are pleased to issue you a Certificate of Completion.</p>
+          
+          <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+             <a href="${verifyUrl}" style="display: inline-block; background-color: #C19A6B; color: white; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 6px;">View & Download Certificate</a>
+             <p style="margin-top: 15px; font-size: 14px; color: #64748B;">Certificate ID: <strong>${certId}</strong></p>
+          </div>
+
+          <p>You can verify the authenticity of this certificate at any time by scanning the QR code on the document or visiting our verification page.</p>
+          <p>Best regards,<br>The CareSim Team</p>
+        </div>
+      `,
+      text: `Dear ${name},\n\nCongratulations on completing the CareSim game modules! Your certificate (ID: ${certId}) is ready.\n\nAccess it here: ${verifyUrl}\n\nBest regards,\nThe CareSim Team`
+    });
+
+    if (emailResult.success) {
+      await logActivity({
+        type: 'certificate',
+        action: 'game_certificate_issued',
+        description: `Issued game certificate ${certId} to ${name}`,
+        actorType: 'admin',
+        actorId: req.admin?.adminId || null,
+        actorName: req.admin?.email || 'Admin',
+        metadata: { uid, email, certId }
+      });
+
+      res.json({ success: true });
+    } else {
+      console.error('Failed to send certificate email:', emailResult.error);
+      res.status(500).json({ error: 'Failed to send email', details: emailResult.error });
+    }
+
+  } catch (error) {
+    console.error('Issue certificate endpoint error:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// ============================================
 // Email Test Endpoint
 // ============================================
 
@@ -2340,6 +2971,702 @@ router.get('/test-email', verifyAdminToken, async (req, res) => {
       success: false,
       error: error.message || 'Internal server error while sending test email'
     });
+  }
+});
+
+// ============================================
+// Admin HTML Page Routes
+// ============================================
+
+// Inject isDev flag into admin pages
+router.use((req, res, next) => {
+  // Check if user is admin and email is admin@gmail.com
+  if (req.admin && req.admin.email === 'admin@gmail.com') {
+    req.isDev = true;
+  } else {
+    req.isDev = false;
+  }
+  next();
+});
+
+// We need to intercept the sendFile calls in app.js or handle data injection.
+// Since we are using static HTML files, we can't easily inject server-side data without a template engine.
+// HOWEVER, we can expose an endpoint that the frontend calls to check config/status.
+
+router.get('/config', verifyAdminToken, (req, res) => {
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  res.json({
+    success: true,
+    config: {
+      isDev: isDev,
+      adminEmail: req.admin?.email
+    }
+  });
+});
+
+// ============================================
+// Dev Tools Endpoints
+// ============================================
+
+// Helper: Load and verify demo user
+async function getDemoUserOrThrow(req, uid) {
+  // 1) Verify current admin is super admin
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  if (!isDev) {
+    const error = new Error('Dev mode only');
+    error.status = 403;
+    throw error;
+  }
+
+  // 2) Verify this is a demo user
+  const demoUserSnapshot = await db.ref(`devTools/demoUsers/${uid}`).once('value');
+  if (!demoUserSnapshot.exists()) {
+    const error = new Error('Demo user not found');
+    error.status = 404;
+    throw error;
+  }
+
+  // 3) Load user data
+  const userSnapshot = await userRef(uid).once('value');
+  const userData = userSnapshot.val() || {};
+
+  return { uid, user: userData };
+}
+
+router.post('/dev/create-lms-student', verifyAdminToken, async (req, res) => {
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  if (!isDev) return res.status(403).json({ error: 'Dev mode only' });
+
+  try {
+    const timestamp = Date.now();
+    // Use provided details or defaults
+    const email = req.body.email || `demo.lms.${timestamp}@example.com`;
+    const password = req.body.password || 'DemoPass123!';
+    const name = req.body.name || `Demo LMS Student ${timestamp}`;
+
+    // Check if user exists (Auth) - although createUser does this, we want a clear error
+    try {
+      await auth.getUserByEmail(email);
+      return res.status(409).json({ error: 'Email already exists. Please use a different email.' });
+    } catch (e) {
+      if (e.code !== 'auth/user-not-found') throw e;
+    }
+
+    // Create Auth User
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: name,
+      emailVerified: true
+    });
+
+    const uid = userRecord.uid;
+    const now = new Date().toISOString();
+
+    // Create User Record with FULL PROGRESS
+    const userData = {
+      uid,
+      name,
+      fullName: name,
+      email,
+      role: 'student',
+      verified: true,
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+      studentInfo: {
+        studentNumber: `DEV-${timestamp}`,
+        batch: '2025',
+        contactNumber: '0000000000',
+        birthday: '2000-01-01',
+        address: 'Dev Address'
+      },
+      lmsProgress: {}
+    };
+
+    // Fill 6 lessons
+    for (let i = 1; i <= 6; i++) {
+      userData.lmsProgress[`lesson${i}`] = {
+        completedPages: { p1: true, p2: true, p3: true }, // Mock pages
+        quiz: {
+          completed: true,
+          highestScore: 10, // 10/10
+          attempts: 1,
+          lastAttempt: now
+        },
+        simulation: {
+          completed: true,
+          passed: true,
+          score: 100,
+          lastAttempt: now
+        }
+      };
+    }
+
+    await userRef(uid).set(userData);
+
+    // Write to /devTools/demoUsers
+    await db.ref(`devTools/demoUsers/${uid}`).set({
+      email,
+      password,
+      type: 'lms',
+      createdAt: now
+    });
+
+    res.json({ success: true, message: 'Created Demo LMS Student', email, password, uid });
+  } catch (error) {
+    console.error('Dev create LMS student error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/dev/create-game-user', verifyAdminToken, async (req, res) => {
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  if (!isDev) return res.status(403).json({ error: 'Dev mode only' });
+
+  try {
+    const timestamp = Date.now();
+    const email = req.body.email || `demo.game.${timestamp}@example.com`;
+    const password = req.body.password || 'DemoPass123!';
+    const name = req.body.name || `Demo Game User ${timestamp}`;
+
+    // Check if user exists (Auth)
+    try {
+      await auth.getUserByEmail(email);
+      return res.status(409).json({ error: 'Email already exists. Please use a different email.' });
+    } catch (e) {
+      if (e.code !== 'auth/user-not-found') throw e;
+    }
+
+    // Create Auth User (Public role usually doesn't strictly need auth but consistent)
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: name
+    });
+
+    const uid = userRecord.uid;
+    const now = new Date().toISOString();
+
+    // Create Public User with Game Progress (using same schema as LMS students)
+    // Initialize progress with correct structure: progress.lesson{N}.quiz and progress.lesson{N}.simulation
+    const progress = {};
+    for (let i = 1; i <= 6; i++) {
+      progress[`lesson${i}`] = {
+        quiz: {
+          attempts: 0,
+          avgTime: 0,
+          completed: false,
+          highestScore: 0,
+          latestScore: 0
+        },
+        simulation: {
+          attempts: 0,
+          avgTime: 0,
+          completed: false
+        }
+      };
+    }
+
+    const userData = {
+      uid,
+      name,
+      fullName: name,
+      email,
+      role: 'public', // Public user
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+      progress
+    };
+
+    await userRef(uid).set(userData);
+
+    // Write to /devTools/demoUsers
+    await db.ref(`devTools/demoUsers/${uid}`).set({
+      email,
+      password,
+      type: 'game',
+      createdAt: now
+    });
+
+    res.json({ success: true, message: 'Created Demo Game User', email, password, uid });
+  } catch (error) {
+    console.error('Dev create Game user error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/dev/demo-users', verifyAdminToken, async (req, res) => {
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  if (!isDev) return res.status(403).json({ error: 'Dev mode only' });
+
+  try {
+    const snapshot = await db.ref('devTools/demoUsers').once('value');
+    const demoUsers = [];
+    
+    snapshot.forEach(child => {
+      demoUsers.push({
+        uid: child.key,
+        ...child.val()
+      });
+    });
+
+    // Enrich with progress counts
+    for (const user of demoUsers) {
+      const userSnapshot = await userRef(user.uid).once('value');
+      const userData = userSnapshot.val() || {};
+      
+      // Calculate LMS lessons completed (if role is student or type is lms)
+      let lmsLessonsCompleted = 0;
+      if (user.type === 'lms' || userData.role === 'student') {
+        const progress = userData.lmsProgress || {};
+        for (let i = 1; i <= 6; i++) {
+          const lessonKey = `lesson${i}`;
+          const lessonData = progress[lessonKey] || {};
+          const completedPages = lessonData.completedPages || {};
+          const hasPages = Object.keys(completedPages).length > 0;
+          const quiz = lessonData.quiz || {};
+          const quizCompleted = quiz.completed === true;
+          const quizScoreOk = (quiz.highestScore || 0) >= 7;
+          const sim = lessonData.simulation || {};
+          const simOk = sim.completed === true && sim.passed === true;
+          
+          if (hasPages && quizCompleted && quizScoreOk && simOk) {
+            lmsLessonsCompleted += 1;
+          }
+        }
+      }
+      
+      // Calculate Game lessons completed (if role is public or type is game)
+      let gameLessonsCompleted = 0;
+      if (user.type === 'game' || userData.role === 'public') {
+        if (typeof userData.lessonsCompleted === 'number') {
+          gameLessonsCompleted = Math.min(6, Math.max(0, userData.lessonsCompleted));
+        } else if (userData.gameProgress && typeof userData.gameProgress.lessonsCompleted === 'number') {
+          gameLessonsCompleted = Math.min(6, Math.max(0, userData.gameProgress.lessonsCompleted));
+        } else if (userData.progress && userData.progress.gameLessons) {
+          gameLessonsCompleted = Object.values(userData.progress.gameLessons).filter(l => l && l.completed === true).length;
+        }
+      }
+      
+      user.lmsLessonsCompleted = lmsLessonsCompleted;
+      user.gameLessonsCompleted = gameLessonsCompleted;
+    }
+
+    // Sort by createdAt descending (newest first)
+    demoUsers.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    res.json({ success: true, users: demoUsers });
+  } catch (error) {
+    console.error('Dev get demo users error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/dev/update-demo-progress', verifyAdminToken, async (req, res) => {
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  if (!isDev) return res.status(403).json({ error: 'Dev mode only' });
+
+  try {
+    const { uid, lmsLessonsCompleted, gameLessonsCompleted, lmsQuizScore, gameQuizScore } = req.body;
+    if (!uid) return res.status(400).json({ error: 'UID is required' });
+
+    // Verify this is a demo user
+    const demoUserSnapshot = await db.ref(`devTools/demoUsers/${uid}`).once('value');
+    if (!demoUserSnapshot.exists()) {
+      return res.status(404).json({ error: 'Demo user not found' });
+    }
+
+    const userSnapshot = await userRef(uid).once('value');
+    const userData = userSnapshot.val() || {};
+    const now = new Date().toISOString();
+
+    // Clamp values
+    const lmsCount = lmsLessonsCompleted !== undefined ? Math.min(6, Math.max(0, parseInt(lmsLessonsCompleted) || 0)) : undefined;
+    const gameCount = gameLessonsCompleted !== undefined ? Math.min(6, Math.max(0, parseInt(gameLessonsCompleted) || 0)) : undefined;
+    const lmsQuiz = lmsQuizScore !== undefined ? Math.min(10, Math.max(0, parseInt(lmsQuizScore) || 8)) : 8;
+    const gameQuiz = gameQuizScore !== undefined ? Math.min(10, Math.max(0, parseInt(gameQuizScore) || 8)) : 8;
+
+    // Update LMS Progress
+    if (lmsCount !== undefined) {
+      const lmsProgress = {};
+      
+      // Try to get real page IDs from lmsLessons
+      let firstPageId = 'demoPage';
+      try {
+        const pagesSnapshot = await db.ref('lmsLessons/1/pages').once('value');
+        const pages = pagesSnapshot.val() || {};
+        const pageIds = Object.keys(pages);
+        if (pageIds.length > 0) {
+          firstPageId = pageIds[0];
+        }
+      } catch (e) {
+        // Use default if can't fetch
+      }
+
+      for (let i = 1; i <= 6; i++) {
+        if (i <= lmsCount) {
+          // Set lesson as complete
+          lmsProgress[`lesson${i}`] = {
+            completedPages: { [firstPageId]: true },
+            quiz: {
+              completed: true,
+              highestScore: lmsQuiz,
+              attempts: 1,
+              lastAttempt: now
+            },
+            simulation: {
+              completed: true,
+              passed: true,
+              score: 100,
+              lastAttempt: now
+            },
+            lastAssessment: now
+          };
+        } else {
+          // Clear lesson progress
+          lmsProgress[`lesson${i}`] = {};
+        }
+      }
+
+      await userRef(uid).update({ lmsProgress });
+    }
+
+    // Update Game Progress
+    if (gameCount !== undefined) {
+      // Set top-level counter
+      await userRef(uid).update({ lessonsCompleted: gameCount });
+      
+      // Update gameProgress/lessonsCompleted
+      const gameProgressRef = db.ref(`users/${uid}/gameProgress`);
+      const existingGameProgress = (await gameProgressRef.once('value')).val() || {};
+      await gameProgressRef.set({ ...existingGameProgress, lessonsCompleted: gameCount });
+
+      // Update gameLessons map
+      const gameLessonsRef = db.ref(`users/${uid}/progress/gameLessons`);
+      const existingGameLessons = (await gameLessonsRef.once('value')).val() || {};
+      
+      // Remove all existing lessons first
+      for (let j = 1; j <= 6; j++) {
+        await db.ref(`users/${uid}/progress/gameLessons/lesson${j}`).remove();
+      }
+      
+      // Add completed lessons
+      const newGameLessons = {};
+      for (let j = 1; j <= gameCount; j++) {
+        newGameLessons[`lesson${j}`] = { completed: true };
+      }
+      if (Object.keys(newGameLessons).length > 0) {
+        await gameLessonsRef.update(newGameLessons);
+      }
+
+      // Update per-lesson quiz/simulation under progress/lesson{j}
+      const existingProgress = userData.progress || {};
+      
+      for (let j = 1; j <= 6; j++) {
+        const lessonRef = db.ref(`users/${uid}/progress/lesson${j}`);
+        if (j <= gameCount) {
+          // Set quiz and simulation
+          const existingLesson = existingProgress[`lesson${j}`] || {};
+          await lessonRef.update({
+            ...existingLesson,
+            quiz: {
+              completed: true,
+              highestScore: gameQuiz,
+              attempts: 1,
+              lastAttempt: now
+            },
+            simulation: {
+              completed: true,
+              passed: true,
+              score: 100,
+              lastAttempt: now
+            }
+          });
+        } else {
+          // Remove quiz and simulation, but keep other data if exists
+          const existingLesson = (await lessonRef.once('value')).val() || {};
+          if (existingLesson.quiz) {
+            await db.ref(`users/${uid}/progress/lesson${j}/quiz`).remove();
+          }
+          if (existingLesson.simulation) {
+            await db.ref(`users/${uid}/progress/lesson${j}/simulation`).remove();
+          }
+        }
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Demo user progress updated successfully',
+      updated: {
+        lmsLessonsCompleted: lmsCount !== undefined ? lmsCount : userData.lmsLessonsCompleted,
+        gameLessonsCompleted: gameCount !== undefined ? gameCount : userData.gameLessonsCompleted
+      }
+    });
+  } catch (error) {
+    console.error('Dev update demo progress error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/dev/demo-user/:uid/progress', verifyAdminToken, async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { uid: verifiedUid, user } = await getDemoUserOrThrow(req, uid);
+
+    const lms = {};
+    const game = {};
+
+    // Load LMS Progress
+    const lmsProgress = user.lmsProgress || {};
+    for (let i = 1; i <= 6; i++) {
+      const lessonKey = `lesson${i}`;
+      const lessonData = lmsProgress[lessonKey] || {};
+      const completedPages = lessonData.completedPages || {};
+      const completedPagesCount = Object.keys(completedPages).length;
+      const hasPages = completedPagesCount > 0;
+      // LMS only tracks pages and assessments (not quiz/simulation - those are in Game)
+      lms[String(i)] = {
+        completedPagesCount,
+        hasPages,
+        lastAssessment: lessonData.lastAssessment || null
+      };
+    }
+
+    // Load Game Progress
+    const progress = user.progress || {};
+    let gameLessonsCompleted = 0;
+    
+    // Calculate summary (same logic as admin-game-certificates)
+    if (typeof user.lessonsCompleted === 'number') {
+      gameLessonsCompleted = Math.min(6, Math.max(0, user.lessonsCompleted));
+    } else if (user.gameProgress && typeof user.gameProgress.lessonsCompleted === 'number') {
+      gameLessonsCompleted = Math.min(6, Math.max(0, user.gameProgress.lessonsCompleted));
+    } else if (progress.gameLessons) {
+      gameLessonsCompleted = Object.values(progress.gameLessons).filter(l => l && l.completed === true).length;
+    }
+
+    for (let i = 1; i <= 6; i++) {
+      const lessonKey = `lesson${i}`;
+      const lessonProgress = progress[lessonKey] || {};
+      const quiz = lessonProgress.quiz || {};
+      const simulation = lessonProgress.simulation || {};
+      const completed = quiz.completed && simulation.completed && simulation.passed;
+
+      game[String(i)] = {
+        completed,
+        quiz: {
+          completed: quiz.completed || false,
+          bestScore: quiz.highestScore || quiz.bestScore || null,
+          attempts: quiz.attempts || 0,
+          lastAttempt: quiz.lastAttempt || null
+        },
+        simulation: {
+          completed: simulation.completed || false,
+          passed: simulation.passed || false,
+          score: simulation.score || null,
+          lastAttempt: simulation.lastAttempt || null
+        }
+      };
+    }
+
+    game.summary = {
+      lessonsCompleted: gameLessonsCompleted
+    };
+
+    res.json({
+      success: true,
+      user: {
+        uid: verifiedUid,
+        email: user.email || '',
+        name: user.name || user.fullName || '',
+        role: user.role || '',
+        demoType: user.demoType || null
+      },
+      lms,
+      game
+    });
+  } catch (error) {
+    console.error('Dev get demo user progress error:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+});
+
+router.post('/dev/demo-user/:uid/update-lesson', verifyAdminToken, async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { system, lesson, lmsData, gameData } = req.body;
+
+    await getDemoUserOrThrow(req, uid);
+
+    // Validate lesson
+    const lessonNum = parseInt(lesson);
+    if (isNaN(lessonNum) || lessonNum < 1 || lessonNum > 6) {
+      return res.status(400).json({ error: 'Lesson must be 1-6' });
+    }
+
+    const now = new Date().toISOString();
+    const lessonKey = `lesson${lessonNum}`;
+
+    if (system === 'lms') {
+      const lessonRef = db.ref(`users/${uid}/lmsProgress/${lessonKey}`);
+      const existingLesson = (await lessonRef.once('value')).val() || {};
+
+      let updatedLesson = { ...existingLesson };
+
+      // Handle pages (LMS only tracks pages and assessments, not quiz/simulation)
+      if (lmsData.hasPages === true) {
+        // Get real page ID if possible
+        let firstPageId = '_devPage';
+        try {
+          const pagesSnapshot = await db.ref(`lmsLessons/${lessonNum}/pages`).once('value');
+          const pages = pagesSnapshot.val() || {};
+          const pageIds = Object.keys(pages);
+          if (pageIds.length > 0) {
+            firstPageId = pageIds[0];
+          }
+        } catch (e) {
+          // Use default
+        }
+        updatedLesson.completedPages = { [firstPageId]: true };
+        updatedLesson.lastAssessment = now;
+      } else if (lmsData.hasPages === false) {
+        updatedLesson.completedPages = {};
+        // Keep lastAssessment timestamp if it exists, but clear pages
+      }
+
+      // Save the lesson
+      await lessonRef.set(updatedLesson);
+
+      // Return updated snapshot
+      const updatedSnapshot = await lessonRef.once('value');
+      res.json({
+        success: true,
+        lms: {
+          [String(lessonNum)]: updatedSnapshot.val() || {}
+        }
+      });
+    } else if (system === 'game') {
+      const lessonProgressRef = db.ref(`users/${uid}/progress/${lessonKey}`);
+      const gameLessonsRef = db.ref(`users/${uid}/progress/gameLessons/${lessonKey}`);
+
+      // Handle completed shorthand
+      if (gameData.completed === true) {
+        // Set all fields to passing defaults
+        await lessonProgressRef.update({
+          quiz: {
+            completed: true,
+            highestScore: gameData.quizBestScore !== undefined ? Math.min(10, Math.max(0, parseInt(gameData.quizBestScore) || 8)) : 8,
+            attempts: gameData.quizAttempts !== undefined ? Math.max(0, parseInt(gameData.quizAttempts) || 1) : 1,
+            lastAttempt: now
+          },
+          simulation: {
+            completed: true,
+            passed: true,
+            score: gameData.simulationScore !== undefined ? Math.min(100, Math.max(0, parseInt(gameData.simulationScore) || 100)) : 100,
+            lastAttempt: now
+          }
+        });
+        await gameLessonsRef.set({ completed: true });
+      } else {
+        // Update quiz
+        if (gameData.quizCompleted !== undefined || gameData.quizBestScore !== undefined || gameData.quizAttempts !== undefined) {
+          const existingQuiz = (await db.ref(`users/${uid}/progress/${lessonKey}/quiz`).once('value')).val() || {};
+          await db.ref(`users/${uid}/progress/${lessonKey}/quiz`).set({
+            completed: gameData.quizCompleted !== undefined ? gameData.quizCompleted : (existingQuiz.completed || false),
+            highestScore: gameData.quizBestScore !== undefined ? Math.min(10, Math.max(0, parseInt(gameData.quizBestScore) || 8)) : (existingQuiz.highestScore || existingQuiz.bestScore || 8),
+            attempts: gameData.quizAttempts !== undefined ? Math.max(0, parseInt(gameData.quizAttempts) || 1) : (existingQuiz.attempts || 1),
+            lastAttempt: now
+          });
+        }
+
+        // Update simulation
+        if (gameData.simulationCompleted !== undefined || gameData.simulationPassed !== undefined || gameData.simulationScore !== undefined) {
+          const existingSim = (await db.ref(`users/${uid}/progress/${lessonKey}/simulation`).once('value')).val() || {};
+          await db.ref(`users/${uid}/progress/${lessonKey}/simulation`).set({
+            completed: gameData.simulationCompleted !== undefined ? gameData.simulationCompleted : (existingSim.completed || false),
+            passed: gameData.simulationPassed !== undefined ? gameData.simulationPassed : (existingSim.passed || false),
+            score: gameData.simulationScore !== undefined ? Math.min(100, Math.max(0, parseInt(gameData.simulationScore) || 100)) : (existingSim.score || 100),
+            lastAttempt: now
+          });
+        }
+
+        // Update gameLessons based on completion status
+        const lessonProgress = (await lessonProgressRef.once('value')).val() || {};
+        const quiz = lessonProgress.quiz || {};
+        const simulation = lessonProgress.simulation || {};
+        const isCompleted = quiz.completed && simulation.completed && simulation.passed;
+
+        if (isCompleted) {
+          await gameLessonsRef.set({ completed: true });
+        } else {
+          await gameLessonsRef.remove();
+        }
+      }
+
+      // Recompute total game lessons completed
+      const allGameLessons = (await db.ref(`users/${uid}/progress/gameLessons`).once('value')).val() || {};
+      const completedCount = Object.values(allGameLessons).filter(l => l && l.completed === true).length;
+      const clampedCount = Math.min(6, Math.max(0, completedCount));
+
+      await userRef(uid).update({ lessonsCompleted: clampedCount });
+      await db.ref(`users/${uid}/gameProgress`).set({ lessonsCompleted: clampedCount });
+
+      // Return updated snapshot
+      const updatedProgress = await lessonProgressRef.once('value');
+      res.json({
+        success: true,
+        game: {
+          [String(lessonNum)]: updatedProgress.val() || {},
+          summary: {
+            lessonsCompleted: clampedCount
+          }
+        }
+      });
+    } else {
+      return res.status(400).json({ error: 'system must be "lms" or "game"' });
+    }
+  } catch (error) {
+    console.error('Dev update lesson error:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+});
+
+router.post('/dev/delete-user', verifyAdminToken, async (req, res) => {
+  const isDev = req.admin?.email === 'admin@gmail.com';
+  if (!isDev) return res.status(403).json({ error: 'Dev mode only' });
+
+  try {
+    const { uid } = req.body;
+    if (!uid) return res.status(400).json({ error: 'UID is required' });
+
+    // Delete from Auth
+    try {
+      await auth.deleteUser(uid);
+    } catch (e) {
+      console.warn(`Failed to delete auth user ${uid}:`, e.message);
+      // Continue to delete from DB even if Auth delete fails (e.g. user not found)
+    }
+
+    // Delete from RTDB
+    await userRef(uid).remove();
+
+    // Also remove from admins if present
+    await db.ref(`admins/${uid}`).remove();
+    
+    // Remove from devTools/demoUsers
+    await db.ref(`devTools/demoUsers/${uid}`).remove();
+
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Dev delete user error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

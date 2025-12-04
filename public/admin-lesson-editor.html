@@ -13,6 +13,11 @@
     <link rel="shortcut icon" type="image/png" href="asat.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="admin-portal.css">
+    <!-- Quill.js Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <!-- Model Viewer -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body class="admin-portal">
     <!-- Header / Navigation -->
@@ -30,6 +35,8 @@
                     <a href="/admin-lessons" class="nav-tab active">Lessons</a>
                     <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
                     <a href="/admin-users" class="nav-tab">Users</a>
+                    <a href="/admin-videos" class="nav-tab">Videos</a>
+                    <a href="/admin-game-certificates" class="nav-tab">Certificates</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
@@ -37,9 +44,19 @@
     </header>
 
     <div class="lesson-editor-page">
-        <div class="editor-header">
-            <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back to Lessons</button>
-            <h1 id="editorPageTitle">Create New Lesson</h1>
+        <div class="editor-header" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="btn-back" onclick="checkUnsavedAndGoBack()"><i class="fas fa-arrow-left"></i> Back to Lessons</button>
+                <h1 id="editorPageTitle" style="margin: 0; font-size: 24px;">Create New Lesson</h1>
+            </div>
+            <div class="header-actions" style="display: flex; gap: 12px;">
+                <button type="button" class="btn-secondary btn-danger" onclick="deleteLesson()" id="topDeleteBtn" style="display: none;">
+                    <i class="fas fa-trash"></i> Delete Lesson
+                </button>
+                <button type="button" class="btn-primary" onclick="saveLesson()">
+                    <i class="fas fa-save"></i> Save Lesson
+                </button>
+            </div>
         </div>
 
         <!-- Tab Navigation -->
@@ -52,9 +69,6 @@
             </button>
             <button class="editor-tab" onclick="switchTab('tools')" id="tabTools">
                 <i class="fas fa-wrench"></i> Tools Used
-            </button>
-            <button class="editor-tab" onclick="switchTab('preview')" id="tabPreview">
-                <i class="fas fa-eye"></i> Preview
             </button>
         </div>
 
@@ -84,6 +98,12 @@
                                 <option value="published">Published (visible in LMS)</option>
                             </select>
                             <small class="form-hint">Use Draft while building content. Switch to Published when it's ready for students.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="lessonIntroVideo">Lesson Intro Video (Optional)</label>
+                            <input type="file" id="lessonIntroVideo" accept="video/*">
+                            <small class="form-hint">This video will be shown at the top of the lesson in the LMS.</small>
+                            <div id="introVideoPreview" style="margin-top: 10px;"></div>
                         </div>
                     </div>
 
@@ -118,16 +138,6 @@
                             <small class="form-hint">Use the toolbar above to format your text. You can add headings, lists, and images.</small>
                         </div>
                     </div>
-
-                    <div class="form-section">
-                        <h2 class="form-section-title">Supporting Images</h2>
-                        <div class="form-group">
-                            <label for="supportingImages">Upload Supporting Images</label>
-                            <input type="file" id="supportingImages" multiple accept="image/*">
-                            <small class="form-hint">You can upload multiple images. These will be stored in Firebase Storage later.</small>
-                            <div id="supportingImagesPreview" class="image-preview-grid"></div>
-                        </div>
-                    </div>
                 </form>
             </div>
 
@@ -158,31 +168,16 @@
                         <i class="fas fa-plus"></i> Add Tool
                     </button>
                 </div>
-                <div id="toolsContainer" class="tools-container">
+                <div id="toolsContainer" class="tools-grid">
                     <!-- Tool cards will be inserted here -->
-                </div>
-            </div>
-
-            <!-- TAB 4: Preview -->
-            <div id="previewTab" class="editor-tab-content">
-                <div class="preview-section">
-                    <h2 class="form-section-title">Lesson Preview</h2>
-                    <p class="preview-hint">This is how students will see the lesson</p>
-                    <div class="preview-content" id="previewContent">
-                        <!-- Preview will be rendered here -->
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Page Actions -->
+        <!-- Page Actions (Cancel only) -->
         <div class="editor-page-actions">
-            <button type="button" class="btn-secondary btn-danger" onclick="deleteLesson()" id="deleteBtn" style="display: none;">
-                <i class="fas fa-trash"></i> Delete Lesson
-            </button>
-            <div class="editor-actions-right">
-                <button type="button" class="btn-secondary" onclick="goBack()">Cancel</button>
-                <button type="button" class="btn-primary" onclick="saveLesson()"><i class="fas fa-save"></i> Save Lesson</button>
+            <div class="editor-actions-right" style="width: 100%; display: flex; justify-content: flex-start;">
+                <button type="button" class="btn-secondary" onclick="checkUnsavedAndGoBack()">Cancel</button>
             </div>
         </div>
     </div>
@@ -216,22 +211,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="toolImage">Tool Image</label>
+                    <label for="toolImage">Tool Image (Optional)</label>
                     <input type="file" id="toolImage" accept="image/*">
-                    <small class="form-hint">PNG or JPG format</small>
+                    <small class="form-hint">PNG or JPG format (Thumbnail)</small>
                     <div id="toolImagePreview" class="image-preview-single"></div>
                 </div>
                 <div class="form-group">
                     <label for="tool3DModel">3D Model (Optional)</label>
-                    <input type="file" id="tool3DModel" accept=".fbx,.glb,.obj">
-                    <small class="form-hint">FBX, GLB, or OBJ format. For future 3D viewer integration.</small>
-                    <div class="model-file-info">
-                        <span id="tool3DModelFileName" class="model-file-label hidden"></span>
-                        <span id="tool3DModelUrl" class="model-file-label hidden"></span>
-                    </div>
-                    <div id="tool3DModelPreview" class="model-preview">
-                        <div class="model-preview-empty">No 3D model selected</div>
-                    </div>
+                    <input type="file" id="tool3DModel" name="tool3DModel" accept=".glb,.gltf,.fbx,.obj,.FBX,.OBJ,.GLB,.GLTF">
+                    <small class="form-hint">Supported formats: GLB/GLTF (web preview), FBX/OBJ (download only).</small>
+                    <div id="tool3DModelPreview" class="model-preview" style="margin-top: 10px;"></div>
                 </div>
                 <div class="form-group">
                     <label for="toolInstructions">How It's Used / Instructions</label>
@@ -294,8 +283,8 @@
                 </div>
                 <div class="form-group">
                     <label for="pageContent">Page Content</label>
-                    <textarea id="pageContent" rows="10" placeholder="Enter the content for this page"></textarea>
-                    <small class="form-hint">This content will be displayed to students on this page</small>
+                    <div id="pageContentEditor" style="min-height: 300px;"></div>
+                    <small class="form-hint">This content will be displayed to students on this page. Use the formatting toolbar to style your content.</small>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="closePageModal()">Cancel</button>
@@ -357,6 +346,22 @@
         </div>
     </div>
 
+    <!-- Unsaved Changes Modal -->
+    <div id="unsavedChangesModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Unsaved Changes</h2>
+            </div>
+            <div class="logout-modal-body">
+                <p>You have unsaved changes. Do you want to save before leaving this page?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button id="unsavedDiscardBtn" class="btn-secondary" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Discard</button>
+                <button id="unsavedSaveBtn" class="btn-primary" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Alert Modal -->
     <div id="alertModal" class="history-modal" style="display: none;">
         <div class="history-modal-content">
@@ -373,15 +378,37 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/FBXLoader.js"></script>
-    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/OBJLoader.js"></script>
-    <!-- Three.js for 3D Model Preview -->
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/FBXLoader.js"></script>
-    <script src="https://unpkg.com/three@0.160.0/examples/js/loaders/OBJLoader.js"></script>
+    <!-- 3D Preview Modal -->
+    <div id="tool3DPreviewModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="tool3DPreviewTitle">3D Preview</h2>
+                <button class="modal-close" onclick="closeModal('tool3DPreviewModal')">&times;</button>
+            </div>
+            <div style="padding: 20px; background: #f9fafb;">
+                <div style="width: 100%; height: 400px; background: #e5e7eb; border-radius: 8px; overflow: hidden; position: relative;">
+                    <div id="modelLoadingOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 12px; color: #64748B; font-weight: 500;">Loading 3D model...</p>
+                    </div>
+                    <model-viewer id="toolModelViewer"
+                                  style="width: 100%; height: 100%;"
+                                  camera-controls
+                                  auto-rotate
+                                  shadow-intensity="0.5"
+                                  exposure="1"
+                                  loading="eager"
+                                  alt="3D model preview">
+                    </model-viewer>
+                </div>
+                <p id="tool3DPreviewError" class="text-danger small mt-2" style="color: #DC2626; text-align: center; margin-top: 10px; min-height: 20px;"></p>
+                <p style="text-align: center; color: #6B7280; font-size: 12px; margin-top: 10px;">
+                    Left click to rotate • Scroll to zoom • Right click to pan
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/admin-lesson-editor.js"></script>
 </body>
 </html>

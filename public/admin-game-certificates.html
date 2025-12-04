@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSim Admin Portal - Game Certificates</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/admin-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab">Users</a>
+                    <a href="/admin-videos" class="nav-tab">Videos</a>
+                    <a href="/admin-game-certificates" class="nav-tab active">Certificates</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    <div class="portal-container">
+        <section class="content-section admin-game-certificates-page">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Certificates</h1>
+                    <p class="section-subtitle">Issue generic CareSim certificates to public users who completed all game lessons, or notify LMS students about their certificate eligibility.</p>
+                </div>
+                <div id="actionButtonsContainer">
+                    <button id="issueAllBtn" class="btn-primary" onclick="issueAllEligible()" style="display:none;">
+                        <i class="fas fa-mail-bulk"></i> Issue for All Eligible
+                    </button>
+                    <button id="notifyAllBtn" class="btn-primary" onclick="notifyAllEligible()" style="display:none;">
+                        <i class="fas fa-envelope"></i> Notify All Eligible
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Tabs -->
+            <div class="admin-game-certs-main-tabs">
+                <button class="admin-game-certs-main-tab active" data-tab="public" onclick="switchMainTab('public')">
+                    Public Game Users
+                </button>
+                <button class="admin-game-certs-main-tab" data-tab="lms" onclick="switchMainTab('lms')">
+                    LMS Students
+                </button>
+            </div>
+
+            <!-- Secondary Tabs (shown based on main tab) -->
+            <div id="secondaryTabsContainer" class="admin-game-certs-secondary-tabs">
+                <button class="admin-game-certs-secondary-tab active" data-filter="toIssue" onclick="switchSecondaryTab('toIssue')">
+                    To Issue
+                </button>
+                <button class="admin-game-certs-secondary-tab" data-filter="issued" onclick="switchSecondaryTab('issued')">
+                    Issued
+                </button>
+            </div>
+
+            <div class="admin-game-certs-table">
+                <table>
+                    <thead id="tableHeader">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Progress</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="history-modal" style="display: none;">
+        <div class="history-modal-content logout-modal-content">
+            <div class="history-modal-header">
+                <h2>Confirmation</h2>
+                <button class="history-close" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-actions" style="padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeLogoutModal()" style="padding: 10px 20px; background: white; color: #64748B; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogout()" style="padding: 10px 20px; background: #C19A6B; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="/js/admin-game-certificates.js"></script>
+    <script src="/js/admin-devtools.js"></script>
+    <script>
+        // Shared Logout Logic (duplicated from other admin pages or moved to shared file ideally)
+        function logout() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+        function confirmLogout() {
+            fetch('/logout', { method: 'POST' })
+                .then(() => window.location.href = '/login');
+        }
+    </script>
+</body>
+</html>

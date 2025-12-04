@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class - CareSim Instructor Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+    <link rel="stylesheet" href="instructor-portal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/instructor-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                    <span class="logo-text">Instructor</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/instructor-class" class="nav-tab active">Class</a>
+                    <a href="/instructor-students" class="nav-tab">Students</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessments</a>
+                </nav>
+                <div class="instr-nav-actions">
+                    <button 
+                        type="button" 
+                        id="instrNotificationButton" 
+                        class="instr-notification-button"
+                        aria-label="Notifications"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="instrNotificationBadge" class="instr-notification-badge" style="display: none;">0</span>
+                    </button>
+                    <div id="instrNotificationDropdown" class="instr-notification-dropdown" style="display: none;">
+                        <div class="instr-notification-dropdown-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="instr-notification-dropdown-body">
+                            <div id="instrNotificationList" class="instr-notification-list"></div>
+                            <div id="instrNotificationEmpty" class="instr-notification-empty" style="display: none;">
+                                <p>You're all caught up ✨</p>
+                            </div>
+                        </div>
+                        <div class="instr-notification-dropdown-footer">
+                            <a href="/instructor-class" class="instr-notification-view-all">View all in Class Feed</a>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="instr-class-page">
+        <div class="instr-class-container">
+            <!-- Breadcrumb -->
+            <nav class="instr-class-breadcrumb">
+                <a href="/instructor-dashboard">Dashboard</a>
+                <span class="breadcrumb-separator">></span>
+                <span class="breadcrumb-current">Class</span>
+            </nav>
+
+            <!-- Page Title -->
+            <div class="instr-class-title-section">
+                <h1 class="instr-class-title">Class</h1>
+                <p class="instr-class-subtitle">Post announcements, materials, and tasks for your students.</p>
+            </div>
+
+            <!-- Main 3-column layout -->
+            <section class="instr-class-layout">
+              <!-- LEFT: class info -->
+              <aside class="instr-class-column instr-class-column-left">
+                <div class="instr-class-card instr-class-overview-card">
+                  <h2>Class Overview</h2>
+                  <p class="instr-class-overview-hint">This is your main class view. Use the feed to share updates with your students.</p>
+                  <ul class="instr-class-info-list">
+                    <li><span>Course:</span> <span id="instrInfoCourse">—</span></li>
+                    <li><span>Batch:</span> <span id="instrInfoBatch">—</span></li>
+                    <li><span>Section:</span> <span id="instrInfoSection">—</span></li>
+                    <li><span>Students:</span> <span id="instrInfoStudents">—</span></li>
+                  </ul>
+                  <button
+                    type="button"
+                    class="btn-secondary instr-class-fullwidth-btn"
+                    onclick="window.location.href='/instructor-students';"
+                  >
+                    View Students
+                  </button>
+                </div>
+
+                <div id="instructorDevDebugCard" style="display: none;">
+                  <div class="instr-class-card instr-class-debug-card" id="instrClassDebugCard">
+                    <div class="instr-class-debug-header">
+                      <h2>Developer Debug</h2>
+                      <button type="button" class="instr-class-debug-toggle" id="instrClassDebugToggle">
+                        <span class="instr-class-debug-toggle-label">Show</span>
+                        <i class="fas fa-chevron-down"></i>
+                      </button>
+                    </div>
+                    <div class="instr-class-debug-body" id="instrClassDebugBody">
+                      <!-- This is ONLY for development so we can see what the class object looks like. -->
+                      <pre id="instrClassDebug" class="instr-class-debug"></pre>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              <!-- MIDDLE: class feed -->
+              <div class="instr-class-column instr-class-column-center">
+                <div class="instr-class-card instr-class-feed-card">
+                  <div class="instr-class-card-header">
+                    <div>
+                      <h2>Class Feed</h2>
+                      <p class="instr-class-subtext">Announcements, materials, and tasks for this class.</p>
+                    </div>
+                    <button type="button" id="btnInstructorNewPost" class="btn-primary">New Post
+                    </button>
+                  </div>
+
+                  <!-- Post type filters -->
+                  <div class="instr-class-filters" id="instrClassFilters">
+                    <button type="button" class="instr-class-filter active" data-filter="all">All</button>
+                    <button type="button" class="instr-class-filter" data-filter="announcement">Announcements</button>
+                    <button type="button" class="instr-class-filter" data-filter="material">Materials</button>
+                    <button type="button" class="instr-class-filter" data-filter="task">Tasks</button>
+                  </div>
+
+                  <!-- Feed list -->
+                  <div class="instr-class-feed" id="instrClassFeed">
+                    <div class="instr-class-empty" id="instrClassEmpty">
+                      <div class="instr-class-empty-icon">
+                        <i class="far fa-clipboard"></i>
+                      </div>
+                      <h3 class="instr-class-empty-title">No posts yet</h3>
+                      <p class="instr-class-empty-text">
+                        Create your first announcement, material, or task using the “New Post” button.
+                      </p>
+                      <button type="button" class="btn-primary instr-class-empty-cta" id="btnInstructorNewPostEmpty">
+                        + New Post
+                      </button>
+                    </div>
+                    <div class="instr-class-feed-list" id="instrClassFeedList"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT: post details -->
+              <aside class="instr-class-column instr-class-column-right">
+                <div class="instr-class-card instr-class-details-card" id="instrPostDetailsCard">
+                  <h2>Post Details</h2>
+                  <div id="instrPostDetailsEmpty" class="instr-class-empty instr-class-empty-details">
+                    <div class="instr-class-empty-icon">
+                      <i class="far fa-hand-pointer"></i>
+                    </div>
+                    <h3 class="instr-class-empty-title">No post selected</h3>
+                    <p class="instr-class-empty-text">
+                      Select a post from the feed to view its full details here.
+                    </p>
+                  </div>
+                  <div id="instrPostDetailsContent" class="instr-class-post-details" style="display:none;">
+                    <div class="instr-post-details-header">
+                      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                        <div style="flex: 1;">
+                          <span class="instr-post-type-badge" id="instrPostTypeBadge"></span>
+                          <h3 id="instrPostTitle" style="margin-top: 8px;"></h3>
+                        </div>
+                        <div class="instr-post-actions" id="instrPostActions" style="display: flex; gap: 8px; flex-shrink: 0;">
+                          <button type="button" class="btn-sm btn-outline" id="instrPostEditBtn" title="Edit Post">
+                            <i class="fas fa-edit"></i> Edit
+                          </button>
+                          <button type="button" class="btn-sm btn-outline" id="instrPostArchiveBtn" title="Archive Post">
+                            <i class="fas fa-archive"></i> Archive
+                          </button>
+                          <button type="button" class="btn-sm btn-danger" id="instrPostDeleteBtn" title="Delete Post">
+                            <i class="fas fa-trash"></i> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="instr-post-meta" id="instrPostMeta"></p>
+                    <div class="instr-post-body" id="instrPostBody"></div>
+                    <div class="instr-post-link" id="instrPostLinkContainer" style="display:none;">
+                      <h4>Related Link</h4>
+                      <a href="#" target="_blank" rel="noopener" id="instrPostLink"></a>
+                    </div>
+                    <div class="instr-post-attachments" id="instrPostAttachments" style="display:none;"></div>
+                    <div class="instr-post-task-meta" id="instrPostTaskMeta" style="display:none;"></div>
+
+                    <!-- Tabs for comments and submissions -->
+                    <div class="instr-post-tabs" id="instrPostTabs" style="display:none;">
+                      <button
+                        type="button"
+                        class="instr-post-tab instr-post-tab-active"
+                        data-tab="comments"
+                        id="instrPostTabCommentsButton"
+                      >
+                        Comments
+                      </button>
+                      <button
+                        type="button"
+                        class="instr-post-tab"
+                        data-tab="submissions"
+                        id="instrPostTabSubmissionsButton"
+                        style="display:none;"
+                      >
+                        Submissions
+                      </button>
+                    </div>
+
+                    <!-- Comments tab content -->
+                    <div class="instr-post-tab-panel" id="instrPostTabCommentsPanel" style="display:none;">
+                      <div class="instr-post-comments-list" id="instrPostCommentsList"></div>
+                      <div class="instr-post-comments-empty-hint" id="instrPostCommentsEmptyHint" style="display: none;">
+                        <p>No comments yet. Start the discussion.</p>
+                      </div>
+                      <div class="instr-post-comment-form">
+                        <textarea
+                          id="instrPostCommentInput"
+                          rows="2"
+                          placeholder="Write a comment..."
+                        ></textarea>
+                        <button type="button" class="btn-primary" id="instrPostCommentSubmit" disabled>
+                          Post
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Submissions tab content (tasks only) -->
+                    <div class="instr-post-tab-panel" id="instrPostTabSubmissionsPanel" style="display:none;">
+                      <div class="instr-post-submissions-summary" id="instrPostSubmissionsSummary"></div>
+                      <div class="instr-post-submissions-list-wrapper">
+                        <table class="instr-post-submissions-table" id="instrPostSubmissionsTable">
+                          <thead>
+                            <tr>
+                              <th>Student</th>
+                              <th>Status</th>
+                              <th>Score</th>
+                              <th>Submitted At</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody id="instrPostSubmissionsTbody">
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </section>
+        </div>
+    </div>
+
+      <!-- New Post Modal -->
+      <div class="history-modal" id="instructorPostModal" style="display:none;">
+        <div class="history-modal-content instr-post-modal-content instr-class-post-modal">
+          <div class="history-modal-header">
+            <h2>Create New Post</h2>
+            <button class="history-close" type="button" id="instrPostModalClose">&times;</button>
+          </div>
+          <div class="history-modal-body">
+            <div class="form-group">
+              <label for="postType">Post Type</label>
+              <select id="postType" class="form-control">
+                <option value="announcement">Announcement</option>
+                <option value="material">Material</option>
+                <option value="task">Task</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="postTitle">Title</label>
+              <input type="text" id="postTitle" class="form-control" placeholder="Enter post title">
+            </div>
+            <div class="form-group">
+              <label for="postBody">Body</label>
+              <textarea id="postBody" class="form-control" rows="5" placeholder="Write the announcement, instructions, or message"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="postLinkUrl">Optional Link</label>
+              <input type="url" id="postLinkUrl" class="form-control" placeholder="https://example.com/resource">
+              <span class="form-text">Students will see this as a clickable link.</span>
+            </div>
+            <div class="form-group" id="postTaskMetaGroup" style="display:none;">
+              <div class="task-meta-grid">
+                <div>
+                  <label for="postDueDate">Due Date (optional)</label>
+                  <input type="date" id="postDueDate" class="form-control">
+                </div>
+                <div>
+                  <label for="postMaxScore">Max Score (optional)</label>
+                  <input type="number" id="postMaxScore" class="form-control" min="0" step="1">
+                </div>
+              </div>
+            </div>
+            <div class="form-group" id="postAttachmentGroup" style="display:none;">
+              <label for="postAttachmentInput">Attachments (optional)</label>
+              <input type="file" id="postAttachmentInput" class="form-control" multiple>
+              <span class="form-text">For materials and tasks you can upload multiple files (PDF, documents, etc.).</span>
+              <div id="postAttachmentList" class="instr-attachment-list" style="display:none; margin-top: 12px;">
+                <div class="instr-attachment-list-header">
+                  <span>Selected files:</span>
+                  <button type="button" class="instr-attachment-clear-btn" id="postAttachmentClearBtn">Clear all</button>
+                </div>
+                <ul id="postAttachmentListItems" class="instr-attachment-items"></ul>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="error instr-class-post-error" id="postError" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="modal-actions instr-class-modal-actions">
+            <button type="button" class="btn-secondary" id="instrPostModalCancel">Cancel</button>
+            <button type="button" class="btn-primary" id="btnSavePost">Save Post</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade Submission Modal -->
+      <div class="history-modal" id="instrGradeModal" style="display:none;">
+        <div class="history-modal-content instr-post-modal-content instr-class-post-modal">
+          <div class="history-modal-header">
+            <h2 id="instrGradeModalTitle">Grade Submission</h2>
+            <button class="history-close" type="button" id="instrGradeModalClose">&times;</button>
+          </div>
+          <div class="history-modal-body">
+            <div class="form-group">
+              <label>Student</label>
+              <p id="instrGradeStudentName" class="instr-grade-student-name">Student Name</p>
+            </div>
+            <div class="form-group">
+              <label>Submitted File</label>
+              <p>
+                <a href="#" target="_blank" rel="noopener" id="instrGradeSubmissionLink">Download submission</a>
+              </p>
+            </div>
+            <div class="form-group">
+              <label for="instrGradeScore">Score</label>
+              <input type="number" id="instrGradeScore" class="form-control" min="0" step="1">
+            </div>
+            <div class="form-group">
+              <label for="instrGradeFeedback">Feedback (optional)</label>
+              <textarea id="instrGradeFeedback" class="form-control" rows="3" placeholder="Write feedback for the student"></textarea>
+            </div>
+            <div class="form-group">
+              <div class="error instr-class-post-error" id="instrGradeError" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="modal-actions instr-class-modal-actions">
+            <button type="button" class="btn-secondary" id="instrGradeModalCancel">Cancel</button>
+            <button type="button" class="btn-primary" id="instrGradeModalSave">Save Grade</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div class="history-modal" id="instrDeleteConfirmModal" style="display:none;">
+        <div class="history-modal-content instr-post-modal-content instr-class-post-modal">
+          <div class="history-modal-header">
+            <h2>Delete Post</h2>
+            <button class="history-close" type="button" id="instrDeleteModalClose">&times;</button>
+          </div>
+          <div class="history-modal-body">
+            <div class="form-group">
+              <p style="font-weight: 500; margin-bottom: 16px;">Are you sure you want to delete this post? This action cannot be undone.</p>
+              <div id="instrDeleteConfirmDetails" style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600; color: #991B1B;">The following will be permanently deleted from the database:</p>
+                <ul id="instrDeleteConfirmList" style="margin: 0; padding-left: 20px; color: #7F1D1D;">
+                  <li>The post itself</li>
+                </ul>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="error instr-class-post-error" id="instrDeleteError" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="modal-actions instr-class-modal-actions">
+            <button type="button" class="btn-secondary" id="instrDeleteModalCancel">Cancel</button>
+            <button type="button" class="btn-danger" id="instrDeleteModalConfirm">Delete Post</button>
+          </div>
+        </div>
+      </div>
+
+    <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-notifications.js"></script>
+    <script src="js/instructor-class.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('instructorToken');
+            window.location.href = '/caresim-login';
+        }
+    </script>
+</body>
+</html>

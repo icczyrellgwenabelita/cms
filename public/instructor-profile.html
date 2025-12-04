@@ -26,12 +26,40 @@
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
-                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
-                    <a href="/instructor-assessment-overview" class="nav-tab">Assessment</a>
-                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
+                    <a href="/instructor-class" class="nav-tab">Class</a>
+                    <a href="/instructor-students" class="nav-tab">Students</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab">Assessments</a>
                     <a href="/instructor-announcements" class="nav-tab">Announcements</a>
                     <a href="/instructor-profile" class="nav-tab active">Profile</a>
                 </nav>
+                <div class="instr-nav-actions">
+                    <button 
+                        type="button" 
+                        id="instrNotificationButton" 
+                        class="instr-notification-button"
+                        aria-label="Notifications"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="instrNotificationBadge" class="instr-notification-badge" style="display: none;">0</span>
+                    </button>
+                    <div id="instrNotificationDropdown" class="instr-notification-dropdown" style="display: none;">
+                        <div class="instr-notification-dropdown-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="instr-notification-dropdown-body">
+                            <div id="instrNotificationList" class="instr-notification-list"></div>
+                            <div id="instrNotificationEmpty" class="instr-notification-empty" style="display: none;">
+                                <p>You're all caught up ✨</p>
+                            </div>
+                        </div>
+                        <div class="instr-notification-dropdown-footer">
+                            <a href="/instructor-class" class="instr-notification-view-all">View all in Class Feed</a>
+                        </div>
+                    </div>
+                </div>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -41,101 +69,52 @@
         <nav class="breadcrumb">
             <a href="/instructor-dashboard">Dashboard</a>
             <span class="breadcrumb-separator">></span>
-            <span class="breadcrumb-current">Instructor Profile</span>
+            <span class="breadcrumb-current">Profile</span>
         </nav>
 
-        <div class="instructor-profile-header-card">
-            <div class="profile-avatar">
-                <span class="profile-avatar-initial">JD</span>
-                <div class="profile-avatar-actions">
-                    <button class="btn-upload">Upload Photo</button>
-                    <button class="btn-remove-picture outline">Remove Photo</button>
+        <div class="instructor-card" style="max-width: 800px; margin: 0 auto;">
+            <div class="instructor-card-header">
+                <h2>Instructor Profile</h2>
+                <p class="centered-subtitle">Your account information.</p>
+            </div>
+            
+            <div id="profileLoading" style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p>Loading profile...</p>
+            </div>
+            
+            <div id="profileContent" style="display: none;">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="profileName" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="profileEmail" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Class</label>
+                    <input type="text" id="profileClass" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" id="profileDepartment" readonly style="background: #f5f5f5; cursor: not-allowed;">
                 </div>
             </div>
-            <div class="profile-info">
-                <div class="profile-info-top">
-                    <div>
-                        <h1>Janelle Diaz</h1>
-                        <p class="profile-role">Instructor</p>
-                    </div>
-                    <span class="status-pill active">Active</span>
-                </div>
-                <p class="profile-email">janelle.diaz@caresim.edu</p>
-                <p class="profile-meta">Last login: Nov 18, 2025 • Oversees 32 students</p>
-            </div>
-        </div>
-
-        <div class="instructor-profile-layout">
-            <div class="profile-main-column">
-                <section class="instructor-card profile-card">
-                    <div class="instructor-card-header">
-                        <h2>Basic Information</h2>
-                    </div>
-                    <form class="instructor-form-grid">
-                        <div class="form-field">
-                            <label for="instructorName">Full Name</label>
-                            <input type="text" id="instructorName" value="Janelle Diaz">
-                        </div>
-                        <div class="form-field">
-                            <label for="instructorEmail">Email Address</label>
-                            <input type="email" id="instructorEmail" value="janelle.diaz@caresim.edu">
-                        </div>
-                        <div class="form-field">
-                            <label for="instructorContact">Contact Number</label>
-                            <input type="text" id="instructorContact" value="+63 912 345 6789">
-                        </div>
-                        <div class="form-field">
-                            <label for="instructorDepartment">Department / Program</label>
-                            <input type="text" id="instructorDepartment" value="Caregiving NC II">
-                        </div>
-                        <div class="form-field">
-                            <label for="instructorId">Instructor ID</label>
-                            <input type="text" id="instructorId" value="INS-2025-004" readonly>
-                        </div>
-                    </form>
-                </section>
-
-                <section class="instructor-card profile-card account-settings-card">
-                    <div class="instructor-card-header">
-                        <h2>Account Settings</h2>
-                    </div>
-                    <div class="account-settings-content">
-                        <p class="account-note">Keep your account secure by updating your password regularly.</p>
-                        <button class="btn-primary">Change Password</button>
-                    </div>
-                    <div class="form-actions right">
-                        <button class="btn-save" type="button">Save Changes</button>
-                        <button class="btn-cancel" type="button">Cancel</button>
-                    </div>
-                </section>
-            </div>
-
-            <aside class="profile-side-column">
-                <section class="instructor-card profile-card">
-                    <div class="instructor-card-header">
-                        <h2>Teaching Snapshot</h2>
-                    </div>
-                    <div class="teaching-snapshot">
-                        <div class="snapshot-item">
-                            <span>Total Students</span>
-                            <strong>32</strong>
-                        </div>
-                        <div class="snapshot-item">
-                            <span>Quizzes Overseen</span>
-                            <strong>12</strong>
-                        </div>
-                        <div class="snapshot-item">
-                            <span>Simulations Overseen</span>
-                            <strong>3</strong>
-                        </div>
-                    </div>
-                </section>
-            </aside>
         </div>
     </div>
 
     <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-notifications.js"></script>
     <script src="js/instructor-profile.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('instructorToken');
+            window.location.href = '/caresim-login';
+        }
+    </script>
 </body>
 </html>
-

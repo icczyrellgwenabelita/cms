@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Certificate - CareSim</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Scoped CSS for verify page */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        body {
+            background: linear-gradient(135deg, #FFF8F0 0%, #FAF0E6 50%, #F2DDC0 100%);
+            background-attachment: fixed;
+        }
+        #verify-certificate-page {
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #verify-certificate-page .verify-card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+            min-width: 320px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        #verify-certificate-page .verify-logo {
+            height: 60px;
+            margin-bottom: 24px;
+        }
+        #verify-certificate-page .verify-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 32px;
+        }
+        #verify-certificate-page .verify-input-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        #verify-certificate-page .verify-input-group label {
+            display: block;
+            font-size: 14px;
+            color: #64748B;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        #verify-certificate-page .verify-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #1E293B;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        #verify-certificate-page .verify-input:focus {
+            outline: none;
+            border-color: #C19A6B;
+            box-shadow: 0 0 0 3px rgba(193, 154, 107, 0.1);
+        }
+        #verify-certificate-page .btn-verify {
+            width: 100%;
+            padding: 12px;
+            background: #C19A6B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #verify-certificate-page .btn-verify:hover {
+            background: #A67A4A;
+        }
+        #verify-certificate-page .verify-result {
+            margin-top: 32px;
+            padding: 24px;
+            border-radius: 12px;
+            display: none;
+        }
+        #verify-certificate-page .result-valid {
+            background: #ECFDF5;
+            border: 1px solid #D1FAE5;
+        }
+        #verify-certificate-page .result-invalid {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+        }
+        #verify-certificate-page .result-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+        #verify-certificate-page .result-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        #verify-certificate-page .result-valid .result-title { color: #059669; }
+        #verify-certificate-page .result-invalid .result-title { color: #DC2626; }
+        
+        #verify-certificate-page .result-details {
+            text-align: left;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        #verify-certificate-page .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        #verify-certificate-page .detail-label { color: #64748B; }
+        #verify-certificate-page .detail-value { font-weight: 600; color: #1E293B; }
+        
+        @media (max-width: 480px) {
+            #verify-certificate-page .verify-card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="verify-certificate-page">
+        <div class="verify-card">
+            <img src="caresimm.png" alt="CareSim" class="verify-logo">
+            <h1 class="verify-title">Verify Certificate</h1>
+            
+            <div class="verify-form">
+                <div class="verify-input-group">
+                    <label for="certIdInput">Certificate ID</label>
+                    <input type="text" id="certIdInput" class="verify-input" placeholder="e.g. LMS-123456-789">
+                </div>
+                <button id="verifyBtn" class="btn-verify">Verify</button>
+            </div>
+
+            <div id="validResult" class="verify-result result-valid">
+                <span class="result-icon">✅</span>
+                <h2 class="result-title">Valid CareSim Certificate</h2>
+                <div class="result-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Student Name</span>
+                        <span class="detail-value" id="validName"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Certificate ID</span>
+                        <span class="detail-value" id="validId"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Certificate Type</span>
+                        <span class="detail-value" id="validType"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Issued Date</span>
+                        <span class="detail-value" id="validDate"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="invalidResult" class="verify-result result-invalid">
+                <span class="result-icon">❌</span>
+                <h2 class="result-title">Certificate Not Found</h2>
+                <p style="color: #991B1B; font-size: 14px;">The certificate ID you entered could not be verified or has been revoked.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="js/verify-certificate.js"></script>
+</body>
+</html>

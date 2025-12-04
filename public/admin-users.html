@@ -30,6 +30,8 @@
                     <a href="/admin-lessons" class="nav-tab">Lessons</a>
                     <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
                     <a href="/admin-users" class="nav-tab active">Users</a>
+                    <a href="/admin-videos" class="nav-tab">Videos</a>
+                    <a href="/admin-game-certificates" class="nav-tab">Certificates</a>
                 </nav>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
@@ -60,35 +62,13 @@
                     <i class="fas fa-archive"></i> Archived Students
                 </button>
             </div>
-            <div class="tab-action-bar">
-                <button class="btn-primary tab-action-btn active" data-tab="students" onclick="openAddUserModal('student')">
-                    <i class="fas fa-plus"></i> Invite Student
-                </button>
-                <button class="btn-primary tab-action-btn" data-tab="instructors" onclick="openAddUserModal('instructor')">
-                    <i class="fas fa-plus"></i> Add Instructor
-                </button>
-                <button class="btn-primary tab-action-btn" data-tab="admins" onclick="openAddUserModal('admin')">
-                    <i class="fas fa-plus"></i> Add Admin
-                </button>
-            </div>
-
             <!-- Search and Filter Section -->
             <div class="users-filters">
                 <div class="search-group">
                     <input type="text" id="searchBar" placeholder="Search..." class="search-input" style="width: 100%;">
                 </div>
-                <div class="filter-group">
-                    <button id="btnBulkActions" class="btn-secondary" onclick="toggleBulkMode()">
-                        <i class="fas fa-list-check"></i> Select Students
-                    </button>
-                    <div id="bulkActionsToolbar" style="display: none; gap: 8px;">
-                        <button class="btn-secondary" onclick="bulkAssignInstructor()">
-                            <i class="fas fa-user-plus"></i> Assign Instructor
-                        </button>
-                        <button class="btn-secondary" onclick="bulkArchiveStudents()" style="color: #EF4444; border-color: #EF4444;">
-                            <i class="fas fa-box-archive"></i> Archive
-                        </button>
-                    </div>
+                <div class="actions-group">
+                    <!-- Filter Batch (Students only) -->
                     <select id="filterBatch" class="filter-select">
                         <option value="">All Batches</option>
                         <option value="2020">2020</option>
@@ -99,6 +79,30 @@
                         <option value="2025">2025</option>
                         <option value="2026">2026</option>
                     </select>
+
+                    <!-- Bulk Actions (Students only) -->
+                    <button id="btnBulkActions" class="btn-secondary" onclick="toggleBulkMode()">
+                        <i class="fas fa-list-check"></i> Select Students
+                    </button>
+                    <div id="bulkActionsToolbar" style="display: none; gap: 8px;">
+                        <button class="btn-secondary" onclick="bulkAssignInstructor()">
+                            <i class="fas fa-user-plus"></i> Assign
+                        </button>
+                        <button class="btn-secondary" onclick="bulkArchiveStudents()" style="color: #EF4444; border-color: #EF4444;">
+                            <i class="fas fa-box-archive"></i> Archive
+                        </button>
+                    </div>
+
+                    <!-- Primary Actions (Tab specific) -->
+                    <button class="btn-primary tab-action-btn active" data-tab="students" onclick="openAddUserModal('student')">
+                        <i class="fas fa-plus"></i> Invite Student
+                    </button>
+                    <button class="btn-primary tab-action-btn" data-tab="instructors" onclick="openAddUserModal('instructor')">
+                        <i class="fas fa-plus"></i> Add Instructor
+                    </button>
+                    <button class="btn-primary tab-action-btn" data-tab="admins" onclick="openAddUserModal('admin')">
+                        <i class="fas fa-plus"></i> Add Admin
+                    </button>
                 </div>
             </div>
 
@@ -111,9 +115,9 @@
                                 <th style="width: 40px; display: none;" class="col-checkbox"><input type="checkbox" id="selectAllStudents" onchange="toggleSelectAll(this)"></th>
                                 <th class="col-primary">Name</th>
                                 <th class="col-primary">Email</th>
-                                <th class="col-optional">Student Number</th>
-                                <th class="col-optional">Batch</th>
-                                <th class="col-optional">Instructor</th>
+                                <th class="col-optional mobile-hidden">Student Number</th>
+                                <th class="col-optional mobile-hidden">Batch</th>
+                                <th class="col-optional mobile-hidden">Instructor</th>
                                 <th class="col-primary">Status</th>
                                 <th class="col-optional" style="text-align: right;">Actions</th>
                             </tr>
@@ -138,10 +142,10 @@
                             <tr>
                                 <th class="col-primary">Name</th>
                                 <th class="col-primary">Email</th>
-                                <th class="col-optional">Department</th>
+                                <th class="col-optional mobile-hidden">Department</th>
                                 <th class="col-primary">Status</th>
-                                <th class="col-optional">Assigned Students</th>
-                                <th class="col-optional">Last Login</th>
+                                <th class="col-optional mobile-hidden">Assigned Students</th>
+                                <th class="col-optional mobile-hidden">Last Login</th>
                                 <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
@@ -165,8 +169,8 @@
                             <tr>
                                 <th class="col-primary">Name</th>
                                 <th class="col-primary">Email</th>
-                                <th class="col-optional">Role</th>
-                                <th class="col-optional">Last Login</th>
+                                <th class="col-optional mobile-hidden">Role</th>
+                                <th class="col-optional mobile-hidden">Last Login</th>
                                 <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
@@ -190,9 +194,9 @@
                             <tr>
                                 <th class="col-primary">Name</th>
                                 <th class="col-primary">Email</th>
-                                <th class="col-optional">Account Created</th>
-                                <th class="col-optional">Converted To Student?</th>
-                                <th class="col-optional">Status</th>
+                                <th class="col-optional mobile-hidden">Account Created</th>
+                                <th class="col-optional mobile-hidden">Progress</th>
+                                <th class="col-optional mobile-hidden">Status</th>
                                 <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
@@ -216,14 +220,14 @@
                             <tr>
                                 <th class="col-primary">Name</th>
                                 <th class="col-primary">Email</th>
-                                <th class="col-optional">Student Number</th>
-                                <th class="col-optional">Batch</th>
-                                <th class="col-primary">Status</th>
+                                <th class="col-optional mobile-hidden">Student Number</th>
+                                <th class="col-optional mobile-hidden">Batch</th>
+                                <th class="col-primary mobile-hidden">Status</th>
                                 <th class="col-optional">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="archivedTableBody">
-                            <tr><td colspan="6" style="text-align:center; padding:40px; color:#64748B;">No archived students</td></tr>
+                            <tr><td colspan="6" style="text-align:center; padding:40px; color:#64748B;">No archived students found</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -563,6 +567,9 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="/js/admin-users.js"></script>
+    <script src="/js/admin-devtools.js"></script>
 </body>
 </html>

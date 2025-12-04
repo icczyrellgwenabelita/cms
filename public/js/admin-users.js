@@ -160,10 +160,11 @@ function buildDetailRow(label, value, options = {}) {
     const hasValue = value !== null && value !== undefined && value !== '';
     const displayValue = hasValue ? value : 'N/A';
     const safeValue = options.allowHtml ? displayValue : escapeHtml(displayValue);
+    const valueTag = options.allowHtml ? 'div' : 'span';
     return `
         <div class="detail-item">
             <span class="detail-label">${escapeHtml(label)}</span>
-            <span>${safeValue}</span>
+            <${valueTag} style="${options.allowHtml ? 'width: 100%;' : ''}">${safeValue}</${valueTag}>
         </div>
     `;
 }
@@ -408,16 +409,16 @@ function renderStudentsTable(students, totalCount) {
                 </td>
                 <td class="col-primary">${user.name || 'N/A'}</td>
                 <td class="col-primary">${user.email || 'N/A'}</td>
-                <td class="col-optional">${studentInfo.studentNumber || 'N/A'}</td>
-                <td class="col-optional">${studentInfo.batch || 'N/A'}</td>
-                <td class="col-optional">
+                <td class="col-optional mobile-hidden">${studentInfo.studentNumber || 'N/A'}</td>
+                <td class="col-optional mobile-hidden">${studentInfo.batch || 'N/A'}</td>
+                <td class="col-optional mobile-hidden">
                     <span class="instructor-badge">${instructorName}</span>
                     ${showAssign ? `
                     <button class="btn-action btn-assign-small" onclick="event.stopPropagation(); assignInstructor('${user.uid}')" title="Assign Instructor">
                         <i class="fas fa-user-plus"></i>
                     </button>` : ''}
                 </td>
-                <td class="col-primary"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td class="col-primary mobile-hidden"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                 <td class="col-optional" style="text-align: right;">
                     <div class="action-buttons" style="justify-content: flex-end;" onclick="event.stopPropagation();">
                         <button class="btn-action btn-edit-small" onclick="editUser('${user.uid}')" title="Edit">
@@ -611,14 +612,14 @@ function renderArchivedStudentsTable(students, totalCount) {
         const statusLabel = 'Archived';
 
         return `
-            <tr data-uid="${user.uid}" onclick="handleRowClick(event, '${user.uid}')">
-                <td class="col-primary">${user.name || 'N/A'}</td>
-                <td class="col-primary">${user.email || 'N/A'}</td>
-                <td class="col-optional">${studentInfo.studentNumber || 'N/A'}</td>
-                <td class="col-optional">${studentInfo.batch || 'N/A'}</td>
-                <td class="col-primary"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                <td class="col-optional">
-                    <div class="action-buttons" onclick="event.stopPropagation();">
+        <tr data-uid="${user.uid}" onclick="handleRowClick(event, '${user.uid}')">
+            <td class="col-primary">${user.name || 'N/A'}</td>
+            <td class="col-primary">${user.email || 'N/A'}</td>
+            <td class="col-optional mobile-hidden">${studentInfo.studentNumber || 'N/A'}</td>
+            <td class="col-optional mobile-hidden">${studentInfo.batch || 'N/A'}</td>
+            <td class="col-primary mobile-hidden"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            <td class="col-optional">
+                <div class="action-buttons" onclick="event.stopPropagation();">
                         <button class="btn-action btn-edit-small" onclick="restoreStudent('${user.uid}')" title="Restore Student">
                             <i class="fas fa-undo"></i>
                         </button>
@@ -730,8 +731,8 @@ function renderInstructorsTable(instructors, totalCount) {
             <tr data-uid="${user.uid}" onclick="handleRowClick(event, '${user.uid}')">
                 <td class="col-primary">${user.name || 'N/A'}</td>
                 <td class="col-primary">${user.email || 'N/A'}</td>
-                <td class="col-optional">${department}</td>
-                <td class="col-primary">
+                <td class="col-optional mobile-hidden">${department}</td>
+                <td class="col-primary mobile-hidden">
                     <label class="status-toggle" onclick="event.stopPropagation();">
                         <input type="checkbox" ${user.active !== false ? 'checked' : ''} 
                                onchange="toggleUserActive('${user.uid}', this.checked)">
@@ -740,8 +741,8 @@ function renderInstructorsTable(instructors, totalCount) {
                         </span>
                     </label>
                 </td>
-                <td class="col-optional">${assignedCount}</td>
-                <td class="col-optional">${formatDateTime(user.lastLogin)}</td>
+                <td class="col-optional mobile-hidden">${assignedCount}</td>
+                <td class="col-optional mobile-hidden">${formatDateTime(user.lastLogin)}</td>
                 <td class="col-optional">
                     <div class="action-buttons" onclick="event.stopPropagation();">
                         <button class="btn-action btn-edit-small" onclick="editUser('${user.uid}')" title="Edit">
@@ -778,8 +779,8 @@ function renderAdminsTable(admins, totalCount) {
         <tr data-uid="${user.uid}" onclick="handleRowClick(event, '${user.uid}')">
             <td class="col-primary">${user.name || 'N/A'}</td>
             <td class="col-primary">${user.email || 'N/A'}</td>
-            <td class="col-optional">${(user.role || 'admin').toUpperCase()}</td>
-            <td class="col-optional">${formatDateTime(user.lastLogin)}</td>
+            <td class="col-optional mobile-hidden">${(user.role || 'admin').toUpperCase()}</td>
+            <td class="col-optional mobile-hidden">${formatDateTime(user.lastLogin)}</td>
             <td class="col-optional">
                 <div class="action-buttons" onclick="event.stopPropagation();">
                     <label class="status-toggle" onclick="event.stopPropagation();">
@@ -820,17 +821,25 @@ function renderPublicTable(publicUsers, totalCount) {
         const statusClass = user.active !== false ? 'status-active' : 'status-deactivated';
         const statusLabel = user.active !== false ? 'Active' : 'Deactivated';
         const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A';
-        const convertedFlag = user.convertedToStudent || !!user.convertedToStudentAt;
-        const converted = convertedFlag
-            ? '<i class="fas fa-check-circle" style="color: #10B981;"></i> Yes'
-            : '<i class="fas fa-times-circle" style="color: #EF4444;"></i> No';
+        
+        // Calculate progress (6/6 lessons)
+        let completedCount = 0;
+        if (typeof user.lessonsCompleted === 'number') {
+            completedCount = user.lessonsCompleted;
+        } else if (user.gameProgress && user.gameProgress.lessonsCompleted) {
+            completedCount = user.gameProgress.lessonsCompleted;
+        } else if (user.progress && user.progress.gameLessons) {
+            completedCount = Object.values(user.progress.gameLessons).filter(l => l.completed).length;
+        }
+        const progress = `${completedCount}/6`;
+        
         return `
         <tr data-uid="${user.uid}" onclick="handleRowClick(event, '${user.uid}')">
             <td class="col-primary">${user.name || 'N/A'}</td>
             <td class="col-primary">${user.email || 'N/A'}</td>
-            <td class="col-optional">${created}</td>
-            <td class="col-optional">${converted}</td>
-            <td class="col-optional">
+            <td class="col-optional mobile-hidden">${created}</td>
+            <td class="col-optional mobile-hidden">${progress}</td>
+            <td class="col-optional mobile-hidden">
                 <label class="status-toggle" onclick="event.stopPropagation();">
                     <input type="checkbox" ${user.active !== false ? 'checked' : ''} 
                            onchange="toggleUserActive('${user.uid}', this.checked)">
@@ -1323,7 +1332,7 @@ async function saveNewUser(event) {
         const submitButton = document.getElementById('addUserSubmitButton');
         const originalText = submitButton.textContent;
         submitButton.disabled = true;
-        submitButton.textContent = 'Inviting...';
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inviting...';
 
         try {
             const response = await fetch(`${API_BASE}/users/invite-student`, {
@@ -1361,6 +1370,11 @@ async function saveNewUser(event) {
 
     const payload = { name, email, password, role };
 
+    const submitButton = document.getElementById('addUserSubmitButton');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (role === 'instructor' ? 'Adding Instructor...' : 'Adding Admin...');
+
     try {
         const endpoint = role === 'instructor'
             ? `${API_BASE}/users/create-instructor`
@@ -1383,6 +1397,11 @@ async function saveNewUser(event) {
     } catch (error) {
         console.error('Create user error:', error);
         showError(error.message || 'Failed to create user');
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
     }
 }
 
@@ -1563,11 +1582,7 @@ function showUserDetails(uid) {
             value: `<span class="role-badge role-${role}">${role}</span>`,
             allowHtml: true
         });
-        rows.push({
-            label: 'Status',
-            value: `<span class="status-badge ${statusMeta.className}">${statusMeta.label}</span>`,
-            allowHtml: true
-        });
+        // Status row removed as redundant - visible in table and header/meta
         rows.push({ label: 'Email', value: user.email || 'N/A' });
         rows.push({ label: 'Last Login', value: formatDateDisplay(user.lastLogin, 'Never') });
         rows.push({ label: 'Created At', value: formatDateDisplay(user.createdAt) });
@@ -1590,7 +1605,19 @@ function showUserDetails(uid) {
         } else if (role === 'admin') {
             rows.push({ label: 'Contact Number', value: formatContactNumber(user.contactNumber) });
         } else {
-            rows.push({ label: 'Converted to Student', value: user.role === 'student' ? 'Yes' : 'No' });
+            // Calculate progress (6/6 lessons)
+            let completedCount = 0;
+            if (typeof user.lessonsCompleted === 'number') {
+                completedCount = user.lessonsCompleted;
+            } else if (user.gameProgress && user.gameProgress.lessonsCompleted) {
+                completedCount = user.gameProgress.lessonsCompleted;
+            } else if (user.progress && user.progress.gameLessons) {
+                completedCount = Object.values(user.progress.gameLessons).filter(l => l.completed).length;
+            }
+            const progressPercent = Math.round((completedCount / 6) * 100);
+            const progressColor = completedCount === 6 ? '#10B981' : '#C19A6B';
+            const progressBar = '<div style="display: flex; justify-content: flex-end; width: 100%;"><div style="width: 50%; background: #E2E8F0; border-radius: 8px; height: 20px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;"><div style="position: absolute; left: 0; top: 0; background: ' + progressColor + '; height: 100%; width: ' + progressPercent + '%; transition: width 0.3s; border-radius: 8px;"></div><span style="position: relative; z-index: 1; font-weight: 600; color: ' + (completedCount === 6 ? '#FFFFFF' : '#1E293B') + '; font-size: 12px;">' + completedCount + '/6</span></div></div>';
+            rows.push({ label: 'Progress', value: progressBar, allowHtml: true });
             rows.push({ label: 'Active', value: user.active !== false ? 'Yes' : 'No' });
         }
 

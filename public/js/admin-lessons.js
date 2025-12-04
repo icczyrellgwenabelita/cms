@@ -209,9 +209,10 @@ function renderLessons() {
     container.innerHTML = filteredLessons.map(lesson => {
         const slot = lesson.slot || 0;
         const lessonName = escapeHtml(lesson.lessonTitle || lesson.lessonName || 'Untitled Lesson');
-        const lessonDescription = escapeHtml(lesson.description || lesson.lessonDescription || 'No description provided for this lesson.');
+        const lessonDescription = escapeHtml(lesson.description || lesson.lessonDescription || '');
         const pageCount = lesson.pageCount || 0;
         const assessmentCount = lesson.assessmentCount || 0;
+        const toolCount = lesson.tools ? Object.keys(lesson.tools).length : 0;
         const status = (lesson.status || 'draft').toLowerCase();
         const statusLabel = status === 'published' ? 'Published' : 'Draft';
         const updatedLabel = formatUpdatedDate(lesson.lastUpdated || lesson.updatedAt || lesson.createdAt);
@@ -222,19 +223,28 @@ function renderLessons() {
                     <span class="lesson-number">Lesson ${slot}</span>
                     <span class="lesson-status status-${status}">${statusLabel}</span>
                 </div>
-                <h3 class="lesson-name">${lessonName}</h3>
-                <p class="lesson-description">${lessonDescription}</p>
-                <div class="lesson-metrics">
-                    <div class="lesson-metric">
-                        <i class="fas fa-layer-group"></i> ${pluralize(pageCount, 'page')}
+                <div class="lesson-card-title">
+                    <h3 class="lesson-name">${lessonName}</h3>
+                </div>
+                <div class="lesson-card-description">${lessonDescription}</div>
+                
+                <div class="lesson-card-stats">
+                    <div class="lesson-metrics">
+                        <div class="lesson-metric">
+                            <i class="fas fa-layer-group"></i> ${pluralize(pageCount, 'page')}
+                        </div>
+                        <div class="lesson-metric">
+                            <i class="fas fa-question-circle"></i> ${pluralize(assessmentCount, 'assessment')}
+                        </div>
+                        <div class="lesson-metric">
+                            <i class="fas fa-wrench"></i> ${pluralize(toolCount, 'tool')}
+                        </div>
                     </div>
-                    <div class="lesson-metric">
-                        <i class="fas fa-question-circle"></i> ${pluralize(assessmentCount, 'assessment')}
+                    <div class="lesson-card-footer">
+                        <span class="lesson-updated">${updatedLabel ? `Updated ${updatedLabel}` : 'Not updated yet'}</span>
                     </div>
                 </div>
-                <div class="lesson-card-footer">
-                    <span class="lesson-updated">${updatedLabel ? `Updated ${updatedLabel}` : 'Not updated yet'}</span>
-                </div>
+
                 <div class="lesson-card-actions">
                     <button class="btn-card-action btn-edit" onclick="event.stopPropagation(); openLesson(${slot});">
                         <i class="fas fa-edit"></i> Edit
@@ -242,8 +252,8 @@ function renderLessons() {
                     <button class="btn-card-action btn-pages" onclick="event.stopPropagation(); openPages(${slot});">
                         <i class="fas fa-file-alt"></i> Pages
                     </button>
-                    <button class="btn-card-action btn-view" onclick="event.stopPropagation(); previewLesson(${slot});">
-                        <i class="fas fa-eye"></i> Preview
+                    <button class="btn-card-action btn-view" onclick="event.stopPropagation(); openTools(${slot});">
+                        <i class="fas fa-wrench"></i> Tools
                     </button>
                 </div>
             </div>
@@ -263,8 +273,8 @@ function openPages(slot) {
     window.location.href = `/admin-lesson-editor?slot=${slot}&action=edit&tab=pages`;
 }
 
-function previewLesson(slot) {
-    window.location.href = `/admin-lesson-editor?slot=${slot}&action=edit&tab=preview`;
+function openTools(slot) {
+    window.location.href = `/admin-lesson-editor?slot=${slot}&action=edit&tab=tools`;
 }
 
 function logout() {
@@ -307,4 +317,5 @@ document.addEventListener('DOMContentLoaded', function() {
     setupControls();
     loadLessons();
 });
+
 

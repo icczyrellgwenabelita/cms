@@ -26,12 +26,38 @@
             <div class="header-right">
                 <nav class="nav-tabs">
                     <a href="/instructor-dashboard" class="nav-tab">Dashboard</a>
-                    <a href="/instructor-class-list" class="nav-tab">Class List</a>
-                    <a href="/instructor-assessment-overview" class="nav-tab active">Assessment</a>
-                    <a href="/instructor-certificates-overview" class="nav-tab">Certificates</a>
-                    <a href="/instructor-announcements" class="nav-tab">Announcements</a>
-                    <a href="/instructor-profile" class="nav-tab">Profile</a>
+                    <a href="/instructor-class" class="nav-tab">Class</a>
+                    <a href="/instructor-students" class="nav-tab">Students</a>
+                    <a href="/instructor-assessment-overview" class="nav-tab active">Assessments</a>
                 </nav>
+                <div class="instr-nav-actions">
+                    <button 
+                        type="button" 
+                        id="instrNotificationButton" 
+                        class="instr-notification-button"
+                        aria-label="Notifications"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="instrNotificationBadge" class="instr-notification-badge" style="display: none;">0</span>
+                    </button>
+                    <div id="instrNotificationDropdown" class="instr-notification-dropdown" style="display: none;">
+                        <div class="instr-notification-dropdown-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="instr-notification-dropdown-body">
+                            <div id="instrNotificationList" class="instr-notification-list"></div>
+                            <div id="instrNotificationEmpty" class="instr-notification-empty" style="display: none;">
+                                <p>You're all caught up ✨</p>
+                            </div>
+                        </div>
+                        <div class="instr-notification-dropdown-footer">
+                            <a href="/instructor-class" class="instr-notification-view-all">View all in Class Feed</a>
+                        </div>
+                    </div>
+                </div>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -55,7 +81,7 @@
                 </svg>
                 Assessment Overview
             </h1>
-            <p>Review class quiz performance and simulation results.</p>
+            <p>Review game quiz performance, simulation results, and instructor task analytics.</p>
         </div>
 
         <div class="assessment-stats-row">
@@ -70,7 +96,7 @@
                     <h3 class="instructor-stat-title">Avg Quiz Score</h3>
                 </div>
                 <div class="instructor-stat-value">78%</div>
-                <p class="instructor-stat-subtext">Across all quizzes</p>
+                <p class="instructor-stat-subtext">Across all game quizzes</p>
             </div>
 
             <div class="instructor-stat-card">
@@ -102,7 +128,7 @@
                     <h3 class="instructor-stat-title">Simulation Pass Rate</h3>
                 </div>
                 <div class="instructor-stat-value">67%</div>
-                <p class="instructor-stat-subtext">Students passing required simulations</p>
+                <p class="instructor-stat-subtext">Students passing required game simulations</p>
             </div>
 
             <div class="instructor-stat-card">
@@ -120,8 +146,10 @@
         </div>
 
         <div class="assessment-tabs">
-            <button class="assessment-tab active" data-tab="quiz">Quiz Analytics</button>
-            <button class="assessment-tab" data-tab="simulation">Simulation Analytics</button>
+            <button class="assessment-tab active" data-tab="quiz">Game Quiz Analytics</button>
+            <button class="assessment-tab" data-tab="simulation">Game Simulation Analytics</button>
+            <button class="assessment-tab" data-tab="tasks">Task Analytics</button>
+            <button class="assessment-tab" data-tab="lms">LMS Analytics</button>
         </div>
 
         <div class="assessment-tab-panels">
@@ -129,7 +157,7 @@
                 <div class="assessment-grid">
                     <div class="instructor-card assessment-card">
                         <div class="instructor-card-header">
-                            <h2>Quiz Performance by Lesson</h2>
+                            <h2>Game Quiz Performance by Lesson</h2>
                         </div>
                         <table class="assessment-table">
                             <thead>
@@ -161,12 +189,12 @@
                                 </tr>
                             </tbody>
                         </table>
-                        <p class="card-note">Data based on all submitted quizzes.</p>
+                        <p class="card-note">Data based on all submitted game quizzes (Unity game).</p>
                     </div>
 
                     <div class="instructor-card assessment-card">
                         <div class="instructor-card-header">
-                            <h2>Low-Scoring Quizzes</h2>
+                            <h2>Low-Scoring Game Quizzes</h2>
                         </div>
                         <div class="low-scoring-list">
                             <div class="low-score-item">
@@ -199,7 +227,7 @@
                 <div class="assessment-grid">
                     <div class="instructor-card assessment-card">
                         <div class="instructor-card-header">
-                            <h2>Simulation Pass Rates</h2>
+                            <h2>Game Simulation Pass Rates</h2>
                         </div>
                         <table class="assessment-table">
                             <thead>
@@ -231,7 +259,7 @@
 
                     <div class="instructor-card assessment-card simulation-summary-card">
                         <div class="instructor-card-header">
-                            <h2>Simulation Status Summary</h2>
+                            <h2>Game Simulation Status Summary</h2>
                         </div>
                         <div class="simulation-summary">
                             <div class="simulation-summary-item">
@@ -248,8 +276,103 @@
                             </div>
                         </div>
                         <div class="simulation-summary-footer">
-                            <a href="/instructor-class-list" class="view-class-list-btn">View Class List</a>
+                            <a href="/instructor-assessment-students" class="view-class-list-btn">View Class List</a>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="assessment-panel" id="tasks">
+                <div class="assessment-grid">
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>Task Performance</h2>
+                        </div>
+                        <table class="assessment-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Avg Score (%)</th>
+                                    <th>Completion Rate</th>
+                                    <th>Due Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px;">Loading task data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="card-note">Data based on all graded instructor task submissions.</p>
+                    </div>
+
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>Task Summary</h2>
+                        </div>
+                        <div class="simulation-summary">
+                            <div class="simulation-summary-item">
+                                <p class="summary-label">Total Tasks</p>
+                                <p class="summary-value" id="taskTotalTasks">0</p>
+                            </div>
+                            <div class="simulation-summary-item">
+                                <p class="summary-label">Tasks Graded</p>
+                                <p class="summary-value" id="taskTotalGraded">0</p>
+                            </div>
+                            <div class="simulation-summary-item">
+                                <p class="summary-label">Avg Task Score</p>
+                                <p class="summary-value" id="taskAvgScore">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="assessment-panel" id="lms">
+                <div class="assessment-grid">
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>LMS Lesson Progress</h2>
+                        </div>
+                        <table class="assessment-table">
+                            <thead>
+                                <tr>
+                                    <th>Lesson</th>
+                                    <th>Avg Progress (%)</th>
+                                    <th>Completion Rate</th>
+                                    <th>Students Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lmsLessonsTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px;">Loading LMS lesson data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="card-note">Data based on LMS page completion progress.</p>
+                    </div>
+
+                    <div class="instructor-card assessment-card">
+                        <div class="instructor-card-header">
+                            <h2>LMS Assessment Performance</h2>
+                        </div>
+                        <table class="assessment-table">
+                            <thead>
+                                <tr>
+                                    <th>Assessment</th>
+                                    <th>Lesson</th>
+                                    <th>Avg Score (%)</th>
+                                    <th>Avg Attempts</th>
+                                    <th>Pass Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lmsAssessmentsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 20px;">Loading LMS assessment data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="card-note">Data based on LMS assessment submissions (70% passing threshold).</p>
                     </div>
                 </div>
             </section>
@@ -257,6 +380,7 @@
     </div>
 
     <script src="js/instructor-api.js"></script>
+    <script src="js/instructor-notifications.js"></script>
     <script src="js/instructor-assessments.js"></script>
     <script>
         // Tab switching logic

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assessment - CareSim Student Portal</title>
+    <title>Progress - CareSim Student Portal</title>
     <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
     <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
     <link rel="shortcut icon" type="image/png" href="asat.png">
@@ -26,7 +26,8 @@
                 <nav class="nav-tabs">
                     <a href="/student-dashboard" class="nav-tab">Dashboard</a>
                     <a href="/student-lessons" class="nav-tab">Lessons</a>
-                    <a href="/student-assessment" class="nav-tab active">Assessment</a>
+                    <a href="/student-progress" class="nav-tab active">Progress</a>
+                    <a href="/student-class" class="nav-tab">Class</a>
                     <a href="/student-certificates" class="nav-tab">Certificates</a>
                     <a href="/student-profile" class="nav-tab">Profile</a>
                 </nav>
@@ -40,7 +41,7 @@
         <nav class="assessment-breadcrumb">
             <a href="/student-dashboard">Dashboard</a>
             <span class="breadcrumb-separator">></span>
-            <span class="breadcrumb-current">Assessment</span>
+            <span class="breadcrumb-current">Progress</span>
         </nav>
 
         <!-- Hero Section -->
@@ -53,101 +54,163 @@
                             <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h1>Assessment</h1>
+                    <h1>Progress</h1>
                 </div>
-                <p class="assessment-hero-subtitle">Track your quiz and simulation performance</p>
+                <p class="assessment-hero-subtitle">Track your learning progress in the LMS and the CareSim game.</p>
             </div>
         </div>
 
-        <!-- Performance Summary Row -->
-        <div class="assessment-performance-summary">
-            <div class="performance-stat-card stat-card-1">
-                <div class="performance-stat-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <div class="performance-stat-content">
-                    <span class="performance-stat-label">Average Score</span>
-                    <strong class="performance-stat-value" id="avgScoreStat">--</strong>
+        <!-- Progress Tabs -->
+        <div class="progress-tabs-wrapper">
+            <div class="progress-tabs">
+                <button id="tabLmsProgress" class="progress-tab active">LMS Progress</button>
+                <button id="tabGameProgress" class="progress-tab">Game Progress</button>
+            </div>
+        </div>
+
+        <!-- LMS Progress Panel -->
+        <div id="lmsProgressPanel" class="progress-panel" style="display: block;">
+            <!-- Loading Overlay -->
+            <div id="lmsLoadingOverlay" class="progress-loading-overlay">
+                <div class="progress-loading-spinner">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Loading your progress...</p>
                 </div>
             </div>
-            <div class="performance-stat-card stat-card-2">
-                <div class="performance-stat-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+            <div class="progress-inner">
+                <!-- A) Stats row -->
+                <div class="progress-stats-row">
+                    <div class="progress-stat-card" id="lmsStatLessons">
+                        <p class="stat-label">Lessons completed</p>
+                        <p class="stat-value" id="lmsStatLessonsValue">--</p>
+                        <p class="stat-sub">Out of total lessons</p>
+                    </div>
+                    <div class="progress-stat-card" id="lmsStatPages">
+                        <p class="stat-label">Pages completed</p>
+                        <p class="stat-value" id="lmsStatPagesValue">--</p>
+                        <p class="stat-sub">Across all lessons</p>
+                    </div>
+                    <div class="progress-stat-card" id="lmsStatTime">
+                        <p class="stat-label">Time spent</p>
+                        <p class="stat-value" id="lmsStatTimeValue">--</p>
+                        <p class="stat-sub">Reading LMS pages</p>
+                    </div>
+                    <div class="progress-stat-card" id="lmsStatAssessments">
+                        <p class="stat-label">Assessments passed</p>
+                        <p class="stat-value" id="lmsStatAssessmentsValue">--</p>
+                        <p class="stat-sub">Out of all page assessments</p>
+                    </div>
+                    <div class="progress-stat-card" id="lmsStatAttempts">
+                        <p class="stat-label">Assessments taken</p>
+                        <p class="stat-value" id="lmsStatAttemptsValue">--</p>
+                        <p class="stat-sub">Total assessment attempts</p>
+                    </div>
                 </div>
-                <div class="performance-stat-content">
-                    <span class="performance-stat-label">Quizzes Completed</span>
-                    <strong class="performance-stat-value" id="quizzesCompletedStat">0</strong>
-                </div>
-            </div>
-            <div class="performance-stat-card stat-card-3">
-                <div class="performance-stat-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <div class="performance-stat-content">
-                    <span class="performance-stat-label">Best Score</span>
-                    <strong class="performance-stat-value" id="bestScoreStat">--</strong>
-                </div>
-            </div>
-            <div class="performance-stat-card stat-card-4">
-                <div class="performance-stat-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <div class="performance-stat-content">
-                    <span class="performance-stat-label">Simulations Passed</span>
-                    <strong class="performance-stat-value" id="simulationsPassedStat">0</strong>
+
+                <!-- B) Lessons section -->
+                <div class="progress-section">
+                    <div class="progress-section-header">
+                        <h3>LMS Lessons</h3>
+                        <p class="progress-section-sub">See your detailed progress per lesson.</p>
+                    </div>
+                    <div id="lmsLessonsList" class="progress-lesson-list">
+                        <!-- JS renders individual lesson cards here -->
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Action Cards Grid -->
-        <div class="assessment-action-grid">
-            <div class="assessment-action-card action-card-quiz">
-                <div class="action-card-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+        <!-- Game Progress Panel (existing Assessment UI) -->
+        <div id="gameProgressPanel" class="progress-panel" style="display: none;">
+            <!-- Loading Overlay -->
+            <div id="gameLoadingOverlay" class="progress-loading-overlay">
+                <div class="progress-loading-spinner">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Loading game progress...</p>
                 </div>
-                <h2>Take a Quiz</h2>
-                <p>Test your knowledge by taking quizzes for completed lessons</p>
-                <a href="/student-quiz-take" class="btn-primary">Start Quiz</a>
             </div>
-
-            <div class="assessment-action-card action-card-history">
-                <div class="action-card-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+            <div class="progress-inner">
+                <!-- Performance Summary Row -->
+                <div class="progress-game-stats-row">
+                    <div class="performance-stat-card stat-card-1">
+                        <div class="performance-stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="performance-stat-content">
+                            <span class="performance-stat-label">Average Score</span>
+                            <strong class="performance-stat-value" id="avgScoreStat">--</strong>
+                        </div>
+                    </div>
+                    <div class="performance-stat-card stat-card-2">
+                        <div class="performance-stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="performance-stat-content">
+                            <span class="performance-stat-label">Quizzes Completed</span>
+                            <strong class="performance-stat-value" id="quizzesCompletedStat">0</strong>
+                        </div>
+                    </div>
+                    <div class="performance-stat-card stat-card-3">
+                        <div class="performance-stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="performance-stat-content">
+                            <span class="performance-stat-label">Best Score</span>
+                            <strong class="performance-stat-value" id="bestScoreStat">--</strong>
+                        </div>
+                    </div>
+                    <div class="performance-stat-card stat-card-4">
+                        <div class="performance-stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="performance-stat-content">
+                            <span class="performance-stat-label">Simulations Passed</span>
+                            <strong class="performance-stat-value" id="simulationsPassedStat">0</strong>
+                        </div>
+                    </div>
                 </div>
-                <h2>Quiz History</h2>
-                <p>View all your quiz attempts and track your progress over time</p>
-                <a href="/student-quiz-history" class="btn-primary">View History</a>
-            </div>
 
-            <div class="assessment-action-card action-card-simulation">
-                <div class="action-card-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                <!-- Action Cards Grid -->
+                <div class="progress-section progress-game-actions">
+                    <div class="assessment-action-grid">
+                        <div class="assessment-action-card action-card-history">
+                            <div class="action-card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h2>Quiz History</h2>
+                            <p>View all your quiz attempts and track your progress over time</p>
+                            <a href="/student-quiz-history" class="btn-primary">View History</a>
+                        </div>
+
+                        <div class="assessment-action-card action-card-simulation">
+                            <div class="action-card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h2>Simulation History</h2>
+                            <p>Track your 3D simulation attempts and results</p>
+                            <a href="/student-simulation-history" class="btn-primary">View History</a>
+                        </div>
+                    </div>
                 </div>
-                <h2>Simulation History</h2>
-                <p>Track your 3D simulation attempts and results</p>
-                <a href="/student-simulation-history" class="btn-primary">View History</a>
             </div>
         </div>
     </div>
@@ -158,76 +221,291 @@
             window.location.href = '/caresim-login';
         }
 
-        let dashboardData = null;
+        let dashboardData = null;      // Game / quiz data from /api/user/dashboard
+        let lmsProgressData = null;    // LMS data from /api/student/dashboard
+        let activeProgressTab = 'lms';
 
-        // Load dashboard data for performance stats
-        async function loadPerformanceStats() {
+        // ------------------------------
+        // Tab Switching
+        // ------------------------------
+        function switchProgressTab(tab) {
+            activeProgressTab = tab;
+
+            const lmsPanel = document.getElementById('lmsProgressPanel');
+            const gamePanel = document.getElementById('gameProgressPanel');
+            const lmsTabBtn = document.getElementById('tabLmsProgress');
+            const gameTabBtn = document.getElementById('tabGameProgress');
+
+            if (!lmsPanel || !gamePanel || !lmsTabBtn || !gameTabBtn) return;
+
+            if (tab === 'lms') {
+                lmsPanel.style.display = 'block';
+                gamePanel.style.display = 'none';
+                lmsTabBtn.classList.add('active');
+                gameTabBtn.classList.remove('active');
+                // Load LMS data if not already loaded
+                if (!lmsProgressData) {
+                    loadLmsProgress();
+                } else {
+                    hideLmsLoading();
+                }
+            } else {
+                lmsPanel.style.display = 'none';
+                gamePanel.style.display = 'block';
+                lmsTabBtn.classList.remove('active');
+                gameTabBtn.classList.add('active');
+                // Load game data if not already loaded
+                if (!dashboardData) {
+                    loadPerformanceStats();
+                } else {
+                    hideGameLoading();
+                }
+            }
+        }
+
+        // ------------------------------
+        // Helpers
+        // ------------------------------
+        function formatTime(seconds) {
+            const s = Math.max(0, Math.floor(seconds || 0));
+            const hours = Math.floor(s / 3600);
+            const minutes = Math.floor((s % 3600) / 60);
+            const secs = s % 60;
+
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            }
+
+            // Show both minutes and seconds when under 1 hour
+            if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            }
+
+            // Under 1 minute: show seconds only
+            return `${secs}s`;
+        }
+
+        // ------------------------------
+        // LMS Progress using /api/student/progress/lms
+        // ------------------------------
+        async function loadLmsProgress() {
+            if (lmsProgressData) {
+                hideLmsLoading();
+                return;
+            }
+
+            showLmsLoading();
+
             try {
-                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
+                const response = await fetch('/api/student/progress/lms?t=' + Date.now(), {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (response.status === 401) {
+                if (response.status === 401 || response.status === 403) {
                     localStorage.removeItem('studentToken');
                     window.location.href = '/caresim-login';
                     return;
                 }
 
                 const data = await response.json();
-                if (response.ok && data.data) {
-                    dashboardData = data.data;
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to load LMS progress');
+                }
+
+                lmsProgressData = data;
+                renderLmsProgress(lmsProgressData);
+                hideLmsLoading();
+            } catch (error) {
+                console.error('Error loading LMS progress:', error);
+                hideLmsLoading();
+                const statLessons = document.getElementById('lmsStatLessonsValue');
+                const statPages = document.getElementById('lmsStatPagesValue');
+                const statTime = document.getElementById('lmsStatTimeValue');
+                if (statLessons && statPages && statTime) {
+                    statLessons.textContent = '--';
+                    statPages.textContent = '--';
+                    statTime.textContent = '--';
+                }
+            }
+        }
+
+        function showLmsLoading() {
+            const overlay = document.getElementById('lmsLoadingOverlay');
+            if (overlay) overlay.style.display = 'flex';
+        }
+
+        function hideLmsLoading() {
+            const overlay = document.getElementById('lmsLoadingOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function renderLmsProgress(lms) {
+            const statLessons = document.getElementById('lmsStatLessonsValue');
+            const statPages = document.getElementById('lmsStatPagesValue');
+            const statTime = document.getElementById('lmsStatTimeValue');
+            const statAssessments = document.getElementById('lmsStatAssessmentsValue');
+            const statAttempts = document.getElementById('lmsStatAttemptsValue');
+            const lessonsList = document.getElementById('lmsLessonsList');
+            if (!statLessons || !statPages || !statTime || !statAssessments || !statAttempts || !lessonsList) return;
+
+            const summary = lms.summary || {};
+            const lessons = lms.lessons || [];
+
+            const totalLessons = summary.totalLessons || 0;
+            const lessonsCompleted = summary.lessonsCompleted || 0;
+            const totalPagesCompleted = summary.totalPagesCompleted || 0;
+            const totalTimeSeconds = summary.totalTimeSeconds || 0;
+            const totalAssessmentsAllLessons = summary.totalAssessmentsAllLessons || 0;
+            const assessmentsPassedAllLessons = summary.assessmentsPassedAllLessons || 0;
+            const totalAssessmentAttempts = summary.totalAssessmentAttempts || summary.totalAssessmentAttemptsAllLessons || 0;
+
+            statLessons.textContent = totalLessons > 0 ? `${lessonsCompleted} / ${totalLessons}` : '--';
+            statPages.textContent = totalPagesCompleted > 0 ? `${totalPagesCompleted}` : '--';
+            statTime.textContent = totalTimeSeconds > 0 ? formatTime(totalTimeSeconds) : '--';
+            statAssessments.textContent = totalAssessmentsAllLessons > 0 ? `${assessmentsPassedAllLessons} / ${totalAssessmentsAllLessons}` : '--';
+            statAttempts.textContent = totalAssessmentAttempts > 0 ? `${totalAssessmentAttempts}` : '--';
+
+            lessonsList.innerHTML = '';
+
+            if (!lessons.length) {
+                lessonsList.innerHTML = '<p class="progress-empty-state">No published lessons yet.</p>';
+                return;
+            }
+
+            lessons.forEach((lesson) => {
+                const card = document.createElement('div');
+                card.className = 'progress-lesson-card';
+
+                const status = (lesson.status || 'not_started').toLowerCase();
+                let statusLabel = 'Not started';
+                if (status === 'completed') statusLabel = 'Completed';
+                else if (status === 'in_progress') statusLabel = 'In progress';
+
+                const timeText = formatTime(lesson.timeSeconds || 0);
+                const pagesText = `${lesson.completedPagesCount || 0} / ${lesson.totalPages || 0}`;
+                const percent = Math.min(100, Math.max(0, lesson.pageProgressPercent || 0));
+                const stats = lesson.assessmentStats || {};
+                const lessonAssessTotal = stats.totalAssessments || 0;
+                const lessonAssessPassed = stats.assessmentsPassed || 0;
+                const lessonAvgScore = stats.averageScorePercent || 0;
+                const lessonAttempts = stats.assessmentAttempts || stats.totalAssessmentAttempts || 0;
+                const lessonBestScore = stats.assessmentBestScorePercent || 0;
+
+                const assessmentMeta =
+                    lessonAttempts > 0
+                        ? ` · Assessments: ${lessonAttempts} attempts${lessonBestScore > 0 ? ` · Best score: ${lessonBestScore}%` : ''}`
+                        : '';
+
+                card.innerHTML = `
+                    <div class="lesson-card-main">
+                        <div class="lesson-card-header">
+                            <h4>${lesson.lessonTitle}</h4>
+                            <span class="lesson-status-pill status-${status}">${statusLabel}</span>
+                        </div>
+                        <p class="lesson-meta">
+                            Pages completed: ${pagesText} · Time spent: ${timeText}${assessmentMeta}
+                        </p>
+                        <div class="lesson-progress-bar">
+                            <div class="lesson-progress-fill" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+
+                lessonsList.appendChild(card);
+            });
+        }
+
+        // Load dashboard data for performance stats (Game / Quiz)
+        async function loadPerformanceStats() {
+            showGameLoading();
+
+            try {
+                const response = await fetch('/api/student/dashboard?t=' + Date.now(), {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('studentToken');
+                    window.location.href = '/caresim-login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (response.ok && data.success && data.game) {
+                    dashboardData = data.game;
+                    updatePerformanceStats();
+                } else if (response.ok && data.success && !data.game) {
+                    // No game data available
                     updatePerformanceStats();
                 }
+                hideGameLoading();
             } catch (error) {
                 console.error('Error loading performance stats:', error);
+                updatePerformanceStats(); // Still update to show zeros
+                hideGameLoading();
             }
+        }
+
+        function showGameLoading() {
+            const overlay = document.getElementById('gameLoadingOverlay');
+            if (overlay) overlay.style.display = 'flex';
+        }
+
+        function hideGameLoading() {
+            const overlay = document.getElementById('gameLoadingOverlay');
+            if (overlay) overlay.style.display = 'none';
         }
 
         // Update performance summary cards
         function updatePerformanceStats() {
-            if (!dashboardData || !dashboardData.lessons) return;
-
-            const lessons = dashboardData.lessons;
-            
-            // Calculate quiz stats
+            // Initialize with defaults
             let totalQuizzes = 0;
             let totalScore = 0;
             let bestScore = 0;
             let quizzesWithScores = 0;
-
-            lessons.forEach(lesson => {
-                if (lesson.recentQuizScore !== null && lesson.recentQuizScore !== undefined) {
-                    totalQuizzes++;
-                    totalScore += lesson.recentQuizScore;
-                    if (lesson.recentQuizScore > bestScore) {
-                        bestScore = lesson.recentQuizScore;
-                    }
-                    quizzesWithScores++;
-                }
-            });
-
-            const avgScore = quizzesWithScores > 0 ? Math.round(totalScore / quizzesWithScores) : 0;
-
-            // Calculate simulations passed
             let simsPassed = 0;
-            lessons.forEach(lesson => {
-                if (lesson.simStatus && lesson.simStatus.toLowerCase() === 'passed') {
-                    simsPassed++;
-                } else if (lesson.simHistory && Array.isArray(lesson.simHistory)) {
-                    const hasPassed = lesson.simHistory.some(entry => 
-                        String(entry.result || '').toLowerCase() === 'passed'
-                    );
-                    if (hasPassed) simsPassed++;
-                }
-            });
+
+            if (dashboardData && dashboardData.lessons && Array.isArray(dashboardData.lessons)) {
+                const lessons = dashboardData.lessons;
+                
+                // Calculate quiz stats from game progress
+                lessons.forEach(lesson => {
+                    const quiz = lesson.quiz || {};
+                    const simulation = lesson.simulation || {};
+                    
+                    // Count quizzes with scores
+                    if (quiz.highestScore !== null && quiz.highestScore !== undefined && quiz.highestScore > 0) {
+                        totalQuizzes++;
+                        totalScore += quiz.highestScore;
+                        if (quiz.highestScore > bestScore) {
+                            bestScore = quiz.highestScore;
+                        }
+                        quizzesWithScores++;
+                    }
+                    
+                    // Count simulations passed
+                    if (simulation.passed === true) {
+                        simsPassed++;
+                    }
+                });
+            }
+
+            const avgScore = quizzesWithScores > 0 ? Math.round((totalScore / quizzesWithScores) * 10) : 0;
 
             // Update DOM
-            document.getElementById('avgScoreStat').textContent = avgScore > 0 ? `${avgScore}%` : '--';
-            document.getElementById('quizzesCompletedStat').textContent = totalQuizzes;
-            document.getElementById('bestScoreStat').textContent = bestScore > 0 ? `${bestScore}%` : '--';
-            document.getElementById('simulationsPassedStat').textContent = simsPassed;
+            const avgScoreEl = document.getElementById('avgScoreStat');
+            const quizzesEl = document.getElementById('quizzesCompletedStat');
+            const bestScoreEl = document.getElementById('bestScoreStat');
+            const simsEl = document.getElementById('simulationsPassedStat');
+            
+            if (avgScoreEl) avgScoreEl.textContent = avgScore > 0 ? `${avgScore}%` : '--';
+            if (quizzesEl) quizzesEl.textContent = totalQuizzes > 0 ? totalQuizzes : '0';
+            if (bestScoreEl) bestScoreEl.textContent = bestScore > 0 ? `${bestScore}%` : '--';
+            if (simsEl) simsEl.textContent = simsPassed > 0 ? simsPassed : '0';
         }
 
 
@@ -238,7 +516,19 @@
         }
 
         // Initialize
-        loadPerformanceStats();
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tabs
+            const lmsTab = document.getElementById('tabLmsProgress');
+            const gameTab = document.getElementById('tabGameProgress');
+            if (lmsTab && gameTab) {
+                lmsTab.addEventListener('click', () => switchProgressTab('lms'));
+                gameTab.addEventListener('click', () => switchProgressTab('game'));
+            }
+
+            switchProgressTab('lms');
+            loadLmsProgress();
+            loadPerformanceStats();
+        });
     </script>
 </body>
 </html>

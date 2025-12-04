@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSim Admin Portal - Videos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-portal.css">
+</head>
+<body class="admin-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/admin-dashboard" style="text-decoration: none; display: flex; align-items: center;">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+                <a href="/admin-dashboard" class="logo-text" style="text-decoration: none; font-style: italic;">Admin</a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/admin-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/admin-lessons" class="nav-tab">Lessons</a>
+                    <a href="/admin-quizzes" class="nav-tab">Quizzes</a>
+                    <a href="/admin-users" class="nav-tab">Users</a>
+                    <a href="/admin-videos" class="nav-tab active">Videos</a>
+                    <a href="/admin-game-certificates" class="nav-tab">Certificates</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container">
+        <section class="content-section">
+            <div class="section-header">
+                <h1 class="section-title">Videos Library</h1>
+                <button class="btn-primary" onclick="openAddVideoModal()">
+                    <i class="fas fa-plus"></i> Add Video
+                </button>
+            </div>
+
+            <!-- Videos Table -->
+            <div class="table-wrapper">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th class="col-primary">Title</th>
+                            <th class="col-optional mobile-hidden">Description</th>
+                            <th class="col-optional mobile-hidden">Created</th>
+                            <th class="col-primary" style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="videosTableBody">
+                        <tr><td colspan="4" style="text-align:center; padding:40px; color:#64748B;">Loading videos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add/Edit Video Modal -->
+    <div id="videoModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="videoModalTitle">Add New Video</h2>
+                <button class="modal-close" onclick="closeVideoModal()">&times;</button>
+            </div>
+            <form id="videoForm" onsubmit="saveVideo(event); return false;">
+                <input type="hidden" id="videoId" value="">
+                <div class="form-group">
+                    <label for="videoTitle">Title <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="videoTitle" required placeholder="Enter video title">
+                </div>
+                <div class="form-group">
+                    <label for="videoDescription">Description</label>
+                    <textarea id="videoDescription" rows="3" placeholder="Enter video description (optional)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="videoFile">Video File <span style="color: #EF4444;">*</span></label>
+                    <input type="file" id="videoFile" accept="video/*">
+                    <small class="form-hint" id="videoFileHint">Select a video file (MP4, WebM, OGG, MOV). Max 50MB.</small>
+                    <div id="existingVideoInfo" style="display: none; margin-top: 8px; padding: 8px; background: #F3F4F6; border-radius: 4px;">
+                        <small>Current video: <span id="currentVideoName"></span></small>
+                        <br>
+                        <small style="color: #64748B;">Upload a new file to replace it.</small>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeVideoModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="saveVideoBtn">Save Video</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="modal" style="display: none;">
+        <div class="modal-content alert-modal-content">
+            <div class="modal-header alert-modal-header">
+                <div class="alert-status-pill" id="alertStatusPill">
+                    <!-- Icon via CSS -->
+                </div>
+                <h2 id="alertTitle">Notice</h2>
+                <button class="modal-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="modal-body alert-modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-actions alert-modal-actions">
+                <button type="button" class="btn-primary" onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/admin-videos.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class - CareSim Student Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asat.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="asat.png">
+    <link rel="shortcut icon" type="image/png" href="asat.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="student-portal.css">
+</head>
+<body class="student-portal">
+    <!-- Header / Navigation -->
+    <header class="portal-header">
+        <div class="header-content">
+            <div class="logo">
+                <a class="logo-link" href="/student-dashboard">
+                    <img src="caresimm.png" alt="CareSim" class="header-logo">
+                </a>
+            </div>
+            <div class="header-right">
+                <nav class="nav-tabs">
+                    <a href="/student-dashboard" class="nav-tab">Dashboard</a>
+                    <a href="/student-lessons" class="nav-tab">Lessons</a>
+                    <a href="/student-progress" class="nav-tab">Progress</a>
+                    <a href="/student-class" class="nav-tab active">Class</a>
+                    <a href="/student-certificates" class="nav-tab">Certificates</a>
+                    <a href="/student-profile" class="nav-tab">Profile</a>
+                </nav>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container assessment-page-container">
+        <!-- Breadcrumb -->
+        <nav class="student-class-breadcrumb">
+            <a href="/student-dashboard">Dashboard</a>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Class</span>
+        </nav>
+
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="progress-loading-overlay" style="display: none;">
+            <div class="progress-loading-spinner">
+                <div class="spinner"></div>
+                <p class="loading-text">Loading class feed...</p>
+            </div>
+        </div>
+
+        <!-- No Class Message -->
+        <div id="noClassMessage" class="progress-section" style="display: none;">
+            <div style="text-align: center; padding: 40px 20px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 20px; color: var(--cs-text-muted);">
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h3 style="color: var(--cs-text-main); margin-bottom: 12px;">You are not assigned to a class yet</h3>
+                <p style="color: var(--cs-text-muted);">Please contact your instructor to be assigned to a class.</p>
+            </div>
+        </div>
+
+        <!-- Class Header Card -->
+        <div id="classHeader" class="student-class-header-card" style="display: none;">
+            <div class="student-class-header-content">
+                <h2 id="className">Class Name</h2>
+                <p class="student-class-header-subtitle" id="classInfo">Course / Batch</p>
+            </div>
+        </div>
+
+        <!-- Two-column layout -->
+        <div id="studentClassLayout" class="student-class-layout" style="display: none;">
+            <!-- LEFT: Class Feed -->
+            <div class="student-class-column student-class-column-left">
+                <div class="student-class-card student-class-feed-card">
+                    <div class="student-class-card-header">
+                        <div>
+                            <h2>Class Feed</h2>
+                            <p class="student-class-subtext">Announcements, materials, and tasks for this class.</p>
+                        </div>
+                    </div>
+                    <!-- Post type filters -->
+                    <div class="student-class-filters" id="studentClassFilters">
+                        <button type="button" class="student-class-filter active" data-filter="all">All</button>
+                        <button type="button" class="student-class-filter" data-filter="announcement">Announcements</button>
+                        <button type="button" class="student-class-filter" data-filter="material">Materials</button>
+                        <button type="button" class="student-class-filter" data-filter="task">Tasks</button>
+                    </div>
+                    <div id="classFeed" class="student-class-feed-list">
+                        <!-- Posts will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Selected Post Details -->
+            <div class="student-class-column student-class-column-right">
+                <div class="student-class-card student-class-details-card" id="studentPostDetailsCard">
+                    <h2>Post Details</h2>
+                    <div id="studentPostDetailsEmpty" class="student-class-empty student-class-empty-details">
+                        <div class="student-class-empty-icon">
+                            <i class="far fa-hand-pointer"></i>
+                        </div>
+                        <h3 class="student-class-empty-title">No post selected</h3>
+                        <p class="student-class-empty-text">
+                            Select a post from the feed to view its full details here.
+                        </p>
+                    </div>
+                    <div id="studentPostDetailsContent" class="student-post-details" style="display:none;">
+                        <div class="student-post-details-header">
+                            <span class="student-post-type-badge" id="studentPostTypeBadge"></span>
+                            <h3 id="studentPostTitle"></h3>
+                        </div>
+                        <p class="student-post-meta" id="studentPostMeta"></p>
+                        <div class="student-post-body" id="studentPostBody"></div>
+                        <div class="student-post-link" id="studentPostLinkContainer" style="display:none;">
+                            <h4>Related Link</h4>
+                            <a href="#" target="_blank" rel="noopener" id="studentPostLink"></a>
+                        </div>
+                        <div class="student-post-attachments" id="studentPostAttachments" style="display:none;"></div>
+                        
+                        <!-- Task-specific sections -->
+                        <div class="student-post-task-section" id="studentPostTaskSection" style="display:none;">
+                            <div class="student-task-status-block">
+                                <div class="student-task-status-row">
+                                    <span class="student-task-label">Due Date:</span>
+                                    <span id="studentTaskDueDate">—</span>
+                                </div>
+                                <div class="student-task-status-row">
+                                    <span class="student-task-label">Status:</span>
+                                    <span id="studentTaskStatus" class="status-pill status-pill--status-not-started">NOT STARTED</span>
+                                </div>
+                            </div>
+                            <div class="student-task-score-block" id="studentTaskScoreBlock" style="display:none;">
+                                <div class="student-task-score-row">
+                                    <span class="student-task-label">Score:</span>
+                                    <span id="studentTaskScore">—</span>
+                                </div>
+                                <div class="student-task-feedback" id="studentTaskFeedback" style="display:none;">
+                                    <span class="student-task-label">Feedback:</span>
+                                    <p id="studentTaskFeedbackText"></p>
+                                </div>
+                            </div>
+                            <div class="student-task-submission-section">
+                                <h4>Your Submission</h4>
+                                <div id="studentTaskSubmissionActions"></div>
+                            </div>
+                        </div>
+
+                        <!-- Comments section -->
+                        <div class="student-post-comments-section">
+                            <h4>Comments</h4>
+                            <div class="student-post-comments-list" id="studentPostCommentsList"></div>
+                            <div class="student-post-comments-empty-hint" id="studentPostCommentsEmptyHint" style="display: none;">
+                                <p>No comments yet. Start the discussion.</p>
+                            </div>
+                            <div class="student-post-comment-form">
+                                <textarea
+                                    id="studentPostCommentInput"
+                                    rows="2"
+                                    placeholder="Write a comment..."
+                                ></textarea>
+                                <button type="button" class="btn-primary" id="studentPostCommentSubmit" disabled>
+                                    Post
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Task Modal -->
+    <div id="submitTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Submit Task</h2>
+                <button class="modal-close" onclick="closeSubmitTaskModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="submitTaskForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="submissionFile">Upload File *</label>
+                        <input type="file" id="submissionFile" name="file" required>
+                        <small>Accepted formats: PDF, DOC, DOCX, ZIP, etc. (Max 50MB)</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-outline" onclick="closeSubmitTaskModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Submission Modal -->
+    <div id="viewSubmissionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>My Submission</h2>
+                <button class="modal-close" onclick="closeViewSubmissionModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="viewSubmissionContent">
+                <!-- Submission details will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/student-class.js"></script>
+</body>
+</html>
+
+
+

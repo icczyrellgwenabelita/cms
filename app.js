@@ -12,11 +12,15 @@ const studentRoutes = require('./routes/student');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 const instructorRoutes = require('./routes/instructor');
+const publicRoutes = require('./routes/public');
+const classRoutes = require('./routes/class');
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/instructor', instructorRoutes);
+app.use('/api/public', publicRoutes);
+app.use('/api/class', classRoutes);
 app.use((req, res, next) => {
   if (req.method === 'GET' && !path.extname(req.path)) {
     const trimmedPath = req.path.endsWith('/') && req.path.length > 1 ? req.path.slice(0, -1) : req.path;
@@ -65,12 +69,36 @@ app.get('/admin-users', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-users.html'));
 });
 
+app.get('/admin-game-certificates', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-game-certificates.html'));
+});
+
+app.get('/admin-videos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-videos.html'));
+});
+
+app.get('/admin-dev-advanced', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-dev-advanced.html'));
+});
+
+app.get('/verify-certificate', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'verify-certificate.html'));
+});
+
+app.get('/generic-certificate', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'generic-certificate.html'));
+});
+
 app.get('/student-dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student-dashboard.html'));
 });
 
 app.get('/instructor-dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'instructor-dashboard.html'));
+});
+
+app.get('/instructor-students', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-students.html'));
 });
 
 app.get('/instructor-class-list', (req, res) => {
@@ -81,9 +109,18 @@ app.get('/instructor-assessment-overview', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'instructor-assessment-overview.html'));
 });
 
-app.get('/instructor-certificates-overview', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'instructor-certificates-overview.html'));
+app.get('/instructor-assessment-students', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-assessment-students.html'));
 });
+
+app.get('/instructor-assessment-student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-assessment-student.html'));
+});
+
+app.get('/download/caresim-app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'download-caresim-app.html'));
+});
+
 
 app.get('/instructor-profile', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'instructor-profile.html'));
@@ -99,6 +136,23 @@ app.get('/instructor-student-progress', (req, res) => {
 
 app.get('/student-profile', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student-profile.html'));
+});
+
+app.get('/student-progress', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student-assessment.html'));
+});
+
+app.get('/student-class', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student-class.html'));
+});
+
+app.get('/instructor-class', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instructor-class.html'));
+});
+
+// Legacy route redirect
+app.get('/student-assessment', (req, res) => {
+  res.redirect('/student-progress');
 });
 
 app.get('/student-instructor-login', (req, res) => {

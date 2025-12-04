@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="student-portal.css">
 </head>
-<body class="student-portal">
+<body class="student-portal student-dashboard-page">
     <!-- Header / Navigation -->
     <header class="portal-header">
         <div class="header-content">
@@ -29,7 +29,8 @@
                 <nav class="nav-tabs">
                     <a href="/student-dashboard" class="nav-tab active">Dashboard</a>
                     <a href="/student-lessons" class="nav-tab">Lessons</a>
-                    <a href="/student-assessment" class="nav-tab">Assessment</a>
+                    <a href="/student-progress" class="nav-tab">Progress</a>
+                    <a href="/student-class" class="nav-tab">Class</a>
                     <a href="/student-certificates" class="nav-tab">Certificates</a>
                     <a href="/student-profile" class="nav-tab">Profile</a>
                 </nav>
@@ -38,6 +39,18 @@
         </div>
     </header>
     <div class="portal-container">
+        <!-- Student dashboard greeting header -->
+        <section class="student-dashboard-header">
+            <div class="dashboard-greeting">
+                <h1 class="dashboard-greeting-title">
+                    Hello, Student 👋
+                </h1>
+                <p class="dashboard-greeting-subtitle">
+                    Here’s a quick overview of your CareSim LMS progress.
+                </p>
+            </div>
+        </section>
+
         <div class="student-dashboard-layout">
             <section class="student-profile-card">
                 <p class="profile-greeting" id="profileGreeting">STUDENT PROFILE</p>
@@ -87,111 +100,115 @@
                         <div class="info-value" id="profileLastLogin">—</div>
                     </div>
                 </div>
-                
-                <!-- Edit Button -->
-                <div class="profile-edit-wrapper">
-                    <button class="profile-edit-btn" onclick="goToProfile()">Edit</button>
-                </div>
             </section>
-            <section class="student-progress-card-grid">
-                    <div class="progress-stat-card">
+            <!-- New student stats row (6 cards) -->
+            <section class="student-stats-row">
+                <div class="student-stat-card">
                         <div class="stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 2L3 7V17C3 17.5304 3.21071 18.0391 3.58579 18.4142C3.96086 18.7893 4.46957 19 5 19H15C15.5304 19 16.0391 18.7893 16.4142 18.4142C16.7893 18.0391 17 17.5304 17 17V7L10 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 10V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 2H20V22H6V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Lessons Completed</span>
-                            <span class="stat-value" id="profileLessonsCount">0</span>
+                    <p class="stat-label">Lessons completed</p>
+                    <p class="stat-value" id="stat-lessons-completed">0</p>
+                    <p class="stat-caption">out of 6 lessons</p>
                         </div>
-                    </div>
-                    <div class="progress-stat-card">
+                <div class="student-stat-card">
                         <div class="stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 2L3 6V14C3 14.5304 3.21071 15.0391 3.58579 15.4142C3.96086 15.7893 4.46957 16 5 16H15C15.5304 16 16.0391 15.7893 16.4142 15.4142C16.7893 15.0391 17 14.5304 17 14V6L11 2H9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9 10L11 12L15 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Quizzes Passed</span>
-                            <span class="stat-value" id="profileQuizzesCount">0</span>
+                    <p class="stat-label">Assessments completed</p>
+                    <p class="stat-value" id="stat-assessments-completed">0</p>
+                    <p class="stat-caption">lesson pages passed</p>
                         </div>
-                    </div>
-                    <div class="progress-stat-card">
+                <div class="student-stat-card">
                         <div class="stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 6V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Simulations</span>
-                            <span class="stat-value" id="profileSimulationsCount">0</span>
+                    <p class="stat-label">Simulations passed</p>
+                    <p class="stat-value" id="stat-simulations-passed">0</p>
+                    <p class="stat-caption">LMS simulations</p>
                         </div>
-                    </div>
-                    <div class="progress-stat-card">
+                <div class="student-stat-card">
                         <div class="stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 2L3 7V17C3 17.5304 3.21071 18.0391 3.58579 18.4142C3.96086 18.7893 4.46957 19 5 19H15C15.5304 19 16.0391 18.7893 16.4142 18.4142C16.7893 18.0391 17 17.5304 17 17V7L10 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M7 12L9 14L13 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Certificates</span>
-                            <span class="stat-value" id="profileCertificatesCount">0</span>
+                    <p class="stat-label">Game lessons completed</p>
+                    <p class="stat-value" id="stat-game-lessons-completed">0</p>
+                    <p class="stat-caption">Unity game progress</p>
                         </div>
-                    </div>
-                    <div class="progress-stat-card">
+                <div class="student-stat-card">
                         <div class="stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 10C12.7614 10 15 7.76142 15 5C15 2.23858 12.7614 0 10 0C7.23858 0 5 2.23858 5 5C5 7.76142 7.23858 10 10 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 12C6.68629 12 4 14.6863 4 18H16C16 14.6863 13.3137 12 10 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Average Score</span>
-                            <span class="stat-value" id="profileAverageScore">—</span>
+                    <p class="stat-label">Game quiz average</p>
+                    <p class="stat-value" id="stat-game-quiz-average">0.0</p>
+                    <p class="stat-caption">Unity game quizzes (out of 10)</p>
                         </div>
-                    </div>
-                    <div class="progress-stat-card">
+                <div class="student-stat-card">
                         <div class="stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 6V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 3V21H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 16L12 11L16 15L21 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 10H15V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Overall Progress</span>
-                            <span class="stat-value" id="profileOverallProgress">0%</span>
-                        </div>
+                    <p class="stat-label">Overall progress</p>
+                    <p class="stat-value" id="stat-overall-lms-progress">0%</p>
+                    <p class="stat-caption">50% LMS + 50% Game</p>
                     </div>
             </section>
         </div>
 
+
+        <!-- Legacy sections (overall progress, quick access, insights, certificates, announcements)
+             remain in place but their contents are now driven by the new LMS dashboard data. -->
         <section class="progress-access-row">
             <div class="overall-progress-card">
                 <div class="overall-progress-visual" id="overallProgressDonut">
                     <span id="overallProgressValue">0%</span>
                     </div>
+                <!-- Updated right-hand content for Overall Course Progress -->
                 <div class="overall-progress-details">
-                    <p class="progress-subtitle">Overall Course Progress</p>
-                    <h2>Stay motivated—you're on track!</h2>
-                    <ul class="progress-list">
-                        <li>
-                            <span>Lessons</span>
-                            <strong id="progressLessonsStat">0/0 complete</strong>
-                        </li>
-                        <li>
-                            <span>Quizzes</span>
-                            <strong id="progressQuizzesStat">0 taken</strong>
-                        </li>
-                        <li>
-                            <span>Simulations</span>
-                            <strong id="progressSimsStat">0 passed</strong>
-                        </li>
-                    </ul>
+                    <h3 class="overall-progress-title">Overall course progress</h3>
+                    <p class="overall-progress-subtitle">Stay motivated—you're on track!</p>
+                    <div class="overall-progress-sections">
+                        <div class="overall-progress-section">
+                            <h4 class="section-heading">LMS</h4>
+                            <div class="section-row">
+                                <span class="section-label">Lessons</span>
+                                <span class="section-value" id="stat-lms-lessons">0 / 0</span>
+                            </div>
+                            <div class="section-row">
+                                <span class="section-label">Assessments</span>
+                                <span class="section-value" id="stat-lms-assessments">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="overall-progress-section">
+                            <h4 class="section-heading">Game</h4>
+                            <div class="section-row">
+                                <span class="section-label">Quiz</span>
+                                <span class="section-value" id="stat-game-quizzes">0 / 6</span>
+                            </div>
+                            <div class="section-row">
+                                <span class="section-label">Simulation</span>
+                                <span class="section-value" id="stat-game-simulations">0 / 6</span>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             <div class="quick-access-grid">
@@ -207,10 +224,10 @@
                     <div class="quick-card-content">
                         <h3 class="quick-card-title">Continue Lesson</h3>
                         <p class="quick-card-subtitle">Jump back to where you left off</p>
-                        <p class="quick-card-back-text" id="continueLessonBack" style="display: none;">Resume Lesson 5</p>
+                        <p class="quick-card-action-text" id="continueLessonBack" style="display: none;">Resume Lesson 5</p>
                     </div>
                 </button>
-                <button class="quick-card quick-card-green" id="takeQuizCard">
+                <button class="quick-card quick-card-green" id="myAssessmentsCard">
                     <div class="quick-card-icon-wrapper">
                         <svg class="icon-quiz" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -218,23 +235,12 @@
                         </svg>
                     </div>
                     <div class="quick-card-content">
-                        <h3 class="quick-card-title">Take a Quiz</h3>
-                        <p class="quick-card-subtitle">Next pending quiz is ready</p>
-                        <p class="quick-card-back-text" id="takeQuizBack" style="display: none;">Next: Lesson 6</p>
+                        <h3 class="quick-card-title">My Assessments</h3>
+                        <p class="quick-card-subtitle">View your pending and completed assessments</p>
+                        <p class="quick-card-action-text">Go to assessments</p>
                     </div>
                 </button>
-                <button class="quick-card quick-card-peach" id="toolsGalleryCard">
-                    <div class="quick-card-icon-wrapper">
-                        <svg class="icon-tools" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14.7 6.3C15.1 5.9 15.1 5.3 14.7 4.9L13.1 3.3C12.7 2.9 12.1 2.9 11.7 3.3L10.3 4.7L13.3 7.7L14.7 6.3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M3 17.2V21H6.8L17.8 10L14 6.2L3 17.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="quick-card-content">
-                        <h3 class="quick-card-title">View Tools Gallery</h3>
-                        <p class="quick-card-subtitle">Explore the 3D tools</p>
-                    </div>
-                </button>
+                
                 <button class="quick-card quick-card-purple" id="viewCertificatesCard">
                     <div class="quick-card-icon-wrapper">
                         <svg class="icon-graduation" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -247,7 +253,22 @@
                     </div>
                     <div class="quick-card-content">
                         <h3 class="quick-card-title">View Certificates</h3>
-                        <p class="quick-card-subtitle">See what you've earned</p>
+                        <p class="quick-card-subtitle">See what you've earned so far</p>
+                        <p class="quick-card-action-text">Open certificates</p>
+                    </div>
+                </button>
+                <button class="quick-card quick-card-peach" id="downloadAppCard">
+                    <div class="quick-card-icon-wrapper">
+                        <svg class="icon-download" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="quick-card-content">
+                        <h3 class="quick-card-title">Download CareSim App</h3>
+                        <p class="quick-card-subtitle">Install the mobile game on your device</p>
+                        <p class="quick-card-action-text">Download APK</p>
                     </div>
                 </button>
             </div>
@@ -276,91 +297,30 @@
                 </div>
             </section>
 
-        <section class="insights-row">
-            <div class="insight-card quiz-performance-card">
-                <div class="insight-card-header">
-                    <h2 class="insight-card-title">Quiz Performance</h2>
-                    <button class="insight-view-btn" id="quizHistoryBtn">View History</button>
+        <section class="lesson-progress-panels">
+            <div class="your-lessons-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Your Lessons</h2>
                 </div>
-                <div class="insight-card-body">
-                    <div class="quiz-main-content">
-                        <div class="quiz-average-section">
-                            <span class="quiz-average-value" id="quizAverageScore">--</span>
-                            <div class="quiz-average-labels">
-                                <span class="quiz-average-label">Average Score</span>
-                                <span class="quiz-average-goal">Goal: 8.0</span>
+                <div class="panel-body">
+                    <div id="yourLessonsContent">
+                        <!-- Lesson cards/rows will be inserted here -->
                             </div>
                         </div>
-                        <div class="quiz-stats-section">
-                            <div class="quiz-stat-box">
-                                <span class="quiz-stat-label">Quizzes Completed</span>
-                                <span class="quiz-stat-value" id="quizCompletedCount">--</span>
                             </div>
-                            <div class="quiz-stat-box">
-                                <span class="quiz-stat-label">Best Score</span>
-                                <span class="quiz-stat-value" id="quizBestScore">--</span>
+            <div class="upcoming-tasks-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Upcoming Tasks</h2>
                             </div>
+                <div class="panel-body">
+                    <div id="upcomingTasksContent">
+                        <!-- Task items will be inserted here -->
                         </div>
-                    </div>
-                    <div class="quiz-progress-section">
-                        <div class="quiz-progress-track">
-                            <div class="quiz-progress-fill" id="quizGoalProgress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="insight-card simulation-summary-card">
-                <div class="insight-card-header">
-                    <h2 class="insight-card-title">Simulation Summary</h2>
-                    <button class="insight-view-btn" id="simulationHistoryBtn">View History</button>
-                </div>
-                <div class="insight-card-body">
-                    <ul class="simulation-list" id="simulationSummaryList">
-                        <li class="simulation-item">
-                            <div class="simulation-info">
-                                <span class="simulation-number">Simulation 1</span>
-                                <span class="simulation-lesson">Lesson 1</span>
-                            </div>
-                            <div class="simulation-status-group">
-                                <span class="simulation-status-icon pending"></span>
-                                <span class="simulation-status-pill pending">Pending</span>
-                            </div>
-                        </li>
-                        <li class="simulation-item">
-                            <div class="simulation-info">
-                                <span class="simulation-number">Simulation 2</span>
-                                <span class="simulation-lesson">Lesson 2</span>
-                            </div>
-                            <div class="simulation-status-group">
-                                <span class="simulation-status-icon pending"></span>
-                                <span class="simulation-status-pill pending">Pending</span>
-                            </div>
-                        </li>
-                        <li class="simulation-item">
-                            <div class="simulation-info">
-                                <span class="simulation-number">Simulation 3</span>
-                                <span class="simulation-lesson">Lesson 3</span>
-                            </div>
-                            <div class="simulation-status-group">
-                                <span class="simulation-status-icon pending"></span>
-                                <span class="simulation-status-pill pending">Pending</span>
-                            </div>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </section>
 
-        <section class="certificates-announcements">
-            <div class="certificate-progress-card">
-                <div class="certificate-progress-header">
-                    <h2 class="certificate-progress-title">Certificate Progress</h2>
-                    <p class="certificate-progress-subtitle">Complete each milestone to unlock your final certificate.</p>
-                </div>
-                <div class="certificate-cards-grid" id="certificateChecklist">
-                    <!-- Certificate cards will be inserted here -->
-                </div>
-            </div>
+        <section class="announcements-section">
             <div class="announcements-card">
                 <div class="announcements-header">
                     <div class="announcements-header-left">
@@ -405,1077 +365,8 @@
             </div>
         </div>
     </div>
-    <script>
-        const token = localStorage.getItem('studentToken');
-        const dashboardState = {
-            lessons: [],
-            certificates: [],
-            quickLinks: {
-                lesson: null,
-                quiz: null,
-                tools: '/student-tools',
-                certificates: '/student-certificates'
-            }
-        };
-        
-        // Icon helper functions
-        function getCheckIcon(size = 16) {
-            return `<svg class="icon-check" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getXIcon(size = 16) {
-            return `<svg class="icon-x" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getLockIcon(size = 16) {
-            return `<svg class="icon-lock" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-                <path d="M5 7V5C5 3.34315 6.34315 2 8 2C9.65685 2 11 3.34315 11 5V7" stroke="currentColor" stroke-width="2"/>
-            </svg>`;
-        }
-        
-        function getCertificateIcon(size = 24) {
-            return `<svg class="icon-certificate" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 10V6C22 4.89543 21.1046 4 20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 10H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M15 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 14L18 16L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getMedalIcon(size = 24) {
-            return `<svg class="icon-medal" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getTrophyIcon(size = 24) {
-            return `<svg class="icon-trophy" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 9H4C3.44772 9 3 9.44772 3 10V12C3 15.3137 5.68629 18 9 18H15C18.3137 18 21 15.3137 21 12V10C21 9.44772 20.5523 9 20 9H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 9V7C6 4.79086 7.79086 3 10 3H14C16.2091 3 18 4.79086 18 7V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9 18V21H15V18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 18V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getMegaphoneIcon(size = 20) {
-            return `<svg class="icon-megaphone" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 11L15 3V21L3 13V11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M15 10L21 8V16L15 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getBookIcon(size = 32) {
-            return `<svg class="icon-book" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 2H20V22H6V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getQuizIcon(size = 32) {
-            return `<svg class="icon-quiz" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getToolsIcon(size = 32) {
-            return `<svg class="icon-tools" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14.7 6.3C15.1 5.9 15.1 5.3 14.7 4.9L13.1 3.3C12.7 2.9 12.1 2.9 11.7 3.3L10.3 4.7L13.3 7.7L14.7 6.3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 17.2V21H6.8L17.8 10L14 6.2L3 17.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        function getGraduationIcon(size = 32) {
-            return `<svg class="icon-graduation" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 10V6C22 4.89543 21.1046 4 20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 10H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M15 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 14L18 16L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-        }
-        
-        if (!token) {
-            window.location.href = '/caresim-login';
-        }
-        
-        attachQuickActions();
-        
-        // Load dashboard data from backend
-        async function loadDashboard() {
-            try {
-                // Show loading state
-                document.body.classList.add('dashboard-loading');
-                
-                const response = await fetch('/api/user/dashboard?t=' + Date.now(), {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                if (response.status === 401 || response.status === 403) {
-                    handleSessionExpiration();
-                    return;
-                }
-                
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    console.error('Error parsing JSON response:', parseError);
-                    showAlertModal('Failed to load dashboard: Invalid response from server. Please try again.', 'Error');
-                    document.body.classList.remove('dashboard-loading');
-                    return;
-                }
-                
-                console.log('Dashboard API Response:', data);
-                console.log('Dashboard Response Status:', response.status);
-                
-                if (response.ok && data.success) {
-                    // Simple endpoint returns { success: true, profile, summaryStats }
-                    // Full endpoint returns { success: true, data: { profile, summaryStats, lessons, ... } }
-                    const profile = data.profile;
-                    const summaryStats = data.summaryStats;
-                    
-                    console.log('Extracted Profile:', profile);
-                    console.log('Extracted SummaryStats:', summaryStats);
-                    
-                    // Update profile card
-                    if (profile) {
-                        console.log('Updating profile card with:', profile);
-                        updateProfileCard(profile);
-                    } else {
-                        console.warn('No profile data in response');
-                    }
-                    
-                    // Update summary stats cards
-                    if (summaryStats) {
-                        console.log('Updating summary stats with:', summaryStats);
-                        updateSummaryStats(summaryStats);
-                    } else {
-                        console.warn('No summaryStats data in response');
-                    }
-                    
-                    // The simple endpoint only returns profile and summaryStats
-                    // Other sections (lessons, quizPerformance, etc.) are not included
-                    // They will remain empty/static for now
-                    dashboardState.lessons = [];
-                    renderLessonCards([]);
-                    updateProgressSummary([], summaryStats || {});
-                    updateQuickAccess([]);
-                    updateQuizPerformance({});
-                    updateSimulationSummaryFromAPI([]);
-                    dashboardState.certificates = [];
-                    loadCertificates([]);
-                    updateCertificateProgress([], {}, []);
-                    updateAnnouncements([]);
-                } else {
-                    // API returned an error response
-                    console.error('Dashboard API Error:', data);
-                    const errorMessage = data.error || data.message || 'Unknown error';
-                    showAlertModal('Failed to load dashboard: ' + errorMessage, 'Error');
-                }
-            } catch (error) {
-                // Network error or other exception
-                console.error('Error loading dashboard:', error);
-                console.error('Error details:', {
-                    message: error.message,
-                    name: error.name,
-                    stack: error.stack
-                });
-                
-                let errorMessage = 'Network error. Please check your connection and try again.';
-                if (error.message && error.message.includes('fetch')) {
-                    errorMessage = 'Unable to connect to server. Please check your internet connection.';
-                } else if (error.message) {
-                    errorMessage = 'Error loading dashboard: ' + error.message;
-                }
-                
-                showAlertModal(errorMessage, 'Error');
-            } finally {
-                // Hide loading state
-                document.body.classList.remove('dashboard-loading');
-            }
-        }
-        
-        function attachQuickActions() {
-            const actions = [
-                { id: 'continueLessonCard', type: 'lesson' },
-                { id: 'takeQuizCard', type: 'quiz' },
-                { id: 'toolsGalleryCard', type: 'tools' },
-                { id: 'viewCertificatesCard', type: 'certificates' }
-            ];
-            actions.forEach(action => {
-                const el = document.getElementById(action.id);
-                if (el) {
-                    el.addEventListener('click', () => handleQuickAction(action.type));
-                }
-            });
-            const quizHistoryBtn = document.getElementById('quizHistoryBtn');
-            if (quizHistoryBtn) {
-                quizHistoryBtn.addEventListener('click', () => {
-                    window.location.href = '/student-quiz-history';
-                });
-            }
-            const simulationHistoryBtn = document.getElementById('simulationHistoryBtn');
-            if (simulationHistoryBtn) {
-                simulationHistoryBtn.addEventListener('click', () => {
-                    window.location.href = '/student-simulation-history';
-                });
-            }
-        }
-        
-        function capitalize(value = '') {
-            if (typeof value !== 'string' || value.length === 0) return '';
-            return value.charAt(0).toUpperCase() + value.slice(1);
-        }
-        
-        function updateProfileCard(profile = {}) {
-            const fullName = profile.name || profile.fullName || profile.email || 'Student';
-            
-            // Set STUDENT PROFILE text
-            const greetingEl = document.getElementById('profileGreeting');
-            if (greetingEl) {
-                greetingEl.textContent = 'STUDENT PROFILE';
-            }
-            
-            // Set full name
-            const profileName = document.getElementById('profileName');
-            if (profileName) profileName.textContent = fullName;
-            
-            const initialEl = document.getElementById('profileInitial');
-            if (initialEl) initialEl.textContent = fullName.charAt(0)?.toUpperCase() || '?';
-            
-            const studentNumberEl = document.getElementById('profileStudentNumber');
-            if (studentNumberEl) studentNumberEl.textContent = profile.studentNumber || '—';
-            
-            const batchEl = document.getElementById('profileBatch');
-            if (batchEl) batchEl.textContent = profile.batch || '—';
-            
-            // Program/Course
-            const programEl = document.getElementById('profileProgram');
-            if (programEl) {
-                programEl.textContent = profile.program || 'Caregiving NC II';
-            }
-            
-            // Assigned Instructor
-            const instructorEl = document.getElementById('profileInstructor');
-            if (instructorEl) {
-                instructorEl.textContent = profile.assignedInstructor || 'Not assigned';
-            }
-            
-            // Email
-            const emailEl = document.getElementById('profileEmail');
-            if (emailEl) {
-                emailEl.textContent = profile.email || '—';
-            }
-            
-            // Last Login
-            const lastLoginEl = document.getElementById('profileLastLogin');
-            if (lastLoginEl) {
-                if (profile.lastLogin) {
-                    try {
-                        const lastLoginDate = new Date(profile.lastLogin);
-                        if (!isNaN(lastLoginDate.getTime())) {
-                            lastLoginEl.textContent = lastLoginDate.toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric', 
-                                year: 'numeric' 
-                            });
-                        } else {
-                            lastLoginEl.textContent = '—';
-                        }
-                    } catch (e) {
-                        lastLoginEl.textContent = '—';
-                    }
-                } else {
-                    lastLoginEl.textContent = '—';
-                }
-            }
-        }
-        
-        function updateSummaryStats(summaryStats = {}) {
-            // Lessons Completed
-            const lessonsCountEl = document.getElementById('profileLessonsCount');
-            if (lessonsCountEl) {
-                lessonsCountEl.textContent = summaryStats.lessonsCompleted || 0;
-            }
-            
-            // Quizzes Passed
-            const quizzesCountEl = document.getElementById('profileQuizzesCount');
-            if (quizzesCountEl) {
-                quizzesCountEl.textContent = summaryStats.quizzesTaken || 0;
-            }
-            
-            // Simulations
-            const simulationsCountEl = document.getElementById('profileSimulationsCount');
-            if (simulationsCountEl) {
-                simulationsCountEl.textContent = summaryStats.simulationsCompleted || 0;
-            }
-            
-            // Certificates
-            const certificatesCountEl = document.getElementById('profileCertificatesCount');
-            if (certificatesCountEl) {
-                certificatesCountEl.textContent = summaryStats.certificatesEarned || 0;
-            }
-            
-            // Average Score
-            const averageScoreEl = document.getElementById('profileAverageScore');
-            if (averageScoreEl) {
-                const avgScore = summaryStats.avgQuizScore;
-                if (avgScore !== null && avgScore !== undefined) {
-                    averageScoreEl.textContent = `${Math.round(avgScore * 10) / 10}`;
-                } else {
-                    averageScoreEl.textContent = '—';
-                }
-            }
-            
-            // Overall Progress
-            const overallProgressEl = document.getElementById('profileOverallProgress');
-            if (overallProgressEl) {
-                overallProgressEl.textContent = `${summaryStats.overallProgressPct || 0}%`;
-            }
-        }
-        
-        function updateVerificationStatus(details = {}) {
-            const verified = details.isVerified || details.verified;
-            const badgeEl = document.getElementById('verifiedBadge');
-            const verificationBannerEl = document.getElementById('verificationBanner');
-            
-            if (badgeEl) {
-                badgeEl.style.display = verified ? 'inline-flex' : 'none';
-            }
-            if (verificationBannerEl) {
-                verificationBannerEl.style.display = verified ? 'none' : 'flex';
-            }
-        }
-        
-        function normalizeLessons(lessons = []) {
-            const slotToLesson = {};
-            lessons.forEach(lesson => {
-                if (lesson && typeof lesson === 'object' && 'slot' in lesson) {
-                    slotToLesson[lesson.slot] = lesson;
-                }
-            });
-            const normalized = [];
-            for (let i = 1; i <= 6; i++) {
-                const lesson = slotToLesson[i] ? { ...slotToLesson[i] } : { slot: i };
-                normalized.push(lesson);
-            }
-            return normalized;
-        }
-        
-        function getNumericValue(value, fallback = 0) {
-            const num = Number(value);
-            return Number.isFinite(num) ? num : fallback;
-        }
-        
-        function formatDuration(seconds) {
-            if (!Number.isFinite(seconds) || seconds <= 0) {
-                    return 'No attempts yet';
-                }
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}m ${secs}s`;
-                }
-            
-        function formatScore(score) {
-                if (score !== null && score !== undefined && typeof score === 'number' && !isNaN(score)) {
-                return `${score}/10`;
-            }
-            return '--';
-        }
-        
-        function getLessonProgressValue(lesson = {}, statusValue = '') {
-            if (typeof lesson.progress === 'number') return Math.min(100, Math.max(0, lesson.progress));
-            if (typeof lesson.progressPercent === 'number') return Math.min(100, Math.max(0, lesson.progressPercent));
-            if (statusValue === 'completed') return 100;
-            if (statusValue === 'in_progress') return 60;
-            return 0;
-        }
-        
-        function renderLessonCards(lessons = []) {
-            const container = document.getElementById('lessonsContainer');
-            if (!container) {
-                console.error('Lessons container not found');
-                return;
-            }
-            if (!lessons.length) {
-                container.innerHTML = '<p class="empty-state">No lessons to display.</p>';
-                return;
-            }
-            
-            const cardsHtml = lessons.map(lesson => {
-                const statusValue = (lesson && typeof lesson.status === 'string') ? lesson.status.trim().toLowerCase() : 'not_started';
-                const lessonName = lesson.lessonTitle || lesson.lessonName || `Lesson ${lesson.slot || lesson.lessonId}`;
-                const lessonSlot = lesson.slot || lesson.lessonId || 0;
-                const progressValue = lesson.progressPct !== undefined ? lesson.progressPct : getLessonProgressValue(lesson, statusValue);
-                const hasQuizAttempts = Number(lesson.quizAttempts) > 0;
-                const simAttemptsCount = Number(lesson.simulationAttempts) || Number(lesson.simAttempts) || 0;
-                const hasSimHistory = Array.isArray(lesson.simHistory) && lesson.simHistory.length > 0;
-                const normalizedAvgSimTime = getNumericValue(lesson.simulationAvgTime || lesson.avgSimTime);
-                const hasSimAttempts = simAttemptsCount > 0 || normalizedAvgSimTime > 0 || hasSimHistory;
-                
-                let statusHtml = '<span class="lesson-status not-started">Not Started</span>';
-                if (statusValue === 'completed') {
-                    statusHtml = '<span class="lesson-status completed">Completed</span>';
-                } else if (statusValue === 'in_progress') {
-                    statusHtml = '<span class="lesson-status in-progress">In Progress</span>';
-                }
-                
-                const quizHistoryData = encodeURIComponent(JSON.stringify(Array.isArray(lesson.quizHistory) ? lesson.quizHistory : []));
-                const simHistoryData = encodeURIComponent(JSON.stringify(Array.isArray(lesson.simHistory) ? lesson.simHistory : []));
-                const simSummaryData = encodeURIComponent(JSON.stringify({
-                    attempts: simAttemptsCount,
-                    avgTime: normalizedAvgSimTime
-                }));
-                
-                const lessonLink = `/student-lessons?lesson=${lessonSlot}`;
-                
-                return `
-                    <div class="lesson-card ${statusValue === 'completed' ? 'is-complete' : ''}">
-                        <div class="lesson-card-header">
-                            <div class="lesson-title-section">
-                                <h3 class="lesson-title">${lessonName}</h3>
-                                <span class="lesson-subtitle">${lessonName}</span>
-                            </div>
-                            ${statusHtml}
-                        </div>
-                        <div class="lesson-progress-section">
-                            <div class="lesson-progress-header">
-                                <span class="progress-label">Progress</span>
-                                <span class="progress-percentage">${progressValue}%</span>
-                        </div>
-                            <div class="lesson-progress-bar">
-                                <div class="lesson-progress-fill" style="width:${progressValue}%"></div>
-                            </div>
-                        </div>
-                        <div class="lesson-stats-grid">
-                            <div class="lesson-stat-item">
-                                <span class="stat-label">Recent Quiz</span>
-                                <span class="stat-value">${formatScore(lesson.recentQuizScore)}</span>
-                            </div>
-                            <div class="lesson-stat-item">
-                                <span class="stat-label">Best Score</span>
-                                <span class="stat-value">${formatScore(lesson.bestQuizScore || lesson.highestQuizScore)}</span>
-                            </div>
-                            <div class="lesson-stat-item">
-                                <span class="stat-label">Attempts</span>
-                                <span class="stat-value">${hasQuizAttempts ? (lesson.quizAttempts || 0) : '0'}</span>
-                            </div>
-                            <div class="lesson-stat-item">
-                                <span class="stat-label">Avg Time</span>
-                                <span class="stat-value">${formatDuration(getNumericValue(lesson.avgQuizTime))}</span>
-                            </div>
-                        </div>
-                        <div class="lesson-simulation-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #E5E7EB;">
-                            <div class="lesson-stat-item" style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="stat-label">Simulation</span>
-                                <span class="stat-value" style="font-weight: 600; color: ${lesson.simulationCompleted ? '#10B981' : '#64748B'}">${lesson.simulationCompleted ? 'Completed' : 'Pending'}</span>
-                            </div>
-                        </div>
-                        <div class="lesson-card-actions">
-                            <div class="lesson-history-tabs">
-                                <button class="lesson-tab btn-quiz-history" data-lesson-slot="${lessonSlot}" data-history="${quizHistoryData}" data-type="quiz" ${hasQuizAttempts ? '' : 'disabled'} onclick="event.stopPropagation(); window.location.href='/student-quiz-history?lesson=${lessonSlot}'">
-                                    <span class="tab-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </span>
-                                    <span class="tab-text">Quiz History</span>
-                                </button>
-                                <button class="lesson-tab btn-simulation-history" data-lesson-slot="${lessonSlot}" data-history="${simHistoryData}" data-summary="${simSummaryData}" data-type="simulation" ${hasSimAttempts ? '' : 'disabled'} onclick="event.stopPropagation(); window.location.href='/student-simulation-history?lesson=${lessonSlot}'">
-                                    <span class="tab-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
-                                            <path d="M12 2V6M12 18V22M2 12H6M18 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                        </svg>
-                                    </span>
-                                    <span class="tab-text">Simulation History</span>
-                                </button>
-                            </div>
-                            <button class="btn-view-lesson" data-lesson-slot="${lessonSlot}" data-lesson-link="${lessonLink}" onclick="event.stopPropagation(); window.location.href='${lessonLink}'">
-                                <span class="btn-icon">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4 19.5C4 18.395 4.895 17.5 6 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M6 2H20V22H6V2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M6 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
-                                <span>View Lesson</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            container.innerHTML = cardsHtml;
-            
-            container.querySelectorAll('.btn-view-lesson').forEach(button => {
-                button.addEventListener('click', function() {
-                    const link = this.getAttribute('data-lesson-link');
-                    if (link) {
-                        window.location.href = link;
-                    } else {
-                        showAlertModal('Lesson link not available yet. Please check back later.', 'Notice');
-                    }
-                });
-            });
-            
-            container.querySelectorAll('.lesson-tab').forEach(button => {
-                button.addEventListener('click', function() {
-                    if (this.disabled) return;
-                    
-                    // Remove active class from all tabs in the same card
-                    const card = this.closest('.lesson-card');
-                    if (card) {
-                        card.querySelectorAll('.lesson-tab').forEach(tab => {
-                            tab.classList.remove('active');
-                        });
-                    }
-                    
-                    // Add active class to clicked tab
-                    this.classList.add('active');
-                    
-                    const lessonSlot = parseInt(this.getAttribute('data-lesson-slot'), 10);
-                    const historyData = this.getAttribute('data-history');
-                    const historyType = this.getAttribute('data-type') || 'quiz';
-                    const summaryAttr = this.getAttribute('data-summary');
-                    let history = [];
-                    if (historyData) {
-                        try {
-                            history = JSON.parse(decodeURIComponent(historyData));
-                        } catch (e) {
-                            console.error('Error parsing history data:', e);
-                        }
-                    }
-                    let summaryInfo = null;
-                    if (summaryAttr) {
-                        try {
-                            summaryInfo = JSON.parse(decodeURIComponent(summaryAttr));
-                        } catch (e) {
-                            console.error('Error parsing summary data:', e);
-                        }
-                    }
-                    showHistory(lessonSlot, history, historyType, summaryInfo);
-                });
-            });
-        }
-        
-        function setDonutProgress(value = 0) {
-            const donut = document.getElementById('overallProgressDonut');
-            const valueEl = document.getElementById('overallProgressValue');
-            if (!donut || !valueEl) return;
-            const degrees = Math.min(360, Math.max(0, (value / 100) * 360));
-            donut.style.background = `conic-gradient(from 0deg, #556B2F 0deg, #6B8E23 ${degrees * 0.3}deg, #9ACD32 ${degrees * 0.6}deg, #C19A6B ${degrees}deg, #E2E8F0 ${degrees}deg 360deg)`;
-            valueEl.textContent = `${Math.round(value)}%`;
-        }
-        
-        function hasSimPassed(lesson = {}) {
-            if (typeof lesson.simStatus === 'string') {
-                return lesson.simStatus.toLowerCase() === 'passed';
-            }
-            if (Array.isArray(lesson.simHistory)) {
-                return lesson.simHistory.some(entry => String(entry.result || '').toLowerCase() === 'passed');
-            }
-            return false;
-        }
-        
-        function updateProgressSummary(lessons = [], details = {}) {
-            const summaryStats = details.summaryStats || {};
-            const totalLessons = summaryStats.totalLessons || lessons.length || 6;
-            const completedLessons = summaryStats.lessonsCompleted || lessons.filter(lesson => String(lesson.status || '').toLowerCase() === 'completed').length;
-            const progressValue = summaryStats.overallProgressPct || details.overallProgressPct || Math.round((completedLessons / totalLessons) * 100);
-            setDonutProgress(progressValue);
-            
-            const lessonStatEl = document.getElementById('progressLessonsStat');
-            if (lessonStatEl) lessonStatEl.textContent = `${completedLessons}/${totalLessons} complete`;
-            
-            const quizzesTaken = summaryStats.quizzesTaken || lessons.reduce((sum, lesson) => sum + (Number(lesson.quizAttempts) > 0 ? 1 : 0), 0);
-            const quizStatEl = document.getElementById('progressQuizzesStat');
-            if (quizStatEl) quizStatEl.textContent = `${quizzesTaken} taken`;
-            
-            const simsPassed = summaryStats.simulationsCompleted || lessons.reduce((sum, lesson) => sum + (hasSimPassed(lesson) ? 1 : 0), 0);
-            const simStatEl = document.getElementById('progressSimsStat');
-            if (simStatEl) simStatEl.textContent = `${simsPassed} passed`;
-        }
-        
-        function updateQuickAccess(lessons = []) {
-            const continueCard = document.getElementById('continueLessonCard');
-            const quizCard = document.getElementById('takeQuizCard');
-            
-            if (!lessons.length) {
-                dashboardState.quickLinks.lesson = null;
-                dashboardState.quickLinks.quiz = null;
-                const continueP = continueCard?.querySelector('p');
-                if (continueP) continueP.textContent = 'Start your first lesson';
-                const quizP = quizCard?.querySelector('p');
-                if (quizP) quizP.textContent = 'Quizzes unlock after lessons';
-                return;
-            }
-            
-            const inProgressLesson = lessons.find(lesson => String(lesson.status || '').toLowerCase() === 'in_progress');
-            const nextLesson = inProgressLesson || lessons.find(lesson => String(lesson.status || '').toLowerCase() !== 'completed') || lessons[0];
-            const lessonLink = nextLesson.lessonLink || `/student-lessons?lesson=${nextLesson.slot}`;
-            dashboardState.quickLinks.lesson = lessonLink;
-            const continueSubtitle = continueCard?.querySelector('.quick-card-subtitle');
-            const continueBack = document.getElementById('continueLessonBack');
-            if (continueSubtitle) {
-                continueSubtitle.textContent = `Jump back to where you left off`;
-            }
-            if (continueBack) {
-                continueBack.textContent = `Resume ${nextLesson.lessonName || `Lesson ${nextLesson.slot}`}`;
-            }
-            
-            const nextQuiz = lessons.find(lesson => Number(lesson.quizAttempts) === 0 || !lesson.quizAttempts);
-            const quizLink = nextQuiz ? (nextQuiz.quizLink || `/student-quizzes?lesson=${nextQuiz.slot}`) : '/student-quizzes';
-            dashboardState.quickLinks.quiz = nextQuiz ? quizLink : (quizzesAvailable(lessons) ? quizLink : null);
-            const quizSubtitle = quizCard?.querySelector('.quick-card-subtitle');
-            const quizBack = document.getElementById('takeQuizBack');
-            if (quizSubtitle) {
-                quizSubtitle.textContent = 'Next pending quiz is ready';
-            }
-            if (quizBack && nextQuiz) {
-                quizBack.textContent = `Next: ${nextQuiz.lessonName || `Lesson ${nextQuiz.slot}`}`;
-            } else if (quizBack) {
-                quizBack.textContent = 'All quizzes completed';
-            }
-            
-            dashboardState.quickLinks.tools = '/student-tools';
-            dashboardState.quickLinks.certificates = '/student-certificates';
-        }
-        
-        function quizzesAvailable(lessons = []) {
-            return lessons.some(lesson => Number(lesson.quizAttempts) > 0);
-        }
-        
-        function updateQuizPerformance(quizPerformance = {}) {
-            const avgScore = quizPerformance.avgScore || 0;
-            const quizzesCompleted = quizPerformance.quizzesCompleted || 0;
-            const bestScore = quizPerformance.bestScore || 0;
-            
-            const avgEl = document.getElementById('quizAverageScore');
-            if (avgEl) {
-                avgEl.textContent = avgScore > 0 ? avgScore.toFixed(1) : '--';
-            }
-            
-            const completedEl = document.getElementById('quizCompletedCount');
-            if (completedEl) {
-                completedEl.textContent = quizzesCompleted;
-            }
-            
-            const bestEl = document.getElementById('quizBestScore');
-            if (bestEl) {
-                bestEl.textContent = bestScore > 0 ? `${bestScore.toFixed(1)} / 10` : '--';
-            }
-
-            const progressEl = document.getElementById('quizGoalProgress');
-            if (progressEl) {
-                const ratio = avgScore > 0 ? Math.min(avgScore / 8, 1) : 0;
-                const percent = Math.round(ratio * 100);
-                progressEl.style.width = `${percent}%`;
-                progressEl.setAttribute('aria-valuenow', percent);
-            }
-        }
-        
-        // Keep old function for backward compatibility
-        function updateQuizSummary(lessons = []) {
-            // This is now handled by updateQuizPerformance
-        }
-        
-        function updateSimulationSummaryFromAPI(simulationSummary = []) {
-            const listEl = document.getElementById('simulationSummaryList');
-            if (!listEl) return;
-            
-            if (!simulationSummary.length) {
-                listEl.innerHTML = `
-                    <li class="simulation-item">
-                        <div class="simulation-info">
-                            <span class="simulation-number">No simulations yet</span>
-                            <span class="simulation-lesson">We'll display your first attempt here.</span>
-                        </div>
-                        <div class="simulation-status-group">
-                            <span class="simulation-status-icon pending"></span>
-                            <span class="simulation-status-pill pending">Pending</span>
-                        </div>
-                    </li>`;
-                return;
-            }
-            
-            const summaries = simulationSummary.slice(0, 3).map((summary, index) => {
-                const status = summary.status || 'Pending';
-                const statusClass = status === 'Completed' ? 'passed' : 'pending';
-                const statusText = status === 'Completed' ? 'Completed' : 'Pending';
-                return `
-                    <li class="simulation-item">
-                        <div class="simulation-info">
-                            <span class="simulation-number">Simulation ${index + 1}</span>
-                            <span class="simulation-lesson">${summary.lessonTitle || `Lesson ${summary.lessonId}`}</span>
-                        </div>
-                        <div class="simulation-status-group">
-                            <span class="simulation-status-icon ${statusClass}"></span>
-                            <span class="simulation-status-pill ${statusClass}">${statusText}</span>
-                        </div>
-                    </li>`;
-            });
-            listEl.innerHTML = summaries.join('');
-        }
-        
-        // Keep old function for backward compatibility
-        function updateSimulationSummary(lessons = []) {
-            // This is now handled by updateSimulationSummaryFromAPI
-        }
-        
-        function updateCertificateProgress(certificates = [], progressData = {}, lessons = []) {
-            const checklistEl = document.getElementById('certificateChecklist');
-            if (!checklistEl) return;
-            
-            // Use new certificateProgress structure if available
-            const lessonCert = progressData.lessonCertificate || {};
-            const simCert = progressData.simulationCertificate || {};
-            const overallCert = progressData.overallCertificate || {};
-            
-            const lessonStatus = lessonCert.status || 'locked';
-            const simStatus = simCert.status || 'locked';
-            const overallStatus = overallCert.status || 'locked';
-            
-            const lessonReqs = lessonCert.requirements || {};
-            const simReqs = simCert.requirements || {};
-            const overallReqs = overallCert.requirements || {};
-            
-            const certificateCards = [
-                {
-                    key: 'lessonCompletion',
-                    title: 'Lesson Completion Certificate',
-                    icon: lessonStatus === 'granted' ? getMedalIcon(32) : getLockIcon(32),
-                    status: lessonStatus === 'granted' ? 'Complete' : lessonStatus === 'unlocked' ? 'Unlocked' : 'Locked',
-                    statusClass: lessonStatus === 'granted' ? 'complete' : lessonStatus === 'unlocked' ? 'available' : 'locked',
-                    requirements: [
-                        { 
-                            text: `Complete all lessons (${lessonReqs.completedLessons || 0} / ${lessonReqs.totalLessons || 0})`, 
-                            completed: lessonStatus === 'granted' 
-                        }
-                    ],
-                    completed: lessonStatus === 'granted'
-                },
-                {
-                    key: 'simulationCompletion',
-                    title: 'Simulation Completion Certificate',
-                    icon: simStatus === 'granted' ? getMedalIcon(32) : getLockIcon(32),
-                    status: simStatus === 'granted' ? 'Complete' : simStatus === 'unlocked' ? 'Unlocked' : 'Locked',
-                    statusClass: simStatus === 'granted' ? 'complete' : simStatus === 'unlocked' ? 'available' : 'locked',
-                    requirements: [
-                        { 
-                            text: `Pass all simulations (${simReqs.completedSimulations || 0} / ${simReqs.totalSimulations || 0})`, 
-                            completed: simStatus === 'granted' 
-                        }
-                    ],
-                    completed: simStatus === 'granted'
-                },
-                {
-                    key: 'finalCourse',
-                    title: 'Overall Course Certificate',
-                    icon: overallStatus === 'granted' ? getTrophyIcon(32) : getLockIcon(32),
-                    status: overallStatus === 'granted' ? 'Complete' : overallStatus === 'unlocked' ? 'Unlocked' : 'Locked',
-                    statusClass: overallStatus === 'granted' ? 'complete' : overallStatus === 'unlocked' ? 'available' : 'locked',
-                    requirements: [
-                        { 
-                            text: `Complete all lessons (${overallReqs.lessonsCompleted || 0} / ${overallReqs.totalLessons || 0})`, 
-                            completed: (overallReqs.lessonsCompleted || 0) >= (overallReqs.totalLessons || 0)
-                        },
-                        { 
-                            text: `Pass all simulations (${overallReqs.simulationsCompleted || 0} / ${overallReqs.totalSimulations || 0})`, 
-                            completed: (overallReqs.simulationsCompleted || 0) >= (overallReqs.totalSimulations || 0)
-                        }
-                    ],
-                    completed: overallStatus === 'granted'
-                }
-            ];
-            
-            checklistEl.innerHTML = certificateCards.map(card => {
-                const isLocked = card.statusClass === 'locked';
-                const iconColorClass = card.statusClass === 'complete' ? 'icon-complete' : card.statusClass === 'available' ? 'icon-available' : 'icon-locked';
-                const requirementsHtml = card.requirements.map(req => `
-                    <li class="requirement-item ${req.completed ? 'completed' : ''}">
-                        ${req.completed ? getCheckIcon(14) : '<span class="requirement-dot"></span>'}
-                        <span>${req.text}</span>
-                    </li>
-                `).join('');
-                
-                return `
-                    <div class="certificate-card">
-                        <div class="certificate-card-icon ${iconColorClass}">${card.icon}</div>
-                        <h3 class="certificate-card-title">${card.title}</h3>
-                        <span class="certificate-status-pill ${card.statusClass}">${card.status}</span>
-                        <ul class="certificate-requirements">
-                            ${requirementsHtml}
-                        </ul>
-                        <button class="certificate-card-btn" ${isLocked ? 'disabled' : ''} onclick="${isLocked ? '' : `viewCertificate('${card.key}')`}">
-                            ${card.completed ? 'Download' : 'View'}
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function updateAnnouncements(announcements = []) {
-            const listEl = document.getElementById('announcementsList');
-            if (!listEl) return;
-            
-            if (!Array.isArray(announcements) || announcements.length === 0) {
-                listEl.innerHTML = `
-                    <div class="announcement-empty-state">
-                        <div class="empty-state-icon">📢</div>
-                        <h4 class="empty-state-title">You're all caught up!</h4>
-                        <p class="empty-state-text">No new announcements at the moment.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Show up to 3 most recent announcements
-            const recentAnnouncements = announcements.slice(0, 3);
-            
-            listEl.innerHTML = recentAnnouncements.map(item => {
-                const title = item.title || 'New Announcement';
-                const message = item.message || item.content || 'Details coming soon.';
-                // Truncate message if too long
-                const shortMessage = message.length > 100 ? message.substring(0, 100) + '...' : message;
-                const date = item.date || item.createdAt;
-                let formattedDate = 'Just now';
-                if (date) {
-                    try {
-                        const dateObj = new Date(date);
-                        if (!isNaN(dateObj.getTime())) {
-                            formattedDate = dateObj.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                            });
-                        }
-                    } catch (e) {
-                        // Keep default
-                    }
-                }
-                const from = item.from || 'Instructor';
-                return `
-                    <div class="announcement-card">
-                        <div class="announcement-icon">${getMegaphoneIcon(20)}</div>
-                        <div class="announcement-content">
-                            <h4 class="announcement-title">${title}</h4>
-                            <p class="announcement-description">${shortMessage}</p>
-                            <span class="announcement-date">${formattedDate} • ${from}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function viewAllAnnouncements() {
-            showAlertModal('View all announcements feature coming soon!', 'Notice');
-        }
-        
-        function handleQuickAction(type) {
-            const link = dashboardState.quickLinks[type];
-            if (!link) {
-                showAlertModal('No available action yet. Keep progressing to unlock this shortcut.', 'Heads up');
-                return;
-            }
-            window.location.href = link;
-        }
-        function loadCertificates(certificates) {
-            const container = document.getElementById('certificatesContainer');
-            if (!container) {
-                console.error('Certificates container not found');
-                return;
-            }
-            
-            if (certificates.length === 0) {
-                container.innerHTML = '<p class="empty-state">No certificates yet. Keep progressing!</p>';
-                return;
-            }
-            container.innerHTML = certificates.map(cert => `
-                <div class="certificate-card">
-                    <div class="certificate-icon">${getCertificateIcon(48)}</div>
-                    <h3>${cert.title || cert.name || 'Certificate'}</h3>
-                    <p class="certificate-date">Issued: ${cert.date || 'N/A'}</p>
-                    <div class="certificate-actions">
-                        <button class="btn-certificate" onclick="viewCertificate('${cert.id || ''}')">View</button>
-                        <button class="btn-certificate" onclick="downloadCertificate('${cert.id || ''}')">Download</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        function viewCertificate(certId) {
-            showAlertModal(`Viewing certificate ${certId}`, 'Notice');
-        }
-        function downloadCertificate(certId) {
-            showAlertModal(`Downloading certificate ${certId}`, 'Notice');
-        }
-        function goToProfile() {
-            window.location.href = '/student-profile';
-        }
-        // Make loadDashboard available globally for refresh functionality
-        window.loadDashboard = loadDashboard;
-        function toggleProfileMenu() {
-            showAlertModal('Profile menu', 'Notice');
-        }
-        function logout() {
-            document.getElementById('logoutModal').style.display = 'flex';
-        }
-        
-        function closeLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'none';
-        }
-        
-        function confirmLogout() {
-            localStorage.removeItem('studentToken');
-            localStorage.removeItem('studentData');
-            window.location.href = '/caresim-login';
-        }
-
-        function handleSessionExpiration() {
-            closeLogoutModal();
-            localStorage.removeItem('studentToken');
-            localStorage.removeItem('studentData');
-            showAlertModal('Your session has expired. Please sign in again.', 'Session expired');
-            setTimeout(() => {
-                window.location.href = '/caresim-login';
-            }, 1500);
-        }
-        function formatSimulationDuration(seconds) {
-            if (seconds === null || seconds === undefined || typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) {
-                return 'No attempts yet';
-            }
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}m ${secs}s`;
-        }
-        function showHistory(lessonSlot, historyData, historyType = 'quiz', summaryInfo = null) {
-            const historyModal = document.getElementById('historyModal');
-            const historyTitle = document.getElementById('historyTitle');
-            const historyList = document.getElementById('historyList');
-            
-            if (!historyModal) {
-                console.error('History modal not found');
-                return;
-            }
-            
-            if (!historyTitle || !historyList) {
-                console.error('History modal elements not found');
-                return;
-            }
-            
-            const typeLabel = historyType === 'simulation' ? 'Simulation' : 'Quiz';
-            historyTitle.textContent = `${typeLabel} History - Lesson ${lessonSlot}`;
-            
-            const history = Array.isArray(historyData) ? historyData : [];
-            
-            if (history.length === 0) {
-                if (historyType === 'simulation' && summaryInfo && Number(summaryInfo.attempts) > 0) {
-                    historyList.innerHTML = `
-                        <div class="history-item-new">
-                            <div class="history-header">
-                                <span class="history-date">Attempts: ${summaryInfo.attempts}</span>
-                                <span class="history-time-label">Average Duration</span>
-                            </div>
-                            <div class="history-body">
-                                <span class="history-duration">${formatSimulationDuration(summaryInfo.avgTime)}</span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    historyList.innerHTML = `<p class="empty-history">No ${historyType} history available</p>`;
-                }
-            } else {
-                historyList.innerHTML = history.map((entry, index) => {
-                    const date = entry.date || 'N/A';
-                    const time = entry.time || 'N/A';
-                    const duration = entry.duration || 'N/A';
-                    
-                    if (historyType === 'quiz') {
-                        const scoreText = entry.scoreText || (entry.score !== undefined ? `${entry.score}/10` : 'N/A');
-                        return `
-                            <div class="history-item-new">
-                                <div class="history-header">
-                                    <span class="history-date">${date}</span>
-                                    <span class="history-time-label">${time}</span>
-                                </div>
-                                <div class="history-body">
-                                    <span class="history-duration">${duration}</span>
-                                    <span class="history-score-text">${scoreText}</span>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        const resultText = entry.result ? `<span class="history-score-text">Result: ${entry.result}</span>` : '';
-                        return `
-                            <div class="history-item-new">
-                                <div class="history-header">
-                                    <span class="history-date">${date}</span>
-                                    <span class="history-time-label">${time}</span>
-                                </div>
-                                <div class="history-body">
-                                    <span class="history-duration">Duration: ${duration}</span>
-                                    ${resultText}
-                                </div>
-                            </div>
-                        `;
-                    }
-                }).join('');
-            }
-            
-            historyModal.style.display = 'flex';
-        }
-        function closeHistoryModal() {
-            const historyModal = document.getElementById('historyModal');
-            if (historyModal) {
-                historyModal.style.display = 'none';
-            }
-        }
-        window.onclick = function(event) {
-            const historyModal = document.getElementById('historyModal');
-            const logoutModal = document.getElementById('logoutModal');
-            if (event.target === historyModal) {
-                closeHistoryModal();
-            }
-            if (event.target === logoutModal) {
-                closeLogoutModal();
-            }
-        };
-        
-        // Ensure logout modal is hidden on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutModal = document.getElementById('logoutModal');
-            if (logoutModal) {
-                logoutModal.style.display = 'none';
-            }
-        });
-        
-        // Load dashboard data on page load
-        loadDashboard();
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('refresh')) {
-            console.log('Refresh parameter detected, reloading dashboard data');
-            setTimeout(() => {
-                loadDashboard();
-            }, 100);
-        }
-    </script>
+    <!-- Student dashboard logic -->
+    <script src="/js/student-dashboard.js"></script>
     <!-- Alert Modal -->
     <div id="alertModal" class="history-modal" style="display: none;">
         <div class="history-modal-content">
@@ -1506,7 +397,43 @@
             if (modal) modal.style.display = 'none';
         }
     </script>
+
+    <!-- APK Download Modal -->
+    <div class="apk-download-modal-backdrop" id="apk-download-modal" aria-hidden="true">
+        <div class="apk-download-modal">
+            <h2 class="apk-modal-title">Download CareSim App</h2>
+            <p class="apk-modal-text">
+                You'll be redirected to Google Drive to download the CareSim Android APK file
+                (<strong>caresim.apk</strong>). After downloading, open it on your device
+                and follow the installation steps.
+            </p>
+            <p class="apk-modal-note">
+                Make sure you trust this device and allow installation from this source.
+            </p>
+            <p class="apk-modal-helper-text">
+                You can copy this link and send it via Messenger or email to download CareSim on another device.
+            </p>
+            <div class="apk-modal-link-box">
+                <input type="text" class="apk-modal-link-input" id="apk-modal-link-input" value="https://drive.google.com/file/d/1Fyv9TuEB8jiB-bJJgTS5wnvzYW1mIhhE/view?usp=sharing" readonly>
+                <button type="button" class="apk-modal-copy-btn" id="apk-modal-copy-link" title="Copy link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" id="apk-copy-icon">
+                        <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" id="apk-copy-check" style="display: none;">
+                        <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="apk-modal-actions">
+                <button type="button" class="apk-modal-btn apk-modal-btn-secondary" id="apk-modal-cancel">
+                    Cancel
+                </button>
+                <a href="https://drive.google.com/file/d/1Fyv9TuEB8jiB-bJJgTS5wnvzYW1mIhhE/view?usp=sharing" class="apk-modal-btn apk-modal-btn-primary" id="apk-modal-confirm" target="_blank" rel="noopener noreferrer">
+                    Download APK
+                </a>
+            </div>
+        </div>
+    </div>
     
 </body>
-</html>
 </html>

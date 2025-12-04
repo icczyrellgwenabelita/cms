@@ -26,7 +26,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Update student info card
     const nameElement = document.querySelector('.student-info-details h2');
-    if (nameElement) nameElement.textContent = student.name || 'Unknown';
+    if (nameElement) {
+      nameElement.innerHTML = (student.name || 'Unknown') + 
+        (student.certificates && student.certificates.caresim_lms_full 
+          ? ' <span class="status-pill completed" style="font-size: 12px; vertical-align: middle; margin-left: 8px;">Certificate Issued</span>' 
+          : '');
+    }
     
     const studentInfo = student.studentInfo || {};
     const metaItems = document.querySelectorAll('.meta-item');

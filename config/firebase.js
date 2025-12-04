@@ -1,45 +1,47 @@
+// config/firebase.js
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-let app;
-let auth = null;
-let db = null;
-
-try {
-  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_DATABASE_URL) {
-    console.warn('⚠️  Firebase environment variables are missing. Some features may not work.');
-    console.warn('Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_DATABASE_URL');
-  } else {
-    app = admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-      databaseURL: process.env.FIREBASE_DATABASE_URL,
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || undefined,
-    });
-    console.log('✅ Firebase Admin initialized successfully');
-    auth = admin.auth();
-    db = admin.database();
-  }
-} catch (error) {
-  console.error('❌ Firebase initialization error:', error.message);
-  console.error('Stack:', error.stack);
+// Basic sanity check for required envs
+if (
+  !process.env.FIREBASE_PROJECT_ID ||
+  !process.env.FIREBASE_CLIENT_EMAIL ||
+  !process.env.FIREBASE_PRIVATE_KEY ||
+  !process.env.FIREBASE_DATABASE_URL
+) {
+  console.warn('⚠️  Firebase env vars missing. Some features may not work.');
+  console.warn(
+    'Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_DATABASE_URL'
+  );
 }
 
-let bucket = null;
-const storageBucketName = process.env.FIREBASE_STORAGE_BUCKET;
-if (!storageBucketName) {
-  console.warn('FIREBASE_STORAGE_BUCKET is not set. 3D uploads will be disabled until a bucket is configured.');
-} else {
-  try {
-    bucket = admin.storage().bucket(storageBucketName);
-  } catch (error) {
-    console.error('Failed to initialize Firebase Storage bucket:', error?.message || error);
-    bucket = null;
-  }
+if (!process.env.FIREBASE_STORAGE_BUCKET) {
+  console.warn(
+    '⚠️  FIREBASE_STORAGE_BUCKET is not set. Storage uploads will fail until this is configured.'
+  );
 }
 
-module.exports = { admin, auth, db, bucket, storageBucketName };
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+    // 👇 tell Admin SDK what the default bucket is
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+  console.log('✅ Firebase Admin initialized');
+}
 
+// Realtime DB + Auth
+const db = admin.database();
+const auth = admin.auth();
+
+// 👇 uses the default bucket from initializeApp()
+const bucket = admin.storage().bucket();
+
+console.log('✅ Firebase Storage bucket:', bucket.name);
+
+module.exports = { admin, auth, db, bucket };
