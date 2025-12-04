@@ -64,7 +64,7 @@ function generateTemporaryPassword(length = 20) {
 }
 
 function getPasswordSetupUrl() {
-  const base = process.env.PUBLIC_HOST || 'http://localhost:3000';
+  const base = process.env.PUBLIC_HOST || 'https://asat-caresim.online';
   return `${base.replace(/\/$/, '')}/create-password`;
 }
 
@@ -2780,7 +2780,7 @@ router.post('/certificates/notify-student', verifyAdminToken, async (req, res) =
       return res.status(503).json({ success: false, error: 'Email service not configured', details: 'SMTP settings are missing. Please configure email service in environment variables.' });
     }
 
-    const certificateUrl = `${process.env.PUBLIC_HOST || 'http://localhost:3000'}/student-certificates.html`;
+    const certificateUrl = `${process.env.PUBLIC_HOST || 'https://asat-caresim.online'}/student-certificates.html`;
 
     const emailResult = await sendEmail({
       to: email,
@@ -2850,7 +2850,7 @@ router.post('/issue-game-certificate', verifyAdminToken, async (req, res) => {
        return res.status(503).json({ error: 'Email service not configured' });
     }
 
-    const verifyUrl = `${process.env.PUBLIC_HOST || 'http://localhost:3000'}/generic-certificate.html?certId=${certId}`;
+    const verifyUrl = `${process.env.PUBLIC_HOST || 'https://asat-caresim.online'}/generic-certificate.html?certId=${certId}`;
 
     const emailResult = await sendEmail({
       to: email,

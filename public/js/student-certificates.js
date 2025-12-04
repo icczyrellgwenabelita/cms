@@ -102,6 +102,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
+            // Fetch published lessons first
+            const lessonsResponse = await fetch('/api/public/lessons');
+            const lessonsData = await lessonsResponse.json();
+            const publishedLessons = lessonsData.success && lessonsData.lessons ? lessonsData.lessons : {};
+            
             // Check progress if not issued
             const progressRef = db.ref(`users/${uid}/lmsProgress`);
             const progressSnap = await progressRef.once('value');
@@ -110,10 +115,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             let allMet = true;
             const missingItems = [];
 
-            // Check Lessons 1-6
-            for (let i = 1; i <= 6; i++) {
-                const lessonKey = `lesson${i}`;
+            // Check only published lessons
+            for (const [slotStr, lessonInfo] of Object.entries(publishedLessons)) {
+                const slot = parseInt(slotStr);
+                if (isNaN(slot)) continue;
+                
+                const lessonKey = `lesson${slot}`;
                 const lessonData = progress[lessonKey] || {};
+                const lessonTitle = lessonInfo.title || `Lesson ${slot}`;
                 
                 // 1. Pages
                 const completedPages = lessonData.completedPages || {};
@@ -138,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     else if (!quizScoreOk) parts.push(`Quiz Score < 70% (${quiz.highestScore || 0}/10)`);
                     if (!simOk) parts.push("Simulation Not Passed");
                     
-                    missingItems.push(`Lesson ${i}: ${parts.join(", ")}`);
+                    missingItems.push(`${lessonTitle}: ${parts.join(", ")}`);
                 }
             }
 
@@ -290,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 doc.text(certId, 170, 565);
 
                 // Add QR Code
-                const verifyUrl = `http://localhost:3000/verify-certificate.html?certId=${certId}`;
+                const verifyUrl = `https://asat-caresim.online/verify-certificate.html?certId=${certId}`;
                 const qrContainer = document.createElement('div');
                 new QRCode(qrContainer, {
                     text: verifyUrl,

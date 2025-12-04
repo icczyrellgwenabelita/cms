@@ -7,6 +7,7 @@ let currentSelectedUid = null;
 let currentUserData = null;
 let currentTab = 'lms'; // Default to LMS for LMS students
 let demoUsersList = []; // Store full user list with passwords
+let publishedLessons = {}; // Store published lessons map
 
 document.addEventListener('DOMContentLoaded', async function() {
     // Verify dev access
@@ -32,9 +33,40 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
-    // Load demo users list
+    // Load published lessons and demo users list
+    await loadPublishedLessons();
     loadDemoUsersList();
 });
+
+async function loadPublishedLessons() {
+    try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch('/api/admin/lessons', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && Array.isArray(data.lessons)) {
+                // Convert array to map by slot, only include published lessons
+                publishedLessons = {};
+                data.lessons.forEach(lesson => {
+                    const status = (lesson.status || '').toString().toLowerCase();
+                    if (status === 'published') {
+                        publishedLessons[String(lesson.slot)] = {
+                            slot: lesson.slot,
+                            title: lesson.lessonTitle || lesson.lessonName || `Lesson ${lesson.slot}`
+                        };
+                    }
+                });
+            }
+        }
+    } catch (err) {
+        console.error('[Dev Advanced] Error loading published lessons:', err);
+        // Fallback to empty object - will show no lessons
+        publishedLessons = {};
+    }
+}
 
 async function loadDemoUsersList() {
     const container = document.getElementById('devAdvancedUsersList');
@@ -72,6 +104,10 @@ function renderUsersList(users) {
         return;
     }
 
+    // Get count of published lessons
+    const publishedLessonsCount = Object.keys(publishedLessons).length;
+    const maxLessons = publishedLessonsCount > 0 ? publishedLessonsCount : 6; // Fallback to 6 if no lessons loaded yet
+
     let html = '';
     users.forEach(u => {
         const typeLabel = u.type === 'lms' ? 'LMS Student' : 'Game User';
@@ -87,7 +123,7 @@ function renderUsersList(users) {
                     <span class="admin-devtools-badge ${typeClass}">${typeLabel}</span>
                 </div>
                 <div class="dev-advanced-user-item-summary">
-                    ${u.type === 'lms' ? `<span>LMS: ${lmsCount}/6</span><span>Game: ${gameCount}/6</span>` : `<span>Game: ${gameCount}/6</span>`}
+                    ${u.type === 'lms' ? `<span>LMS: ${lmsCount}/${maxLessons}</span><span>Game: ${gameCount}/${maxLessons}</span>` : `<span>Game: ${gameCount}/${maxLessons}</span>`}
                 </div>
             </div>
         `;
@@ -226,36 +262,49 @@ function renderLmsTable(lms) {
     if (!tbody) return;
 
     let html = '';
-    for (let i = 1; i <= 6; i++) {
-        const lesson = lms[String(i)] || {};
-        const hasPages = lesson.hasPages || false;
-        const completedPagesCount = lesson.completedPagesCount || 0;
-        const lastAssessment = lesson.lastAssessment || null;
+    
+    // Only render published lessons
+    const sortedSlots = Object.keys(publishedLessons)
+        .map(s => parseInt(s))
+        .filter(s => !isNaN(s))
+        .sort((a, b) => a - b);
+    
+    if (sortedSlots.length === 0) {
+        html = '<tr><td colspan="4" style="text-align: center; color: #9CA3AF; padding: 20px;">No published lessons found</td></tr>';
+    } else {
+        for (const slot of sortedSlots) {
+            const lessonInfo = publishedLessons[String(slot)];
+            const lesson = lms[String(slot)] || {};
+            const hasPages = lesson.hasPages || false;
+            const completedPagesCount = lesson.completedPagesCount || 0;
+            const lastAssessment = lesson.lastAssessment || null;
+            const lessonTitle = lessonInfo.title || `Lesson ${slot}`;
 
-        html += `
-            <tr class="dev-advanced-lesson-row">
-                <td>
-                    <strong>Lesson ${i}</strong>
-                </td>
-                <td>
-                    <label class="dev-advanced-checkbox-label">
-                        <input type="checkbox" id="lms-${i}-pages" ${hasPages ? 'checked' : ''} 
-                               onchange="updateLmsLessonField(${i}, 'hasPages', this.checked)">
-                        Pages completed
-                    </label>
-                    ${completedPagesCount > 0 ? `<div style="font-size: 12px; color: #6B7280; margin-top: 4px;">${completedPagesCount} page(s) with assessments passed</div>` : ''}
-                </td>
-                <td>
-                    <div style="font-size: 13px; color: #4B5563;">
-                        ${hasPages ? '<span style="color: #10B981;">✓ Assessments completed</span>' : '<span style="color: #9CA3AF;">No assessments</span>'}
-                        ${lastAssessment ? `<div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">Last: ${new Date(lastAssessment).toLocaleDateString()}</div>` : ''}
-                    </div>
-                </td>
-                <td>
-                    <button class="dev-advanced-btn-apply" onclick="applyLmsLesson(${i})">Apply</button>
-                </td>
-            </tr>
-        `;
+            html += `
+                <tr class="dev-advanced-lesson-row">
+                    <td>
+                        <strong>${lessonTitle}</strong>
+                    </td>
+                    <td>
+                        <label class="dev-advanced-checkbox-label">
+                            <input type="checkbox" id="lms-${slot}-pages" ${hasPages ? 'checked' : ''} 
+                                   onchange="updateLmsLessonField(${slot}, 'hasPages', this.checked)">
+                            Pages completed
+                        </label>
+                        ${completedPagesCount > 0 ? `<div style="font-size: 12px; color: #6B7280; margin-top: 4px;">${completedPagesCount} page(s) with assessments passed</div>` : ''}
+                    </td>
+                    <td>
+                        <div style="font-size: 13px; color: #4B5563;">
+                            ${hasPages ? '<span style="color: #10B981;">✓ Assessments completed</span>' : '<span style="color: #9CA3AF;">No assessments</span>'}
+                            ${lastAssessment ? `<div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">Last: ${new Date(lastAssessment).toLocaleDateString()}</div>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <button class="dev-advanced-btn-apply" onclick="applyLmsLesson(${slot})">Apply</button>
+                    </td>
+                </tr>
+            `;
+        }
     }
 
     tbody.innerHTML = html;
@@ -266,73 +315,86 @@ function renderGameTable(game) {
     if (!tbody) return;
 
     let html = '';
-    for (let i = 1; i <= 6; i++) {
-        const lesson = game[String(i)] || {};
-        const completed = lesson.completed || false;
-        const quizCompleted = lesson.quiz?.completed || false;
-        const quizScore = lesson.quiz?.bestScore || 0;
-        const quizAttempts = lesson.quiz?.attempts || 0;
-        const simCompleted = lesson.simulation?.completed || false;
-        const simPassed = lesson.simulation?.passed || false;
-        const simScore = lesson.simulation?.score || 0;
+    
+    // Only render published lessons
+    const sortedSlots = Object.keys(publishedLessons)
+        .map(s => parseInt(s))
+        .filter(s => !isNaN(s))
+        .sort((a, b) => a - b);
+    
+    if (sortedSlots.length === 0) {
+        html = '<tr><td colspan="5" style="text-align: center; color: #9CA3AF; padding: 20px;">No published lessons found</td></tr>';
+    } else {
+        for (const slot of sortedSlots) {
+            const lessonInfo = publishedLessons[String(slot)];
+            const lesson = game[String(slot)] || {};
+            const completed = lesson.completed || false;
+            const quizCompleted = lesson.quiz?.completed || false;
+            const quizScore = lesson.quiz?.bestScore || 0;
+            const quizAttempts = lesson.quiz?.attempts || 0;
+            const simCompleted = lesson.simulation?.completed || false;
+            const simPassed = lesson.simulation?.passed || false;
+            const simScore = lesson.simulation?.score || 0;
+            const lessonTitle = lessonInfo.title || `Lesson ${slot}`;
 
-        html += `
-            <tr class="dev-advanced-lesson-row">
-                <td><strong>Lesson ${i}</strong></td>
-                <td>
-                    <span class="dev-advanced-badge ${completed ? 'completed' : 'not-completed'}">
-                        ${completed ? 'Completed' : 'Not Completed'}
-                    </span>
-                </td>
-                <td>
-                    <div class="dev-advanced-quiz-controls">
-                        <label class="dev-advanced-checkbox-label">
-                            <input type="checkbox" id="game-${i}-quiz-completed" ${quizCompleted ? 'checked' : ''}
-                                   onchange="updateGameLessonField(${i}, 'quizCompleted', this.checked)">
-                            Completed
-                        </label>
-                        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 11px; color: #6B7280; min-width: 50px;">Score (0-10):</label>
-                                <input type="number" min="0" max="10" id="game-${i}-quiz-score" value="${quizScore}"
-                                       class="dev-advanced-number-input"
-                                       onchange="updateGameLessonField(${i}, 'quizScore', this.value)">
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 11px; color: #6B7280; min-width: 50px;">Attempts:</label>
-                                <input type="number" min="0" id="game-${i}-quiz-attempts" value="${quizAttempts}"
-                                       class="dev-advanced-number-input"
-                                       onchange="updateGameLessonField(${i}, 'quizAttempts', this.value)">
+            html += `
+                <tr class="dev-advanced-lesson-row">
+                    <td><strong>${lessonTitle}</strong></td>
+                    <td>
+                        <span class="dev-advanced-badge ${completed ? 'completed' : 'not-completed'}">
+                            ${completed ? 'Completed' : 'Not Completed'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="dev-advanced-quiz-controls">
+                            <label class="dev-advanced-checkbox-label">
+                                <input type="checkbox" id="game-${slot}-quiz-completed" ${quizCompleted ? 'checked' : ''}
+                                       onchange="updateGameLessonField(${slot}, 'quizCompleted', this.checked)">
+                                Completed
+                            </label>
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <label style="font-size: 11px; color: #6B7280; min-width: 50px;">Score (0-10):</label>
+                                    <input type="number" min="0" max="10" id="game-${slot}-quiz-score" value="${quizScore}"
+                                           class="dev-advanced-number-input"
+                                           onchange="updateGameLessonField(${slot}, 'quizScore', this.value)">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <label style="font-size: 11px; color: #6B7280; min-width: 50px;">Attempts:</label>
+                                    <input type="number" min="0" id="game-${slot}-quiz-attempts" value="${quizAttempts}"
+                                           class="dev-advanced-number-input"
+                                           onchange="updateGameLessonField(${slot}, 'quizAttempts', this.value)">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="dev-advanced-sim-controls">
-                        <label class="dev-advanced-checkbox-label">
-                            <input type="checkbox" id="game-${i}-sim-completed" ${simCompleted ? 'checked' : ''}
-                                   onchange="updateGameLessonField(${i}, 'simCompleted', this.checked)">
-                            Completed
-                        </label>
-                        <label class="dev-advanced-checkbox-label">
-                            <input type="checkbox" id="game-${i}-sim-passed" ${simPassed ? 'checked' : ''}
-                                   onchange="updateGameLessonField(${i}, 'simPassed', this.checked)">
-                            Passed
-                        </label>
-                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
-                            <label style="font-size: 11px; color: #6B7280; min-width: 50px;">Score (0-100):</label>
-                            <input type="number" min="0" max="100" id="game-${i}-sim-score" value="${simScore}"
-                                   class="dev-advanced-number-input"
-                                   onchange="updateGameLessonField(${i}, 'simScore', this.value)">
+                    </td>
+                    <td>
+                        <div class="dev-advanced-sim-controls">
+                            <label class="dev-advanced-checkbox-label">
+                                <input type="checkbox" id="game-${slot}-sim-completed" ${simCompleted ? 'checked' : ''}
+                                       onchange="updateGameLessonField(${slot}, 'simCompleted', this.checked)">
+                                Completed
+                            </label>
+                            <label class="dev-advanced-checkbox-label">
+                                <input type="checkbox" id="game-${slot}-sim-passed" ${simPassed ? 'checked' : ''}
+                                       onchange="updateGameLessonField(${slot}, 'simPassed', this.checked)">
+                                Passed
+                            </label>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+                                <label style="font-size: 11px; color: #6B7280; min-width: 50px;">Score (0-100):</label>
+                                <input type="number" min="0" max="100" id="game-${slot}-sim-score" value="${simScore}"
+                                       class="dev-advanced-number-input"
+                                       onchange="updateGameLessonField(${slot}, 'simScore', this.value)">
+                            </div>
                         </div>
-                    </div>
-                </td>
-                <td>
-                    <button class="dev-advanced-btn-apply" onclick="applyGameLesson(${i})">Apply</button>
-                    <button class="dev-advanced-btn-quick" onclick="quickPassGameLesson(${i})">Quick Pass</button>
-                </td>
-            </tr>
-        `;
+                    </td>
+                    <td>
+                        <button class="dev-advanced-btn-apply" onclick="applyGameLesson(${slot})">Apply</button>
+                        <button class="dev-advanced-btn-quick" onclick="quickPassGameLesson(${slot})">Quick Pass</button>
+                    </td>
+                </tr>
+            `;
+        }
     }
 
     tbody.innerHTML = html;

@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 doc.text(cId, 405, 495);
 
                 // Add QR Code
-                const verifyUrl = `http://localhost:3000/verify-certificate.html?certId=${cId}`;
+                const verifyUrl = `https://asat-caresim.online/verify-certificate.html?certId=${cId}`;
                 const qrContainer = document.createElement('div');
                 new QRCode(qrContainer, {
                     text: verifyUrl,
